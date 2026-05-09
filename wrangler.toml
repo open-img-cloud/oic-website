@@ -1,20 +1,21 @@
 name = "oic-website"
+main = "src/worker.ts"
 compatibility_date = "2026-05-09"
 
-# Keep the workers.dev fallback URL active for now (oic-website.<account>.workers.dev).
-# Once the apex domain is configured (see below), flip this to false to make the
-# custom domain the only public entry point.
-workers_dev = true
+# Apex-only access: disable the workers.dev fallback URL and per-deploy preview URLs.
+# Public entry points are exclusively the custom domains below.
+workers_dev = false
+preview_urls = false
 
-# Per-deploy preview URLs (e.g. <hash>.oic-website.<account>.workers.dev).
-# Useful for PR previews; flip to false once you want to lock down access.
-preview_urls = true
-
-# Pure static site served by Cloudflare Workers Static Assets.
-# No Worker script — assets only.
+# Static site served by Cloudflare Workers Static Assets, with a thin Worker
+# in front to handle the www → apex redirect.
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 not_found_handling = "404-page"
+# Run the Worker before serving assets so the redirect can intercept requests
+# whose path also matches an asset (e.g. www.openimages.cloud/index.html).
+run_worker_first = true
 
 # Custom domains. The openimages.cloud zone is on the same Cloudflare account,
 # so Wrangler manages the DNS records and TLS certs automatically on deploy.
