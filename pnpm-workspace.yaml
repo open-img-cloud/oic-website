@@ -1,6 +1,9 @@
 allowBuilds:
   esbuild: true
   sharp: true
+  # workerd is injected transitively by Cloudflare Pages' deploy step
+  # (it auto-installs wrangler). Allow its postinstall so CF deploy succeeds.
+  workerd: true
 
 overrides:
   yaml: ^2.8.3
