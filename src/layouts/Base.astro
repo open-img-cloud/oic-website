@@ -9,21 +9,24 @@ interface Props {
   ogImage?: string;
 }
 
-const { title, description, ogImage } = Astro.props;
+const { title, description, ogImage = "/img/og.png" } = Astro.props;
 const fullTitle = title === "Open Image Cloud" ? title : `${title} — Open Image Cloud`;
 const desc =
   description ??
   "Cloud-init-ready, signed, reproducible cloud images for OpenStack and Proxmox. Built in the open.";
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImageUrl = new URL(ogImage, Astro.site).toString();
 ---
 
 <!doctype html>
-<html lang="en" class="bg-zinc-950 text-zinc-100">
+<html lang="en" class="bg-navy-950 text-slate-100">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a1730" />
     <meta name="generator" content={Astro.generator} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/img/icon-128.png" />
     <link rel="canonical" href={canonical} />
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
@@ -31,10 +34,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
     <meta property="og:description" content={desc} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
-    {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site).toString()} />}
+    <meta property="og:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImageUrl} />
   </head>
-  <body class="flex min-h-screen flex-col antialiased">
+  <body class="bg-cloud-pattern flex min-h-screen flex-col antialiased">
     <Header />
     <main class="flex-1">
       <slot />

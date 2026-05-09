@@ -12,8 +12,8 @@ const images = await loadEnrichedImages();
 >
   <section>
     <div class="mx-auto max-w-6xl px-6 py-16">
-      <h1 class="text-3xl font-semibold tracking-tight text-zinc-50">Image catalog</h1>
-      <p class="mt-3 max-w-2xl text-zinc-400">
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-50">Image catalog</h1>
+      <p class="mt-3 max-w-2xl text-slate-400">
         Every image is published to{" "}
         <a class="underline" href="https://images.openimages.cloud/">images.openimages.cloud</a>{
           " "
@@ -27,7 +27,7 @@ const images = await loadEnrichedImages();
         {images.map((image) => <ImageCard image={image} />)}
       </div>
 
-      {images.length === 0 && <p class="mt-12 text-zinc-500">No images published yet.</p>}
+      {images.length === 0 && <p class="mt-12 text-slate-500">No images published yet.</p>}
     </div>
   </section>
 </Base>
