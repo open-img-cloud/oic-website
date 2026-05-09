@@ -16,14 +16,12 @@ preview_urls = true
 directory = "./dist"
 not_found_handling = "404-page"
 
-# Once openimages.cloud zone is configured on the same Cloudflare account,
-# uncomment to bind the custom domains directly from this config.
-# Wrangler will create/manage the DNS records and TLS certs automatically.
-#
-# [[routes]]
-# pattern = "openimages.cloud"
-# custom_domain = true
-#
-# [[routes]]
-# pattern = "www.openimages.cloud"
-# custom_domain = true
+# Custom domains. The openimages.cloud zone is on the same Cloudflare account,
+# so Wrangler manages the DNS records and TLS certs automatically on deploy.
+[[routes]]
+pattern = "openimages.cloud"
+custom_domain = true
+
+[[routes]]
+pattern = "www.openimages.cloud"
+custom_domain = true
