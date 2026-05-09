@@ -1,0 +1,19 @@
+---
+interface Props {
+  lang?: string;
+  label?: string;
+}
+const { lang = "bash", label } = Astro.props;
+---
+
+<figure class="not-prose group relative my-4">
+  {
+    label && (
+      <figcaption class="absolute top-2 right-3 font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
+        {label}
+      </figcaption>
+    )
+  }
+  <pre
+    class="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/70 p-4 text-sm leading-relaxed"><code data-lang={lang}><slot /></code></pre>
+</figure>

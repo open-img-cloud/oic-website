@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://openimages.cloud/sitemap-index.xml

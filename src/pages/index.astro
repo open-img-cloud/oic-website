@@ -1,0 +1,83 @@
+---
+import Base from "~/layouts/Base.astro";
+import { loadEnrichedImages } from "~/lib/images";
+import ImageCard from "~/components/ImageCard.astro";
+
+const images = await loadEnrichedImages();
+const featured = images.slice(0, 3);
+---
+
+<Base title="Open Image Cloud">
+  <section class="border-b border-zinc-800/60">
+    <div class="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+      <p class="text-brand-500 font-mono text-xs tracking-wider uppercase">
+        open source · signed · reproducible
+      </p>
+      <h1 class="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-zinc-50 sm:text-5xl">
+        Cloud images you can actually trust.
+      </h1>
+      <p class="mt-6 max-w-2xl text-lg text-zinc-400">
+        Open Image Cloud builds <span class="text-zinc-200"
+          >cloud-init-ready, signed, reproducible</span
+        >
+        qcow2 images for OpenStack and Proxmox — all in the open, on GitHub Actions, with keyless cosign
+        signatures and a public manifest for every release.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a
+          href="/images/"
+          class="bg-brand-500 hover:bg-brand-600 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-zinc-50 transition-colors"
+        >
+          Browse the catalog →
+        </a>
+        <a
+          href="https://github.com/open-img-cloud"
+          class="inline-flex items-center gap-2 rounded-md border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:border-zinc-500 hover:text-zinc-50"
+        >
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-b border-zinc-800/60">
+    <div class="mx-auto grid max-w-6xl gap-8 px-6 py-20 sm:grid-cols-3">
+      <div>
+        <h3 class="text-base font-semibold text-zinc-100">Reproducible</h3>
+        <p class="mt-2 text-sm text-zinc-400">
+          Every release is built from a pinned upstream source and a tagged builder container. The
+          exact commit, run URL and builder digest are embedded in the per-image
+          <code class="font-mono text-xs">MANIFEST.json</code>.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-zinc-100">Signed</h3>
+        <p class="mt-2 text-sm text-zinc-400">
+          Keyless <code class="font-mono text-xs">cosign</code> signatures via GitHub OIDC. Verify any
+          image with a single command — no key management on your side.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-zinc-100">Open infrastructure</h3>
+        <p class="mt-2 text-sm text-zinc-400">
+          Source of truth on a self-hosted Garage cluster, mirrored to Cloudflare R2 behind a public
+          CDN. Reusable workflows in
+          <a href="https://github.com/open-img-cloud/.github" class="underline">.github</a>
+          power every image repo.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="mx-auto max-w-6xl px-6 py-20">
+      <div class="flex items-baseline justify-between">
+        <h2 class="text-2xl font-semibold tracking-tight text-zinc-50">Featured images</h2>
+        <a href="/images/" class="text-sm text-zinc-400 hover:text-zinc-100">All images →</a>
+      </div>
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {featured.map((image) => <ImageCard image={image} />)}
+      </div>
+    </div>
+  </section>
+</Base>

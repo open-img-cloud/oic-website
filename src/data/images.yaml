@@ -1,0 +1,46 @@
+# Curated catalog of cloud images published by open-img-cloud.
+#
+# Each entry is enriched at build time by fetching the corresponding
+# MANIFEST.json from `IMAGES_BASE_URL` (default: https://images.openimages.cloud).
+# When `variants` is set, one MANIFEST-<variant>.json is fetched per variant.
+#
+# Path scheme on the bucket:
+#   <os_name>/<version>/<filename>
+#   <os_name>/<version>/MANIFEST.json            (no variant)
+#   <os_name>/<version>/MANIFEST-<variant>.json  (with variant)
+
+images:
+  - os_name: alpaquita-linux
+    title: Alpaquita Linux
+    tagline: Lightweight Alpine-derived distribution from BellSoft, glibc and musl flavors.
+    description: |
+      Cloud-init-ready, signed Alpaquita Linux images, customized via
+      `virt-customize` on top of the upstream BellSoft Stream qcow2.
+      Produced in both glibc and musl variants for OpenStack and Proxmox.
+    repo: open-img-cloud/alpaquita-linux
+    upstream_homepage: https://bell-sw.com/alpaquita-linux/
+    latest_version: "2026.04.14"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    variants:
+      - id: glibc
+        label: glibc
+        filename_template: "alpaquita-{version}-glibc-x86_64.qcow2"
+      - id: musl
+        label: musl
+        filename_template: "alpaquita-{version}-musl-x86_64.qcow2"
+
+  # Octavia Amphora image (placeholder — fill `latest_version` once the first release tag is cut).
+  # - os_name: octavia-amphora
+  #   title: Octavia Amphora
+  #   tagline: OpenStack Octavia load balancer amphora image, built via diskimage-builder.
+  #   description: |
+  #     Cloud-init-ready Octavia amphora qcow2, built from upstream
+  #     `openstack/octavia` element packs via `diskimage-builder`.
+  #   repo: open-img-cloud/octavia-amphora
+  #   upstream_homepage: https://docs.openstack.org/octavia/latest/
+  #   latest_version: ""
+  #   format: qcow2
+  #   arch: x86_64
+  #   tags: [openstack, octavia, dib]
