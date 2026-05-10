@@ -12,22 +12,29 @@ const images = await loadEnrichedImages();
 >
   <section>
     <div class="mx-auto max-w-6xl px-6 py-16">
-      <h1 class="text-3xl font-semibold tracking-tight text-slate-50">Image catalog</h1>
-      <p class="mt-3 max-w-2xl text-slate-400">
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+        Image catalog
+      </h1>
+      <p class="mt-3 max-w-2xl text-slate-600 dark:text-slate-400">
         Every image is published to{" "}
-        <a class="underline" href="https://images.openimages.cloud/">images.openimages.cloud</a>{
-          " "
-        }
-        with a versioned, immutable path and a <code class="font-mono text-xs">MANIFEST.json</code> describing
-        its provenance. <code class="font-mono text-xs">latest/</code> aliases are kept up to date but
-        should not be linked from reproducible documentation — pin the version instead.
+        <a
+          class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
+          href="https://images.openimages.cloud/">images.openimages.cloud</a
+        >{" "}
+        with a versioned, immutable path and a <code class="font-mono text-xs">MANIFEST.json</code>
+        describing its provenance. <code class="font-mono text-xs">latest/</code> aliases are kept up
+        to date but should not be linked from reproducible documentation — pin the version instead.
       </p>
 
       <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {images.map((image) => <ImageCard image={image} />)}
       </div>
 
-      {images.length === 0 && <p class="mt-12 text-slate-500">No images published yet.</p>}
+      {
+        images.length === 0 && (
+          <p class="mt-12 text-slate-500 dark:text-slate-400">No images published yet.</p>
+        )
+      }
     </div>
   </section>
 </Base>

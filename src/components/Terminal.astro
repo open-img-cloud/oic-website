@@ -1,0 +1,68 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"div"> {
+  title?: string;
+}
+const { title = "bash", class: className, ...rest } = Astro.props;
+---
+
+<div
+  class:list={[
+    "rounded-xl border border-slate-300/60 bg-slate-950 shadow-[0_30px_60px_-20px_rgba(8,15,35,0.25)] dark:border-slate-800/80 dark:bg-slate-950/80 dark:shadow-[0_30px_60px_-30px_rgba(8,15,35,0.8)] dark:backdrop-blur",
+    className,
+  ]}
+  {...rest}
+>
+  <div class="flex items-center gap-2 border-b border-slate-800/60 bg-slate-900/40 px-4 py-2.5">
+    <span class="h-2.5 w-2.5 rounded-full bg-rose-400/70" aria-hidden="true"></span>
+    <span class="h-2.5 w-2.5 rounded-full bg-amber-400/70" aria-hidden="true"></span>
+    <span class="h-2.5 w-2.5 rounded-full bg-emerald-400/70" aria-hidden="true"></span>
+    <span class="ml-3 font-mono text-[11px] tracking-wide text-slate-400">{title}</span>
+  </div>
+  <div
+    class="terminal-body overflow-x-auto px-5 py-4 font-mono text-[13px] leading-relaxed whitespace-pre"
+  >
+    <slot />
+  </div>
+</div>
+
+<style>
+  /* One rendered line per child of the terminal body. Astro's HTML compiler
+     collapses whitespace between sibling spans, so we rely on block-level
+     line wrappers instead of \n in the source. */
+  .terminal-body > :global(.t-line) {
+    display: block;
+    min-height: 1lh;
+  }
+
+  /* Tokens for in-line snippet semantics — keep small and predictable. */
+  :global(.t-comment) {
+    color: var(--color-slate-500);
+  }
+  :global(.t-prompt) {
+    color: var(--color-brand-300);
+    user-select: none;
+    margin-right: 0.5ch;
+  }
+  :global(.t-cmd) {
+    color: var(--color-slate-50);
+  }
+  :global(.t-flag) {
+    color: var(--color-slate-400);
+  }
+  :global(.t-str) {
+    color: var(--color-amber-300, #fcd34d);
+  }
+  :global(.t-out) {
+    color: var(--color-slate-400);
+  }
+  :global(.t-ok) {
+    color: var(--color-emerald-300, #6ee7b7);
+  }
+  :global(.t-cont) {
+    /* Continuation indent for wrapped flag lines. */
+    padding-left: 4ch;
+    display: block;
+  }
+</style>

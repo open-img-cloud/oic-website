@@ -50,59 +50,53 @@ const rows: Row[] =
 
 const firstFileUrl = rows.find((r) => r.fileUrl)?.fileUrl ?? null;
 const firstFilename = rows.find((r) => r.filename)?.filename ?? null;
+
+const chipClass =
+  "rounded-md border border-slate-200 bg-slate-100 px-2 py-1 font-mono text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300";
+const tagChipClass =
+  "rounded-md border border-slate-200 bg-white px-2 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400";
 ---
 
 <Base title={image.title} description={image.tagline}>
   <article class="mx-auto max-w-4xl px-6 py-16">
-    <nav class="text-sm text-slate-500">
-      <a href="/images/" class="hover:text-slate-300">Catalog</a>
+    <nav class="text-sm text-slate-500 dark:text-slate-500">
+      <a href="/images/" class="hover:text-slate-900 dark:hover:text-slate-300">Catalog</a>
       <span class="mx-2">/</span>
-      <span class="text-slate-300">{image.title}</span>
+      <span class="text-slate-700 dark:text-slate-300">{image.title}</span>
     </nav>
 
     <header class="mt-6">
-      <h1 class="text-3xl font-semibold tracking-tight text-slate-50">{image.title}</h1>
-      <p class="mt-2 text-slate-400">{image.tagline}</p>
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+        {image.title}
+      </h1>
+      <p class="mt-2 text-slate-600 dark:text-slate-400">{image.tagline}</p>
       <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
-        <span
-          class="rounded-md border border-slate-700 bg-slate-800/50 px-2 py-1 font-mono text-slate-300"
-        >
-          v{image.latest_version}
-        </span>
-        <span
-          class="rounded-md border border-slate-700 bg-slate-800/50 px-2 py-1 font-mono text-slate-300"
-        >
-          {image.format}
-        </span>
-        <span
-          class="rounded-md border border-slate-700 bg-slate-800/50 px-2 py-1 font-mono text-slate-300"
-        >
-          {image.arch}
-        </span>
-        {
-          image.tags.map((tag) => (
-            <span class="rounded-md border border-slate-800 bg-slate-900/40 px-2 py-1 text-slate-400">
-              {tag}
-            </span>
-          ))
-        }
+        <span class={chipClass}>v{image.latest_version}</span>
+        <span class={chipClass}>{image.format}</span>
+        <span class={chipClass}>{image.arch}</span>
+        {image.tags.map((tag) => <span class={tagChipClass}>{tag}</span>)}
       </div>
     </header>
 
     <section class="mt-10">
-      <h2 class="text-lg font-semibold text-slate-100">About</h2>
-      <p class="mt-2 whitespace-pre-line text-slate-400">{image.description}</p>
-      <ul class="mt-4 space-y-1 text-sm text-slate-400">
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">About</h2>
+      <p class="mt-2 whitespace-pre-line text-slate-600 dark:text-slate-400">{image.description}</p>
+      <ul class="mt-4 space-y-1 text-sm text-slate-600 dark:text-slate-400">
         <li>
-          Source repository: <a class="underline hover:text-slate-100" href={repoUrl}
-            >{image.repo}</a
+          Source repository:{" "}
+          <a
+            class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
+            href={repoUrl}>{image.repo}</a
           >
         </li>
         {
           image.upstream_homepage && (
             <li>
               Upstream:{" "}
-              <a class="underline hover:text-slate-100" href={image.upstream_homepage}>
+              <a
+                class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
+                href={image.upstream_homepage}
+              >
                 {image.upstream_homepage}
               </a>
             </li>
@@ -112,10 +106,12 @@ const firstFilename = rows.find((r) => r.filename)?.filename ?? null;
     </section>
 
     <section class="mt-10">
-      <h2 class="text-lg font-semibold text-slate-100">Downloads</h2>
-      <div class="mt-4 overflow-x-auto rounded-lg border border-slate-800">
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Downloads</h2>
+      <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
         <table class="w-full text-left text-sm">
-          <thead class="bg-slate-900/60 text-xs tracking-wider text-slate-400 uppercase">
+          <thead
+            class="bg-slate-50 text-xs tracking-wider text-slate-500 uppercase dark:bg-slate-900/60 dark:text-slate-400"
+          >
             <tr>
               {image.enrichedVariants.length > 0 && <th class="px-4 py-3">Variant</th>}
               <th class="px-4 py-3">File</th>
@@ -124,34 +120,42 @@ const firstFilename = rows.find((r) => r.filename)?.filename ?? null;
               <th class="px-4 py-3">Manifest</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/60">
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60">
             {
               rows.map((row) => (
-                <tr class="hover:bg-slate-900/30">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30">
                   {row.variantLabel !== null && (
-                    <td class="px-4 py-3 font-mono text-slate-200">{row.variantLabel}</td>
+                    <td class="px-4 py-3 font-mono text-slate-700 dark:text-slate-200">
+                      {row.variantLabel}
+                    </td>
                   )}
                   <td class="px-4 py-3">
                     {row.fileUrl ? (
-                      <a href={row.fileUrl} class="text-brand-500 font-mono hover:underline">
+                      <a
+                        href={row.fileUrl}
+                        class="text-brand-700 dark:text-brand-300 font-mono hover:underline"
+                      >
                         {row.filename}
                       </a>
                     ) : (
-                      <span class="text-slate-500">unavailable</span>
+                      <span class="text-slate-400 dark:text-slate-500">unavailable</span>
                     )}
                   </td>
-                  <td class="px-4 py-3 font-mono text-xs break-all text-slate-400">
+                  <td class="px-4 py-3 font-mono text-xs break-all text-slate-500 dark:text-slate-400">
                     {row.sha256 ?? "—"}
                   </td>
                   <td class="px-4 py-3">
                     {row.signed ? (
-                      <span class="text-emerald-400">yes</span>
+                      <span class="text-emerald-600 dark:text-emerald-400">yes</span>
                     ) : (
-                      <span class="text-slate-500">no</span>
+                      <span class="text-slate-400 dark:text-slate-500">no</span>
                     )}
                   </td>
                   <td class="px-4 py-3">
-                    <a href={row.manifestUrl} class="text-brand-500 hover:underline">
+                    <a
+                      href={row.manifestUrl}
+                      class="text-brand-700 dark:text-brand-300 hover:underline"
+                    >
                       MANIFEST
                     </a>
                   </td>
@@ -166,10 +170,15 @@ const firstFilename = rows.find((r) => r.filename)?.filename ?? null;
     {
       firstFileUrl && firstFilename && (
         <section class="mt-10">
-          <h2 class="text-lg font-semibold text-slate-100">Verify the signature</h2>
-          <p class="mt-2 text-sm text-slate-400">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Verify the signature
+          </h2>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
             All releases are signed keylessly via GitHub OIDC. Verify with{" "}
-            <a class="underline" href="https://docs.sigstore.dev/cosign/installation/">
+            <a
+              class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
+              href="https://docs.sigstore.dev/cosign/installation/"
+            >
               cosign
             </a>
             :
@@ -182,8 +191,8 @@ const firstFilename = rows.find((r) => r.filename)?.filename ?? null;
     }
 
     <section class="mt-10">
-      <h2 class="text-lg font-semibold text-slate-100">Use it</h2>
-      <p class="mt-2 text-sm text-slate-400">Upload to OpenStack Glance:</p>
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Use it</h2>
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Upload to OpenStack Glance:</p>
       {
         firstFileUrl && firstFilename && (
           <CodeBlock label="bash">

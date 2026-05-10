@@ -3,10 +3,20 @@ import { Image } from "astro:assets";
 import Base from "~/layouts/Base.astro";
 import { loadEnrichedImages } from "~/lib/images";
 import ImageCard from "~/components/ImageCard.astro";
+import Terminal from "~/components/Terminal.astro";
 import logoIcon from "~/assets/open-images-icon.png";
 
 const images = await loadEnrichedImages();
 const featured = images.slice(0, 3);
+
+// Pick the first image with a known filename for the snippet (falls back to a placeholder).
+const sample = images[0];
+const sampleVariant = sample?.enrichedVariants[0];
+const sampleFile =
+  sampleVariant?.filename ?? sample?.filename ?? "alpaquita-2026.04.14-glibc-x86_64.qcow2";
+const sampleRepo = sample?.repo ?? "open-img-cloud/alpaquita-linux";
+const sampleVersion = sample?.latest_version ?? "2026.04.14";
+const sampleOs = sample?.os_name ?? "alpaquita-linux";
 ---
 
 <Base title="Open Image Cloud">
@@ -20,27 +30,28 @@ const featured = images.slice(0, 3);
       class="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-28 lg:grid-cols-[1.2fr_1fr] lg:items-center"
     >
       <div>
-        <p class="text-brand-300 font-mono text-xs tracking-widest uppercase">
+        <p class="text-brand-700 dark:text-brand-300 font-mono text-xs tracking-widest uppercase">
           open source · signed · reproducible
         </p>
         <h1
-          class="mt-4 text-4xl leading-tight font-semibold tracking-tight text-slate-50 sm:text-5xl lg:text-6xl"
+          class="mt-4 text-4xl leading-tight font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-slate-50"
         >
           Cloud images
           <span
-            class="from-brand-300 via-brand-500 to-brand-300 bg-gradient-to-r bg-clip-text text-transparent"
+            class="from-brand-600 via-brand-500 to-brand-600 dark:from-brand-300 dark:via-brand-500 dark:to-brand-300 bg-gradient-to-r bg-clip-text text-transparent"
             >you can actually trust.</span
           >
         </h1>
-        <p class="mt-6 max-w-2xl text-lg text-slate-300/90">
-          Cloud-init-ready, <strong class="font-semibold text-slate-100">signed</strong>,
-          reproducible qcow2 images for OpenStack and Proxmox — built in the open on GitHub Actions,
-          with keyless cosign signatures and a public manifest for every release.
+        <p class="mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300/90">
+          Cloud-init-ready, <strong class="font-semibold text-slate-900 dark:text-slate-100"
+            >signed</strong
+          >, reproducible qcow2 images for OpenStack and Proxmox — built in the open on GitHub
+          Actions, with keyless cosign signatures and a public manifest for every release.
         </p>
         <div class="mt-8 flex flex-wrap gap-3">
           <a
             href="/images/"
-            class="bg-brand-500 hover:bg-brand-600 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium text-slate-50 shadow-[0_8px_24px_-12px_rgba(91,141,239,0.6)] transition-colors"
+            class="bg-brand-500 hover:bg-brand-600 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium text-white shadow-[0_8px_24px_-12px_rgba(91,141,239,0.6)] transition-colors"
           >
             Browse the catalog
             <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" fill="none" aria-hidden="true">
@@ -54,7 +65,7 @@ const featured = images.slice(0, 3);
           </a>
           <a
             href="https://github.com/open-img-cloud"
-            class="inline-flex items-center gap-2 rounded-md border border-slate-700 px-5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-900/40 hover:text-slate-50"
+            class="inline-flex items-center gap-2 rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-900/40 dark:hover:text-slate-50"
           >
             <svg viewBox="0 0 16 16" class="h-4 w-4" fill="currentColor" aria-hidden="true">
               <path
@@ -81,13 +92,88 @@ const featured = images.slice(0, 3);
         />
       </div>
     </div>
+    <div class="mx-auto -mt-4 max-w-6xl px-6 pb-20 sm:pb-24">
+      <div class="mb-4 flex items-baseline justify-between">
+        <p class="text-xs tracking-widest text-slate-500 uppercase dark:text-slate-400">
+          From <code class="font-mono text-slate-700 dark:text-slate-300">curl</code> to a running VM
+          in three commands
+        </p>
+        <a
+          href={`/images/${sampleOs}/`}
+          class="text-brand-700 hover:text-brand-500 dark:text-brand-300 hidden text-xs sm:inline"
+        >
+          Full instructions for {sample?.title ?? "this image"} →
+        </a>
+      </div>
+      <Terminal title={`~ ${sampleOs}@v${sampleVersion}`}>
+        <span class="t-line t-comment"># 1. Download the image and its cosign bundle</span>
+        <span class="t-line"
+          ><span class="t-prompt">$</span><span class="t-cmd">curl</span>
+          <span class="t-flag">-fLO</span>
+          <span class="t-str"
+            >https://images.openimages.cloud/{sampleOs}/{sampleVersion}/{sampleFile}</span
+          ></span
+        >
+        <span class="t-line"
+          ><span class="t-prompt">$</span><span class="t-cmd">curl</span>
+          <span class="t-flag">-fLO</span>
+          <span class="t-str"
+            >https://images.openimages.cloud/{sampleOs}/{sampleVersion}/{sampleFile}.bundle</span
+          ></span
+        >
+        <span class="t-line">&nbsp;</span>
+        <span class="t-line t-comment"># 2. Verify the signature (keyless, GitHub OIDC)</span>
+        <span class="t-line"
+          ><span class="t-prompt">$</span><span class="t-cmd">cosign</span> verify-blob
+          <span class="t-str">{sampleFile}</span> \</span
+        >
+        <span class="t-cont"
+          ><span class="t-flag">--bundle</span>
+          <span class="t-str">{sampleFile}.bundle</span> --new-bundle-format \</span
+        >
+        <span class="t-cont"
+          ><span class="t-flag">--certificate-identity-regexp</span>
+          <span class="t-str">'https://github.com/{sampleRepo}/'</span> \</span
+        >
+        <span class="t-cont"
+          ><span class="t-flag">--certificate-oidc-issuer</span>
+          <span class="t-str">https://token.actions.githubusercontent.com</span></span
+        >
+        <span class="t-line t-ok">Verified OK</span>
+        <span class="t-line">&nbsp;</span>
+        <span class="t-line t-comment"># 3. Upload to OpenStack Glance and you're done</span>
+        <span class="t-line"
+          ><span class="t-prompt">$</span><span class="t-cmd">openstack</span> image create
+          <span class="t-flag">--disk-format</span> qcow2 <span class="t-flag"
+            >--container-format</span
+          >
+          bare \</span
+        >
+        <span class="t-cont"
+          ><span class="t-flag">--file</span>
+          <span class="t-str">{sampleFile}</span> --public
+          <span class="t-str">{sampleOs}-{sampleVersion}</span></span
+        >
+        <span class="t-line t-out">+------------------+--------------------------------------+</span
+        >
+        <span class="t-line t-out"
+          >| status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+          active&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          |</span
+        >
+        <span class="t-line t-out">+------------------+--------------------------------------+</span
+        >
+      </Terminal>
+    </div>
   </section>
 
-  <section class="bg-navy-900/30 border-t border-slate-800/60">
+  <section
+    class="dark:bg-navy-900/30 border-t border-slate-200 bg-slate-50/70 dark:border-slate-800/60"
+  >
     <div class="mx-auto grid max-w-6xl gap-8 px-6 py-20 sm:grid-cols-3">
       <div>
         <div
-          class="bg-brand-500/15 text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md"
+          class="bg-brand-500/15 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md"
         >
           <svg
             viewBox="0 0 24 24"
@@ -103,8 +189,10 @@ const featured = images.slice(0, 3);
             <path d="M12 7v5l3 2"></path>
           </svg>
         </div>
-        <h3 class="mt-4 text-base font-semibold text-slate-100">Reproducible</h3>
-        <p class="mt-2 text-sm text-slate-400">
+        <h3 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">
+          Reproducible
+        </h3>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
           Every release is built from a pinned upstream source and a tagged builder container. The
           exact commit, run URL and builder digest are embedded in the per-image
           <code class="font-mono text-xs">MANIFEST.json</code>.
@@ -112,7 +200,7 @@ const featured = images.slice(0, 3);
       </div>
       <div>
         <div
-          class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-300"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
         >
           <svg
             viewBox="0 0 24 24"
@@ -128,15 +216,15 @@ const featured = images.slice(0, 3);
             <path d="M9 12l2 2 4-4"></path>
           </svg>
         </div>
-        <h3 class="mt-4 text-base font-semibold text-slate-100">Signed</h3>
-        <p class="mt-2 text-sm text-slate-400">
+        <h3 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">Signed</h3>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
           Keyless <code class="font-mono text-xs">cosign</code> signatures via GitHub OIDC. Verify any
           image with a single command — no key management on your side.
         </p>
       </div>
       <div>
         <div
-          class="bg-brand-700/25 text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md"
+          class="bg-brand-700/25 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md"
         >
           <svg
             viewBox="0 0 24 24"
@@ -151,13 +239,15 @@ const featured = images.slice(0, 3);
             <path d="M17.5 19a4.5 4.5 0 0 0 0-9 7 7 0 0 0-13.5 2.5A4.5 4.5 0 0 0 6 19"></path>
           </svg>
         </div>
-        <h3 class="mt-4 text-base font-semibold text-slate-100">Open infrastructure</h3>
-        <p class="mt-2 text-sm text-slate-400">
+        <h3 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">
+          Open infrastructure
+        </h3>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
           Source of truth on a self-hosted Garage cluster, mirrored to Cloudflare R2 behind a public
           CDN. Reusable workflows in
           <a
             href="https://github.com/open-img-cloud/.github"
-            class="text-brand-300 underline-offset-2 hover:underline">.github</a
+            class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline">.github</a
           >
           power every image repo.
         </p>
@@ -165,11 +255,15 @@ const featured = images.slice(0, 3);
     </div>
   </section>
 
-  <section class="border-t border-slate-800/60">
+  <section class="border-t border-slate-200 dark:border-slate-800/60">
     <div class="mx-auto max-w-6xl px-6 py-20">
       <div class="flex items-baseline justify-between">
-        <h2 class="text-2xl font-semibold tracking-tight text-slate-50">Featured images</h2>
-        <a href="/images/" class="text-brand-300 hover:text-brand-500 text-sm">All images →</a>
+        <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+          Featured images
+        </h2>
+        <a href="/images/" class="text-brand-700 hover:text-brand-500 dark:text-brand-300 text-sm"
+          >All images →</a
+        >
       </div>
       <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {featured.map((image) => <ImageCard image={image} />)}

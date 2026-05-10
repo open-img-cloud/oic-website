@@ -1,6 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import logoIcon from "~/assets/open-images-icon.png";
+import ThemeToggle from "~/components/ThemeToggle.astro";
 
 const links = [
   { href: "/images/", label: "Images" },
@@ -9,11 +10,13 @@ const links = [
 const currentPath = Astro.url.pathname;
 ---
 
-<header class="bg-navy-950/80 sticky top-0 z-20 border-b border-slate-800/60 backdrop-blur">
+<header
+  class="dark:bg-navy-950/80 sticky top-0 z-20 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/60"
+>
   <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
     <a
       href="/"
-      class="group flex items-center gap-2.5 font-semibold tracking-tight transition-opacity hover:opacity-90"
+      class="group flex items-center gap-2.5 font-semibold tracking-tight text-slate-900 transition-opacity hover:opacity-90 dark:text-slate-100"
     >
       <Image
         src={logoIcon}
@@ -25,7 +28,7 @@ const currentPath = Astro.url.pathname;
       />
       <span>Open Image Cloud</span>
     </a>
-    <nav class="flex items-center gap-6 text-sm">
+    <nav class="flex items-center gap-5 text-sm">
       {
         links.map((link) => {
           const isActive = !link.external && currentPath.startsWith(link.href);
@@ -34,7 +37,9 @@ const currentPath = Astro.url.pathname;
               href={link.href}
               class:list={[
                 "transition-colors",
-                isActive ? "text-slate-50" : "text-slate-400 hover:text-slate-100",
+                isActive
+                  ? "text-slate-900 dark:text-slate-50"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
               ]}
               {...(link.external ? { rel: "noopener", target: "_blank" } : {})}
             >
@@ -43,6 +48,7 @@ const currentPath = Astro.url.pathname;
           );
         })
       }
+      <ThemeToggle />
     </nav>
   </div>
 </header>
