@@ -19,6 +19,7 @@ export interface ImageEntry {
   arch: string;
   tags: string[];
   variants?: Variant[];
+  logo?: string;
 }
 
 export interface Manifest {
