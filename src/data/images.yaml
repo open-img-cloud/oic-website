@@ -116,6 +116,22 @@ images:
     tags: [openstack, proxmox, cloud-init, signed]
     logo: oracle.svg
 
+  - os_name: nixos
+    title: NixOS
+    tagline: Reproducible, declarative Linux distribution built from a Nix flake.
+    description: |
+      Cloud-init-ready, signed NixOS qcow2 image built from a pinned
+      Nix flake. Reproducible by construction — same flake input
+      always yields the same image. Drop-in for declarative-infra
+      shops on OpenStack and Proxmox.
+    repo: open-img-cloud/nixos
+    upstream_homepage: https://nixos.org/
+    latest_version: "25.11"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    logo: nixos.svg
+
   - os_name: octavia-amphora
     title: Octavia Amphora
     tagline: OpenStack load balancer amphora image, built via diskimage-builder.
@@ -126,7 +142,10 @@ images:
       deployment on OpenStack.
     repo: open-img-cloud/octavia-amphora
     upstream_homepage: https://docs.openstack.org/octavia/latest/
-    latest_version: "2025.2"
+    latest_version: "2026.1"
+    previous_versions:
+      - "2025.2"
+      - "2025.1"
     format: qcow2
     arch: x86_64
     tags: [openstack, octavia, dib, signed]

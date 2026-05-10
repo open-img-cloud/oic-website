@@ -208,6 +208,72 @@ const tagChipClass =
       )
     }
 
+    {
+      image.previousReleases.length > 0 && (
+        <section class="mt-10">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Previous releases
+          </h2>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Older versions remain available at their pinned, immutable paths — useful when your
+            stack targets a specific OpenStack/cloud release.
+          </p>
+          <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs tracking-wider text-slate-500 uppercase dark:bg-slate-900/60 dark:text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Version</th>
+                  <th class="px-4 py-3">File</th>
+                  <th class="px-4 py-3">SHA-256</th>
+                  <th class="px-4 py-3">Signed</th>
+                  <th class="px-4 py-3">Manifest</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60">
+                {image.previousReleases.map((rel) => (
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30">
+                    <td class="px-4 py-3 font-mono text-slate-700 dark:text-slate-200">
+                      {rel.version}
+                    </td>
+                    <td class="px-4 py-3">
+                      {rel.fileUrl ? (
+                        <a
+                          href={rel.fileUrl}
+                          class="text-brand-700 dark:text-brand-300 font-mono hover:underline"
+                        >
+                          {rel.filename}
+                        </a>
+                      ) : (
+                        <span class="text-slate-400 dark:text-slate-500">unavailable</span>
+                      )}
+                    </td>
+                    <td class="px-4 py-3 font-mono text-xs break-all text-slate-500 dark:text-slate-400">
+                      {rel.sha256 ?? "—"}
+                    </td>
+                    <td class="px-4 py-3">
+                      {rel.signed ? (
+                        <span class="text-emerald-600 dark:text-emerald-400">yes</span>
+                      ) : (
+                        <span class="text-slate-400 dark:text-slate-500">no</span>
+                      )}
+                    </td>
+                    <td class="px-4 py-3">
+                      <a
+                        href={rel.manifestUrl}
+                        class="text-brand-700 dark:text-brand-300 hover:underline"
+                      >
+                        MANIFEST
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )
+    }
+
     <section class="mt-10">
       <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Use it</h2>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Upload to OpenStack Glance:</p>
