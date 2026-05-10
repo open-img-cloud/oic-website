@@ -60,7 +60,8 @@ const FETCH_TIMEOUT_MS = 8000;
 
 export function loadImages(): ImageEntry[] {
   const doc = parseYaml(imagesYamlRaw) as { images: ImageEntry[] };
-  return doc.images ?? [];
+  const images = doc.images ?? [];
+  return [...images].sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }));
 }
 
 function manifestUrl(osName: string, version: string, variant?: Variant | null): string {
