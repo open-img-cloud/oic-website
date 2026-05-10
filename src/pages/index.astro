@@ -1,10 +1,8 @@
 ---
-import { Image } from "astro:assets";
 import Base from "~/layouts/Base.astro";
 import { loadEnrichedImages } from "~/lib/images";
 import ImageCard from "~/components/ImageCard.astro";
 import Terminal from "~/components/Terminal.astro";
-import logoIcon from "~/assets/open-images-icon.png";
 
 const images = await loadEnrichedImages();
 const featured = images.slice(0, 3);
@@ -23,18 +21,18 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
   <section class="relative overflow-hidden">
     <div
       aria-hidden="true"
-      class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,color-mix(in_oklch,var(--color-brand-500)_18%,transparent)_0%,transparent_70%)]"
+      class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_45%_at_50%_0%,color-mix(in_oklch,var(--color-brand-500)_15%,transparent)_0%,transparent_70%)]"
     >
     </div>
     <div
-      class="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-28 lg:grid-cols-[1.2fr_1fr] lg:items-center"
+      class="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-24 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-16"
     >
       <div>
         <p class="text-brand-700 dark:text-brand-300 font-mono text-xs tracking-widest uppercase">
           open source · signed · reproducible
         </p>
         <h1
-          class="mt-4 text-4xl leading-tight font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-slate-50"
+          class="mt-4 text-4xl leading-[1.05] font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-slate-50"
         >
           Cloud images
           <span
@@ -42,13 +40,13 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
             >you can actually trust.</span
           >
         </h1>
-        <p class="mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300/90">
+        <p class="mt-5 max-w-xl text-lg text-slate-600 dark:text-slate-300/90">
           Cloud-init-ready, <strong class="font-semibold text-slate-900 dark:text-slate-100"
             >signed</strong
           >, reproducible qcow2 images for OpenStack and Proxmox — built in the open on GitHub
           Actions, with keyless cosign signatures and a public manifest for every release.
         </p>
-        <div class="mt-8 flex flex-wrap gap-3">
+        <div class="mt-7 flex flex-wrap gap-3">
           <a
             href="/images/"
             class="bg-brand-500 hover:bg-brand-600 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium text-white shadow-[0_8px_24px_-12px_rgba(91,141,239,0.6)] transition-colors"
@@ -75,95 +73,58 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
             View on GitHub
           </a>
         </div>
+        <p class="mt-6 text-xs tracking-wide text-slate-500 dark:text-slate-400">
+          Two commands away. Try it on{" "}
+          <a
+            href={`/images/${sampleOs}/`}
+            class="text-brand-700 dark:text-brand-300 hover:underline"
+            >{sample?.title ?? "Alpine Linux"}</a
+          >.
+        </p>
       </div>
-      <div class="relative flex items-center justify-center lg:justify-end">
+      <div class="relative">
         <div
           aria-hidden="true"
-          class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,color-mix(in_oklch,var(--color-brand-500)_22%,transparent)_0%,transparent_60%)] blur-2xl"
+          class="absolute -inset-6 -z-10 bg-[radial-gradient(circle_at_70%_30%,color-mix(in_oklch,var(--color-brand-500)_18%,transparent)_0%,transparent_60%)] blur-2xl"
         >
         </div>
-        <Image
-          src={logoIcon}
-          alt="Open Image Cloud logo"
-          width={420}
-          height={420}
-          loading="eager"
-          class="w-64 max-w-full sm:w-80 lg:w-[26rem]"
-        />
-      </div>
-    </div>
-    <div class="mx-auto -mt-4 max-w-6xl px-6 pb-20 sm:pb-24">
-      <div class="mb-4 flex items-baseline justify-between">
-        <p class="text-xs tracking-widest text-slate-500 uppercase dark:text-slate-400">
-          From <code class="font-mono text-slate-700 dark:text-slate-300">curl</code> to a running VM
-          in three commands
-        </p>
-        <a
-          href={`/images/${sampleOs}/`}
-          class="text-brand-700 hover:text-brand-500 dark:text-brand-300 hidden text-xs sm:inline"
-        >
-          Full instructions for {sample?.title ?? "this image"} →
-        </a>
-      </div>
-      <Terminal title={`~ ${sampleOs}@v${sampleVersion}`}>
-        <span class="t-line t-comment"># 1. Download the image and its cosign bundle</span>
-        <span class="t-line"
-          ><span class="t-prompt">$</span><span class="t-cmd">curl</span>
-          <span class="t-flag">-fLO</span>
-          <span class="t-str"
-            >https://images.openimages.cloud/{sampleOs}/{sampleVersion}/{sampleFile}</span
-          ></span
-        >
-        <span class="t-line"
-          ><span class="t-prompt">$</span><span class="t-cmd">curl</span>
-          <span class="t-flag">-fLO</span>
-          <span class="t-str"
-            >https://images.openimages.cloud/{sampleOs}/{sampleVersion}/{sampleFile}.bundle</span
-          ></span
-        >
-        <span class="t-line">&nbsp;</span>
-        <span class="t-line t-comment"># 2. Verify the signature (keyless, GitHub OIDC)</span>
-        <span class="t-line"
-          ><span class="t-prompt">$</span><span class="t-cmd">cosign</span> verify-blob
-          <span class="t-str">{sampleFile}</span> \</span
-        >
-        <span class="t-cont"
-          ><span class="t-flag">--bundle</span>
-          <span class="t-str">{sampleFile}.bundle</span> --new-bundle-format \</span
-        >
-        <span class="t-cont"
-          ><span class="t-flag">--certificate-identity-regexp</span>
-          <span class="t-str">'https://github.com/{sampleRepo}/'</span> \</span
-        >
-        <span class="t-cont"
-          ><span class="t-flag">--certificate-oidc-issuer</span>
-          <span class="t-str">https://token.actions.githubusercontent.com</span></span
-        >
-        <span class="t-line t-ok">Verified OK</span>
-        <span class="t-line">&nbsp;</span>
-        <span class="t-line t-comment"># 3. Upload to OpenStack Glance and you're done</span>
-        <span class="t-line"
-          ><span class="t-prompt">$</span><span class="t-cmd">openstack</span> image create
-          <span class="t-flag">--disk-format</span> qcow2 <span class="t-flag"
-            >--container-format</span
+        <Terminal title={`${sampleOs} @ v${sampleVersion}`}>
+          <span class="t-line t-comment"># Verify the signature (keyless, GitHub OIDC)</span>
+          <span class="t-line"
+            ><span class="t-prompt">$</span><span class="t-cmd">cosign</span> verify-blob
+            <span class="t-str">{sampleFile}</span> \</span
           >
-          bare \</span
-        >
-        <span class="t-cont"
-          ><span class="t-flag">--file</span>
-          <span class="t-str">{sampleFile}</span> --public
-          <span class="t-str">{sampleOs}-{sampleVersion}</span></span
-        >
-        <span class="t-line t-out">+------------------+--------------------------------------+</span
-        >
-        <span class="t-line t-out"
-          >| status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
-          active&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          |</span
-        >
-        <span class="t-line t-out">+------------------+--------------------------------------+</span
-        >
-      </Terminal>
+          <span class="t-cont"
+            ><span class="t-flag">--bundle</span>
+            <span class="t-str">{sampleFile}.bundle</span> --new-bundle-format \</span
+          >
+          <span class="t-cont"><span class="t-flag">--certificate-identity-regexp</span> \</span>
+          <span class="t-cont"><span class="t-str">'https://github.com/{sampleRepo}/'</span> \</span
+          >
+          <span class="t-cont"><span class="t-flag">--certificate-oidc-issuer</span> \</span>
+          <span class="t-cont"
+            ><span class="t-str">https://token.actions.githubusercontent.com</span></span
+          >
+          <span class="t-line t-ok">Verified OK</span>
+          <span class="t-line">&nbsp;</span>
+          <span class="t-line t-comment"># Upload to OpenStack — done.</span>
+          <span class="t-line"
+            ><span class="t-prompt">$</span><span class="t-cmd">openstack</span> image create \</span
+          >
+          <span class="t-cont"
+            ><span class="t-flag">--disk-format</span> qcow2
+            <span class="t-flag">--container-format</span> bare \</span
+          >
+          <span class="t-cont"
+            ><span class="t-flag">--file</span> <span class="t-str">{sampleFile}</span> \</span
+          >
+          <span class="t-cont"><span class="t-str">{sampleOs}-{sampleVersion}</span></span>
+          <span class="t-line t-out"
+            >Created image <span class="t-ok">{sampleOs}-{sampleVersion}</span> · status:
+            <span class="t-ok">active</span></span
+          >
+        </Terminal>
+      </div>
     </div>
   </section>
 

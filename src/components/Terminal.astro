@@ -21,7 +21,7 @@ const { title = "bash", class: className, ...rest } = Astro.props;
     <span class="ml-3 font-mono text-[11px] tracking-wide text-slate-400">{title}</span>
   </div>
   <div
-    class="terminal-body overflow-x-auto px-5 py-4 font-mono text-[13px] leading-relaxed whitespace-pre"
+    class="terminal-body overflow-x-auto px-4 py-3.5 font-mono text-[12.5px] leading-[1.7] whitespace-pre sm:px-5 sm:py-4 sm:text-[13px]"
   >
     <slot />
   </div>
@@ -62,7 +62,7 @@ const { title = "bash", class: className, ...rest } = Astro.props;
   }
   :global(.t-cont) {
     /* Continuation indent for wrapped flag lines. */
-    padding-left: 4ch;
+    padding-left: 2ch;
     display: block;
   }
 </style>
