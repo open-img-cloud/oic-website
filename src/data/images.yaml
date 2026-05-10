@@ -82,16 +82,17 @@ images:
         label: musl
         filename_template: "alpaquita-{version}-musl-x86_64.qcow2"
 
-  # Octavia Amphora image (placeholder — fill `latest_version` once the first release tag is cut).
-  # - os_name: octavia-amphora
-  #   title: Octavia Amphora
-  #   tagline: OpenStack Octavia load balancer amphora image, built via diskimage-builder.
-  #   description: |
-  #     Cloud-init-ready Octavia amphora qcow2, built from upstream
-  #     `openstack/octavia` element packs via `diskimage-builder`.
-  #   repo: open-img-cloud/octavia-amphora
-  #   upstream_homepage: https://docs.openstack.org/octavia/latest/
-  #   latest_version: ""
-  #   format: qcow2
-  #   arch: x86_64
-  #   tags: [openstack, octavia, dib]
+  - os_name: octavia-amphora
+    title: Octavia Amphora
+    tagline: OpenStack load balancer amphora image, built via diskimage-builder.
+    description: |
+      Cloud-init-ready, signed Octavia Amphora qcow2 with HAProxy
+      pre-installed, built from upstream `openstack/octavia` element
+      packs via `diskimage-builder`. Drop-in for a reference Octavia
+      deployment on OpenStack.
+    repo: open-img-cloud/octavia-amphora
+    upstream_homepage: https://docs.openstack.org/octavia/latest/
+    latest_version: "2025.2"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, octavia, dib, signed]
