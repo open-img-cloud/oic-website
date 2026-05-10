@@ -10,6 +10,27 @@
 #   <os_name>/<version>/MANIFEST-<variant>.json  (with variant)
 
 images:
+  - os_name: alpine-linux
+    title: Alpine Linux
+    tagline: Minimal, security-oriented distro built around musl libc and BusyBox.
+    description: |
+      Cloud-init-ready, signed Alpine Linux images derived from the upstream
+      `nocloud_alpine` cloud release. Two firmware variants (legacy BIOS and
+      UEFI) cover both classic OpenStack and modern Proxmox deployments.
+    repo: open-img-cloud/alpine-linux
+    upstream_homepage: https://www.alpinelinux.org/
+    latest_version: "3.23.4"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    variants:
+      - id: bios
+        label: BIOS
+        filename_template: "alpine-{version}-bios-x86_64.qcow2"
+      - id: uefi
+        label: UEFI
+        filename_template: "alpine-{version}-uefi-x86_64.qcow2"
+
   - os_name: alpaquita-linux
     title: Alpaquita Linux
     tagline: Lightweight Alpine-derived distribution from BellSoft, glibc and musl flavors.
