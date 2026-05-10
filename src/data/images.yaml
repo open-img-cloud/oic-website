@@ -31,6 +31,36 @@ images:
         label: UEFI
         filename_template: "alpine-{version}-uefi-x86_64.qcow2"
 
+  - os_name: amazon-linux-2
+    title: Amazon Linux 2
+    tagline: AWS's long-term-support base image, derived from the RHEL/CentOS 7 family.
+    description: |
+      Cloud-init-ready, signed Amazon Linux 2 qcow2 image based on AWS's
+      official KVM cloud release. Long-term support window through 2026,
+      ideal for keeping legacy AWS-style workloads running on OpenStack
+      and Proxmox.
+    repo: open-img-cloud/amazon-linux-2
+    upstream_homepage: https://aws.amazon.com/amazon-linux-2/
+    latest_version: "2.0.20260508.0"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+
+  - os_name: amazon-linux-2023
+    title: Amazon Linux 2023
+    tagline: Fedora-derived AL2023 image — modern dnf-based AWS workhorse.
+    description: |
+      Cloud-init-ready, signed Amazon Linux 2023 qcow2 image based on
+      AWS's official KVM cloud release with kernel 6.1. Faster-moving
+      successor to Amazon Linux 2, drop-in for AL2023-targeted workloads
+      on OpenStack and Proxmox.
+    repo: open-img-cloud/amazon-linux-2023
+    upstream_homepage: https://aws.amazon.com/linux/amazon-linux-2023/
+    latest_version: "2023.11.20260509.0"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+
   - os_name: alpaquita-linux
     title: Alpaquita Linux
     tagline: Lightweight Alpine-derived distribution from BellSoft, glibc and musl flavors.
