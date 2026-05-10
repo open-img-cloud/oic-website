@@ -82,6 +82,34 @@ images:
         label: musl
         filename_template: "alpaquita-{version}-musl-x86_64.qcow2"
 
+  - os_name: oracle-linux-9
+    title: Oracle Linux 9
+    tagline: Enterprise RHEL-compatible distribution from Oracle, RHEL 9 family.
+    description: |
+      Cloud-init-ready, signed Oracle Linux 9 qcow2 image based on
+      Oracle's official KVM cloud release. Drop-in replacement for
+      RHEL 9 / Rocky 9 / AlmaLinux 9 workloads on OpenStack and Proxmox.
+    repo: open-img-cloud/oracle-linux-9
+    upstream_homepage: https://www.oracle.com/linux/
+    latest_version: "9.7-b269"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+
+  - os_name: oracle-linux-10
+    title: Oracle Linux 10
+    tagline: Latest Oracle Linux release, RHEL 10 family with UEK 8.
+    description: |
+      Cloud-init-ready, signed Oracle Linux 10 qcow2 image based on
+      Oracle's official KVM cloud release. RHEL 10-compatible base
+      with the Unbreakable Enterprise Kernel for OpenStack and Proxmox.
+    repo: open-img-cloud/oracle-linux-10
+    upstream_homepage: https://www.oracle.com/linux/
+    latest_version: "10.1-b270"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+
   - os_name: octavia-amphora
     title: Octavia Amphora
     tagline: OpenStack load balancer amphora image, built via diskimage-builder.
