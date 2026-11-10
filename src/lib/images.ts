@@ -207,7 +207,7 @@ export function loadEnrichedImages(): Promise<EnrichedImage[]> {
 }
 
 export function formatBytes(bytes: number | null): string {
-  if (bytes == null) return "—";
+  if (bytes == null) return "n/a";
   const units = ["B", "KB", "MB", "GB"];
   let n = bytes;
   let i = 0;
@@ -219,13 +219,13 @@ export function formatBytes(bytes: number | null): string {
 }
 
 export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "n/a";
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
-    ? "—"
+    ? "n/a"
     : d.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
 }
 
 export function shortSha(sha: string | null | undefined, n = 7): string {
-  return sha ? sha.replace(/^sha256:/, "").slice(0, n) : "—";
+  return sha ? sha.replace(/^sha256:/, "").slice(0, n) : "n/a";
 }
