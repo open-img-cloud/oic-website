@@ -63,7 +63,7 @@ images:
 
   - os_name: amazon-linux-2023
     title: Amazon Linux 2023
-    tagline: Fedora-derived AL2023 image — modern dnf-based AWS workhorse.
+    tagline: Fedora-derived AL2023 image, modern dnf-based AWS workhorse.
     description: |
       Cloud-init-ready, signed Amazon Linux 2023 qcow2 image based on
       AWS's official KVM cloud release with kernel 6.1. Faster-moving
@@ -142,7 +142,7 @@ images:
     tagline: Reproducible, declarative Linux distribution built from a Nix flake.
     description: |
       Cloud-init-ready, signed NixOS qcow2 image built from a pinned
-      Nix flake. Reproducible by construction — same flake input
+      Nix flake. Reproducible by construction: same flake input
       always yields the same image. Drop-in for declarative-infra
       shops on OpenStack and Proxmox.
     repo: open-img-cloud/nixos

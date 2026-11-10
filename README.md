@@ -1,6 +1,6 @@
 # oic-website
 
-Public website for the [Open Image Cloud](https://github.com/open-img-cloud) project — landing page and image catalog, served at <https://openimages.cloud>.
+Public website for the [Open Image Cloud](https://github.com/open-img-cloud) project: landing page and image catalog, served at <https://openimages.cloud>.
 
 ## What
 
@@ -15,7 +15,7 @@ Prerequisites:
 
 - Node (pinned in `.nvmrc`), managed via [`fnm`](https://github.com/Schniz/fnm).
 - [`pnpm`](https://pnpm.io) (via Corepack: `corepack enable && corepack prepare pnpm@latest --activate`).
-- [`direnv`](https://direnv.net) recommended — `.envrc` activates the right Node version automatically.
+- [`direnv`](https://direnv.net) recommended: `.envrc` activates the right Node version automatically.
 
 ```bash
 direnv allow         # first time only
