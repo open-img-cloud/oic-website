@@ -1,14 +1,21 @@
 ---
 import Base from "~/layouts/Base.astro";
 import CodeBlock from "~/components/CodeBlock.astro";
-import { loadEnrichedImages, type EnrichedImage } from "~/lib/images";
+import StatusBadge from "~/components/StatusBadge.astro";
+import {
+  CERT_IDENTITY_REGEXP,
+  CERT_OIDC_ISSUER,
+  formatBytes,
+  formatDate,
+  loadEnrichedImages,
+  shortSha,
+  type Artifact,
+  type EnrichedImage,
+} from "~/lib/images";
 
 export async function getStaticPaths() {
   const images = await loadEnrichedImages();
-  return images.map((image) => ({
-    params: { os: image.os_name },
-    props: { image },
-  }));
+  return images.map((image) => ({ params: { os: image.os_name }, props: { image } }));
 }
 
 interface Props {
@@ -17,263 +24,367 @@ interface Props {
 
 const { image } = Astro.props;
 const repoUrl = `https://github.com/${image.repo}`;
-
-type Row = {
-  variantLabel: string | null;
-  filename: string | null;
-  fileUrl: string | null;
-  manifestUrl: string;
-  sha256: string | null;
-  signed: boolean;
-};
-
-const rows: Row[] =
-  image.enrichedVariants.length > 0
-    ? image.enrichedVariants.map((v) => ({
-        variantLabel: v.variant.label,
-        filename: v.filename,
-        fileUrl: v.fileUrl,
-        manifestUrl: v.manifestUrl,
-        sha256: v.manifest?.sha256 ?? null,
-        signed: v.manifest?.signed ?? false,
-      }))
-    : [
-        {
-          variantLabel: null,
-          filename: image.filename,
-          fileUrl: image.fileUrl,
-          manifestUrl: `https://images.openimages.cloud/${image.os_name}/${image.latest_version}/MANIFEST.json`,
-          sha256: image.enrichedManifest?.sha256 ?? null,
-          signed: image.enrichedManifest?.signed ?? false,
-        },
-      ];
-
-const firstFileUrl = rows.find((r) => r.fileUrl)?.fileUrl ?? null;
-const firstFilename = rows.find((r) => r.filename)?.filename ?? null;
 const logoUrl = image.logo ? `/img/logos/${image.logo}` : null;
+const artifacts = image.latest.artifacts;
+const primary: Artifact | undefined = artifacts.find((a) => a.fileUrl) ?? artifacts[0];
+const p = image.provenance;
+const loginUser = image.login_user;
+const isUefi = (a?: Artifact) => !!a?.filename?.includes("uefi");
+const glanceName = `${image.os_name}-${image.latest_version}${primary?.label ? `-${primary.label.toLowerCase()}` : ""}`;
 
-const chipClass =
-  "rounded-md border border-slate-200 bg-slate-100 px-2 py-1 font-mono text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300";
-const tagChipClass =
-  "rounded-md border border-slate-200 bg-white px-2 py-1 text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400";
+// Quick-start snippets, built from the primary (first published) artifact.
+const file = primary?.filename ?? `${image.os_name}.qcow2`;
+const fileUrl = primary?.fileUrl ?? `https://images.openimages.cloud/${image.os_name}/latest/`;
+const uefiProps = isUefi(primary)
+  ? "\n  --property hw_firmware_type=uefi \\\n  --property hw_machine_type=q35 \\"
+  : "";
+
+const openstack = `curl -fLO ${fileUrl}
+
+openstack image create \\
+  --disk-format qcow2 --container-format bare \\
+  --file ${file} \\${uefiProps}
+  --property hw_qemu_guest_agent=yes \\
+  ${glanceName}`;
+
+const proxmoxUefi = isUefi(primary)
+  ? " \\\n  --bios ovmf --machine q35 --efidisk0 local-lvm:0,efitype=4m"
+  : "";
+const proxmox = `wget ${fileUrl}
+
+qm create 9000 --name ${image.os_name} --memory 2048 --cores 2 \\
+  --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-pci \\
+  --serial0 socket --vga serial0 --agent enabled=1${proxmoxUefi}
+qm set 9000 --scsi0 local-lvm:0,import-from=$PWD/${file}
+qm set 9000 --ide2 local-lvm:cloudinit --boot order=scsi0${
+  loginUser ? ` \\\n  --ciuser ${loginUser}` : ""
+} --sshkeys ~/.ssh/id_ed25519.pub --ipconfig0 ip=dhcp
+qm template 9000`;
+
+const verify = `curl -fLO ${fileUrl}
+curl -fLO ${fileUrl}.bundle
+
+cosign verify-blob ${file} \\
+  --bundle ${file}.bundle --new-bundle-format \\
+  --certificate-identity-regexp '${CERT_IDENTITY_REGEXP}' \\
+  --certificate-oidc-issuer ${CERT_OIDC_ISSUER}`;
+
+// Inline `code` spans in the YAML description.
+const descriptionParts = image.description.trim().split(/(`[^`]+`)/g);
+
+const provenance = [
+  { label: "Version", value: image.latest_version, mono: true },
+  { label: "Built", value: formatDate(image.builtAt) },
+  p?.commit && {
+    label: "Source commit",
+    value: shortSha(p.commit),
+    href: `${repoUrl}/commit/${p.commit}`,
+    mono: true,
+  },
+  p?.build_url && {
+    label: "CI run",
+    value: `#${p.build_url.split("/").pop()}`,
+    href: p.build_url,
+    mono: true,
+  },
+  p?.builder_tool && { label: "Builder", value: p.builder_tool },
+  p?.builder?.digest && {
+    label: "Builder image",
+    value: `${p.builder.image?.replace("ghcr.io/", "") ?? "image"}@${shortSha(p.builder.digest, 12)}`,
+    mono: true,
+  },
+  p?.upstream_url && {
+    label: "Upstream artefact",
+    value: new URL(p.upstream_url).hostname,
+    href: p.upstream_url,
+  },
+  { label: "Signature", value: image.signed ? "cosign keyless" : "unsigned" },
+].filter(Boolean) as { label: string; value: string; href?: string; mono?: boolean }[];
 ---
 
-<Base title={image.title} description={image.tagline}>
-  <article class="mx-auto max-w-4xl px-6 py-16">
-    <nav class="text-sm text-slate-500 dark:text-slate-500">
-      <a href="/images/" class="hover:text-slate-900 dark:hover:text-slate-300">
+<Base title={image.title} description={`${image.title}: ${image.tagline}`}>
+  <article class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <nav aria-label="Breadcrumb" class="text-ink-faint text-sm">
+      <a href="/images/" class="hover:text-ink">
         Catalog
       </a>
-      <span class="mx-2">/</span>
-      <span class="text-slate-700 dark:text-slate-300">{image.title}</span>
+      <span class="mx-2" aria-hidden="true">
+        /
+      </span>
+      <span class="text-ink-muted" aria-current="page">
+        {image.title}
+      </span>
     </nav>
 
-    <header class="mt-6 flex items-start gap-4">
+    <header class="mt-6 flex flex-col gap-5 sm:flex-row sm:items-start">
       {logoUrl && (
-        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 ring-1 ring-slate-200/80 dark:bg-slate-800/60 dark:ring-slate-700/60">
-          <img
-            src={logoUrl}
-            alt=""
-            width="36"
-            height="36"
-            loading="eager"
-            decoding="async"
-            class="h-9 w-9"
-          />
-        </div>
+        <span class="border-line surface-raised flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border">
+          <img src={logoUrl} alt="" width="40" height="40" class="h-10 w-10" />
+        </span>
       )}
-      <div class="flex-1">
-        <h1 class="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-          {image.title}
-        </h1>
-        <p class="mt-2 text-slate-600 dark:text-slate-400">{image.tagline}</p>
-        <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
-          <span class={chipClass}>v{image.latest_version}</span>
-          <span class={chipClass}>{image.format}</span>
-          <span class={chipClass}>{image.arch}</span>
-          {image.tags.map((tag) => (
-            <span class={tagChipClass}>{tag}</span>
-          ))}
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 class="text-ink text-3xl font-semibold tracking-tight sm:text-4xl">{image.title}</h1>
+          <StatusBadge status={image.status} />
         </div>
+        <p class="text-ink-muted mt-2 text-lg">{image.tagline}</p>
+        <p class="text-ink-faint mt-3 font-mono text-xs">
+          {image.latest_version} · {image.format} · {image.arch}
+          {loginUser && <> · user {loginUser}</>}
+        </p>
       </div>
     </header>
 
-    <section class="mt-10">
-      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">About</h2>
-      <p class="mt-2 whitespace-pre-line text-slate-600 dark:text-slate-400">{image.description}</p>
-      <ul class="mt-4 space-y-1 text-sm text-slate-600 dark:text-slate-400">
-        <li>
-          Source repository:{" "}
-          <a
-            class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
-            href={repoUrl}
-          >
-            {image.repo}
-          </a>
-        </li>
-        {image.upstream_homepage && (
-          <li>
-            Upstream:{" "}
-            <a
-              class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
-              href={image.upstream_homepage}
-            >
-              {image.upstream_homepage}
-            </a>
-          </li>
-        )}
-      </ul>
-    </section>
+    {image.status_note && (
+      <p
+        class="mt-6 rounded-lg border border-[color-mix(in_oklch,var(--warn)_40%,transparent)] bg-[color-mix(in_oklch,var(--warn)_8%,transparent)] px-4 py-3 text-sm"
+        role="note"
+      >
+        <span class="text-warn font-medium">Note: </span>
+        <span class="text-ink-muted">{image.status_note}</span>
+      </p>
+    )}
 
-    <section class="mt-10">
-      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Downloads</h2>
-      <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs tracking-wider text-slate-500 uppercase dark:bg-slate-900/60 dark:text-slate-400">
-            <tr>
-              {image.enrichedVariants.length > 0 && <th class="px-4 py-3">Variant</th>}
-              <th class="px-4 py-3">File</th>
-              <th class="px-4 py-3">SHA-256</th>
-              <th class="px-4 py-3">Signed</th>
-              <th class="px-4 py-3">Manifest</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60">
-            {rows.map((row) => (
-              <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                {row.variantLabel !== null && (
-                  <td class="px-4 py-3 font-mono text-slate-700 dark:text-slate-200">
-                    {row.variantLabel}
-                  </td>
+    <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-14">
+      <div class="min-w-0">
+        <!-- Downloads -->
+        <section aria-labelledby="dl-title">
+          <h2 id="dl-title" class="text-ink text-xl font-semibold tracking-tight">
+            Download
+          </h2>
+          <ul class="mt-4 space-y-3">
+            {artifacts.map((a) => (
+              <li class="border-line rounded-xl border p-4 sm:p-5">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    {a.label && (
+                      <p class="text-ink font-semibold">
+                        {a.label}
+                        {a.hint && (
+                          <span class="text-ink-faint ml-2 text-sm font-normal">{a.hint}</span>
+                        )}
+                      </p>
+                    )}
+                    <p class="text-ink-muted mt-0.5 font-mono text-sm break-all">
+                      {a.filename ?? "not published"}
+                    </p>
+                  </div>
+                  {a.fileUrl ? (
+                    <a
+                      href={a.fileUrl}
+                      class="bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 inline-flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors dark:text-slate-950"
+                    >
+                      <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" fill="none" aria-hidden="true">
+                        <path
+                          d="M8 2v9m0 0l-3.5-3.5M8 11l3.5-3.5M2.5 13.5h11"
+                          stroke="currentColor"
+                          stroke-width="1.6"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      {formatBytes(a.sizeBytes)}
+                    </a>
+                  ) : (
+                    <span class="text-ink-faint text-sm">Unavailable</span>
+                  )}
+                </div>
+                {a.manifest?.sha256 && (
+                  <div class="border-line mt-4 flex items-center gap-2 border-t pt-3">
+                    <span class="eyebrow shrink-0">sha256</span>
+                    <code class="text-ink-muted min-w-0 flex-1 truncate font-mono text-xs">
+                      {a.manifest.sha256}
+                    </code>
+                    <button
+                      type="button"
+                      data-copy={a.manifest.sha256}
+                      class="text-ink-faint hover:text-ink shrink-0 rounded px-1.5 py-0.5 text-xs"
+                      aria-label="Copy SHA-256"
+                    >
+                      <span data-copy-label>Copy</span>
+                    </button>
+                  </div>
                 )}
-                <td class="px-4 py-3">
-                  {row.fileUrl ? (
-                    <a
-                      href={row.fileUrl}
-                      class="text-brand-700 dark:text-brand-300 font-mono hover:underline"
-                    >
-                      {row.filename}
+                {a.fileUrl && (
+                  <p class="text-ink-faint mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                    <a class="hover:text-ink" href={a.bundleUrl ?? undefined}>
+                      Signature bundle
                     </a>
-                  ) : (
-                    <span class="text-slate-400 dark:text-slate-500">unavailable</span>
-                  )}
-                </td>
-                <td class="px-4 py-3 font-mono text-xs break-all text-slate-500 dark:text-slate-400">
-                  {row.sha256 ?? "—"}
-                </td>
-                <td class="px-4 py-3">
-                  {row.signed ? (
-                    <span class="text-emerald-600 dark:text-emerald-400">yes</span>
-                  ) : (
-                    <span class="text-slate-400 dark:text-slate-500">no</span>
-                  )}
-                </td>
-                <td class="px-4 py-3">
-                  <a
-                    href={row.manifestUrl}
-                    class="text-brand-700 dark:text-brand-300 hover:underline"
-                  >
-                    MANIFEST
-                  </a>
-                </td>
-              </tr>
+                    <a class="hover:text-ink" href={a.manifestUrl}>
+                      Manifest
+                    </a>
+                    <a class="hover:text-ink" href={`${a.fileUrl}.sha256`}>
+                      .sha256
+                    </a>
+                    <a
+                      class="hover:text-ink"
+                      href={`https://images.openimages.cloud/${image.os_name}/${image.latest_version}/`}
+                    >
+                      All files
+                    </a>
+                  </p>
+                )}
+              </li>
             ))}
-          </tbody>
-        </table>
+          </ul>
+        </section>
+
+        <!-- Quick start -->
+        <section class="mt-14" aria-labelledby="qs-title">
+          <h2 id="qs-title" class="text-ink text-xl font-semibold tracking-tight">
+            Quick start
+          </h2>
+          {artifacts.length > 1 && (
+            <p class="text-ink-muted mt-2 text-sm">
+              Commands below use the {primary?.label} variant; swap the file name for another one.
+            </p>
+          )}
+          <h3 class="text-ink mt-6 text-sm font-semibold">OpenStack</h3>
+          <CodeBlock code={openstack} label="OpenStack Glance" />
+          <h3 class="text-ink mt-6 text-sm font-semibold">Proxmox VE</h3>
+          <p class="text-ink-muted mt-1 text-sm">
+            Creates a cloud-init template (VM 9000) on <code class="font-mono">local-lvm</code>.
+            Adjust the storage, bridge and SSH key path to your setup.
+          </p>
+          <CodeBlock code={proxmox} label="Proxmox VE 8" />
+          <h3 class="text-ink mt-6 text-sm font-semibold">Verify before booting</h3>
+          <CodeBlock code={verify} label="cosign 2.x / 3.x" />
+          <p class="text-ink-muted text-sm">
+            Expect <code class="text-ok font-mono">Verified OK</code>. Details in the{" "}
+            <a class="link" href="/verify/">
+              verification guide
+            </a>
+            .
+          </p>
+        </section>
+
+        <!-- About -->
+        <section class="mt-14" aria-labelledby="about-title">
+          <h2 id="about-title" class="text-ink text-xl font-semibold tracking-tight">
+            About
+          </h2>
+          <p class="text-ink-muted mt-3 leading-relaxed">
+            {descriptionParts.map((part) =>
+              part.startsWith("`") ? (
+                <code class="text-ink font-mono text-sm">{part.slice(1, -1)}</code>
+              ) : (
+                part.replace(/\s+/g, " ")
+              ),
+            )}
+          </p>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {image.tags.map((tag) => (
+              <li class="border-line text-ink-muted rounded-full border px-2.5 py-0.5 text-xs">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <!-- Previous releases -->
+        {image.previous.length > 0 && (
+          <section class="mt-14" aria-labelledby="prev-title">
+            <h2 id="prev-title" class="text-ink text-xl font-semibold tracking-tight">
+              Previous releases
+            </h2>
+            <p class="text-ink-muted mt-2 text-sm">
+              Older versions stay at their immutable paths, useful when you target a specific
+              release.
+            </p>
+            <div class="border-line mt-4 overflow-x-auto rounded-xl border">
+              <table class="w-full text-left text-sm">
+                <thead class="surface-sunken border-line border-b">
+                  <tr>
+                    <th class="eyebrow px-4 py-2.5 font-normal">Version</th>
+                    <th class="eyebrow px-4 py-2.5 font-normal">File</th>
+                    <th class="eyebrow px-4 py-2.5 text-right font-normal">Size</th>
+                    <th class="eyebrow px-4 py-2.5 font-normal">Built</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-line divide-y">
+                  {image.previous.map((rel) =>
+                    rel.artifacts.map((a) => (
+                      <tr>
+                        <td class="text-ink px-4 py-3 font-mono">{rel.version}</td>
+                        <td class="px-4 py-3">
+                          {a.fileUrl ? (
+                            <a class="link font-mono text-xs" href={a.fileUrl}>
+                              {a.filename}
+                            </a>
+                          ) : (
+                            <span class="text-ink-faint">unavailable</span>
+                          )}
+                        </td>
+                        <td class="text-ink-muted px-4 py-3 text-right font-mono">
+                          {formatBytes(a.sizeBytes)}
+                        </td>
+                        <td class="text-ink-muted px-4 py-3">{formatDate(a.manifest?.built_at)}</td>
+                      </tr>
+                    )),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </div>
-    </section>
 
-    {firstFileUrl && firstFilename && (
-      <section class="mt-10">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Verify the signature
-        </h2>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          All releases are signed keylessly via GitHub OIDC. Verify with{" "}
-          <a
-            class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
-            href="https://docs.sigstore.dev/cosign/installation/"
-          >
-            cosign
-          </a>
-          :
-        </p>
-        <CodeBlock label="bash">
-          {`curl -fLO ${firstFileUrl}\ncurl -fLO ${firstFileUrl}.bundle\n\ncosign verify-blob ${firstFilename} \\\n  --bundle ${firstFilename}.bundle \\\n  --new-bundle-format \\\n  --certificate-identity-regexp 'https://github.com/${image.repo}/' \\\n  --certificate-oidc-issuer https://token.actions.githubusercontent.com`}
-        </CodeBlock>
-      </section>
-    )}
-
-    {image.previousReleases.length > 0 && (
-      <section class="mt-10">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Previous releases</h2>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Older versions remain available at their pinned, immutable paths — useful when your stack
-          targets a specific OpenStack/cloud release.
-        </p>
-        <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-xs tracking-wider text-slate-500 uppercase dark:bg-slate-900/60 dark:text-slate-400">
-              <tr>
-                <th class="px-4 py-3">Version</th>
-                <th class="px-4 py-3">File</th>
-                <th class="px-4 py-3">SHA-256</th>
-                <th class="px-4 py-3">Signed</th>
-                <th class="px-4 py-3">Manifest</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200 dark:divide-slate-800/60">
-              {image.previousReleases.map((rel) => (
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                  <td class="px-4 py-3 font-mono text-slate-700 dark:text-slate-200">
-                    {rel.version}
-                  </td>
-                  <td class="px-4 py-3">
-                    {rel.fileUrl ? (
-                      <a
-                        href={rel.fileUrl}
-                        class="text-brand-700 dark:text-brand-300 font-mono hover:underline"
-                      >
-                        {rel.filename}
-                      </a>
-                    ) : (
-                      <span class="text-slate-400 dark:text-slate-500">unavailable</span>
-                    )}
-                  </td>
-                  <td class="px-4 py-3 font-mono text-xs break-all text-slate-500 dark:text-slate-400">
-                    {rel.sha256 ?? "—"}
-                  </td>
-                  <td class="px-4 py-3">
-                    {rel.signed ? (
-                      <span class="text-emerald-600 dark:text-emerald-400">yes</span>
-                    ) : (
-                      <span class="text-slate-400 dark:text-slate-500">no</span>
-                    )}
-                  </td>
-                  <td class="px-4 py-3">
-                    <a
-                      href={rel.manifestUrl}
-                      class="text-brand-700 dark:text-brand-300 hover:underline"
-                    >
-                      MANIFEST
+      <!-- Provenance -->
+      <aside class="lg:sticky lg:top-24 lg:self-start" aria-labelledby="prov-title">
+        <div class="border-line surface-sunken rounded-xl border p-5">
+          <h2 id="prov-title" class="eyebrow">
+            Provenance
+          </h2>
+          <dl class="mt-4 space-y-3.5 text-sm">
+            {provenance.map((row) => (
+              <div class="flex items-baseline justify-between gap-4">
+                <dt class="text-ink-faint shrink-0">{row.label}</dt>
+                <dd
+                  class:list={[
+                    "text-ink min-w-0 truncate text-right",
+                    row.mono && "font-mono text-xs",
+                  ]}
+                >
+                  {row.href ? (
+                    <a class="link" href={row.href}>
+                      {row.value}
                     </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  ) : (
+                    row.value
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div class="border-line mt-5 space-y-2 border-t pt-4 text-sm">
+            <a
+              class="text-ink-muted hover:text-ink flex items-center justify-between"
+              href={repoUrl}
+            >
+              <span>Source repository</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+            {image.upstream_homepage && (
+              <a
+                class="text-ink-muted hover:text-ink flex items-center justify-between"
+                href={image.upstream_homepage}
+              >
+                <span>Upstream project</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+            {primary?.manifestUrl && (
+              <a
+                class="text-ink-muted hover:text-ink flex items-center justify-between"
+                href={primary.manifestUrl}
+              >
+                <span>Raw manifest</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
         </div>
-      </section>
-    )}
-
-    <section class="mt-10">
-      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Use it</h2>
-      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Upload to OpenStack Glance:</p>
-      {firstFileUrl && firstFilename && (
-        <CodeBlock label="bash">
-          {`openstack image create \\\n  --disk-format qcow2 \\\n  --container-format bare \\\n  --file ${firstFilename} \\\n  --public \\\n  ${image.os_name}-${image.latest_version}`}
-        </CodeBlock>
-      )}
-    </section>
+      </aside>
+    </div>
   </article>
 </Base>

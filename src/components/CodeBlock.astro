@@ -1,16 +1,37 @@
 ---
 interface Props {
-  lang?: string;
+  /** The exact text to display and copy. */
+  code: string;
+  /** Small caption shown in the block header (e.g. "bash", "OpenStack"). */
   label?: string;
 }
-const { lang = "bash", label } = Astro.props;
+const { code, label = "bash" } = Astro.props;
+const id = `code-${Math.random().toString(36).slice(2, 10)}`;
 ---
 
-<figure class="not-prose group relative my-4">
-  {label && (
-    <figcaption class="absolute top-2 right-3 font-mono text-[10px] tracking-wider text-slate-500 uppercase">
-      {label}
-    </figcaption>
-  )}
-  <pre class="overflow-x-auto rounded-lg border border-slate-300/60 bg-slate-950 p-4 text-sm leading-relaxed text-slate-100 dark:border-slate-800 dark:bg-slate-900/70"><code data-lang={lang}><slot /></code></pre>
+<figure class="border-line-strong my-4 overflow-hidden rounded-lg border bg-[#0b1220]">
+  <figcaption class="flex items-center justify-between border-b border-white/10 py-1.5 pr-1.5 pl-4 font-mono text-[11px] tracking-wide text-slate-400">
+    <span>{label}</span>
+    <button
+      type="button"
+      data-copy
+      data-copy-target={id}
+      class="inline-flex items-center gap-1.5 rounded px-2 py-1 text-slate-400 transition-colors hover:bg-white/10 hover:text-slate-100"
+      aria-label="Copy to clipboard"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="h-3.5 w-3.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <rect x="9" y="9" width="12" height="12" rx="2"></rect>
+        <path d="M5 15V5a2 2 0 0 1 2-2h10"></path>
+      </svg>
+      <span data-copy-label>Copy</span>
+    </button>
+  </figcaption>
+  <pre class="overflow-x-auto px-4 py-3.5 text-[13px] leading-relaxed text-slate-100"><code id={id}>{code}</code></pre>
 </figure>

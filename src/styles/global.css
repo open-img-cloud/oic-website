@@ -1,76 +1,174 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
 
-/* Class-based dark mode: `.dark` on <html> enables dark variants.
-   Default (no class) = light. */
+/* Class-based dark mode: `.dark` on <html> enables dark variants. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  /* Brand blue (matches the cloud accent in the Open Image Cloud logo). */
-  --color-brand-50: oklch(0.96 0.02 252);
-  --color-brand-100: oklch(0.9 0.05 252);
+  /* Brand blue (the cloud accent of the Open Image Cloud logo). */
+  --color-brand-50: oklch(0.97 0.015 252);
+  --color-brand-100: oklch(0.93 0.035 252);
+  --color-brand-200: oklch(0.86 0.07 252);
   --color-brand-300: oklch(0.78 0.1 252);
-  --color-brand-500: oklch(0.66 0.15 252);
-  --color-brand-600: oklch(0.58 0.16 252);
-  --color-brand-700: oklch(0.48 0.16 252);
+  --color-brand-400: oklch(0.71 0.13 252);
+  --color-brand-500: oklch(0.64 0.15 252);
+  --color-brand-600: oklch(0.56 0.16 252);
+  --color-brand-700: oklch(0.47 0.15 252);
   --color-brand-900: oklch(0.3 0.1 252);
 
-  /* Navy background palette matching the logo banner. */
-  --color-navy-950: oklch(0.16 0.04 252);
-  --color-navy-900: oklch(0.2 0.04 252);
-  --color-navy-800: oklch(0.26 0.04 252);
+  /* Navy surfaces, matching the logo banner. */
+  --color-navy-700: oklch(0.32 0.04 252);
+  --color-navy-800: oklch(0.25 0.04 252);
+  --color-navy-850: oklch(0.215 0.04 252);
+  --color-navy-900: oklch(0.19 0.04 252);
+  --color-navy-950: oklch(0.155 0.035 252);
 }
 
-html {
-  scroll-behavior: smooth;
-  background-color: white;
-  color-scheme: light;
+/* Semantic surface/ink tokens so components don't repeat light/dark pairs. */
+@layer base {
+  :root {
+    --surface: var(--color-white);
+    --surface-sunken: var(--color-slate-50);
+    --surface-raised: var(--color-white);
+    --line: oklch(0.92 0.01 252);
+    --line-strong: oklch(0.85 0.015 252);
+    --ink: var(--color-slate-900);
+    --ink-muted: var(--color-slate-600);
+    --ink-faint: var(--color-slate-500);
+    --accent: var(--color-brand-600);
+    --accent-ink: var(--color-brand-700);
+    --ok: oklch(0.55 0.13 155);
+    --warn: oklch(0.6 0.13 70);
+    color-scheme: light;
+  }
+
+  :root.dark {
+    --surface: var(--color-navy-950);
+    --surface-sunken: oklch(0.13 0.03 252);
+    --surface-raised: var(--color-navy-900);
+    --line: oklch(0.27 0.035 252);
+    --line-strong: oklch(0.34 0.04 252);
+    --ink: oklch(0.96 0.01 252);
+    --ink-muted: oklch(0.78 0.02 252);
+    --ink-faint: oklch(0.64 0.025 252);
+    --accent: var(--color-brand-400);
+    --accent-ink: var(--color-brand-300);
+    --ok: oklch(0.78 0.13 155);
+    --warn: oklch(0.82 0.12 75);
+    color-scheme: dark;
+  }
+
+  html {
+    background-color: var(--surface);
+    color: var(--ink);
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+    font-feature-settings: "calt" 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--color-brand-400) 35%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
 }
 
-html.dark {
-  background-color: var(--color-navy-950);
-  color-scheme: dark;
+@utility surface {
+  background-color: var(--surface);
+}
+@utility surface-sunken {
+  background-color: var(--surface-sunken);
+}
+@utility surface-raised {
+  background-color: var(--surface-raised);
+}
+@utility border-line {
+  border-color: var(--line);
+}
+@utility border-line-strong {
+  border-color: var(--line-strong);
+}
+@utility divide-line {
+  & > :not(:last-child) {
+    border-color: var(--line);
+  }
+}
+@utility text-ink {
+  color: var(--ink);
+}
+@utility text-ink-muted {
+  color: var(--ink-muted);
+}
+@utility text-ink-faint {
+  color: var(--ink-faint);
+}
+@utility text-accent {
+  color: var(--accent-ink);
+}
+@utility text-ok {
+  color: var(--ok);
+}
+@utility text-warn {
+  color: var(--warn);
 }
 
-body {
-  font-family: var(--font-sans);
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+/* Faint engineering grid behind the hero, fading out downwards. */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 30%, transparent 75%);
 }
 
-code,
-pre,
-kbd {
+/* Small uppercase monospace label used for section eyebrows and table heads. */
+@utility eyebrow {
   font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
 }
 
-/* Subtle cloud silhouette pattern echoing the logo background.
-   Different intensity per theme: more visible on dark, near-invisible on light. */
-.bg-cloud-pattern {
-  background-image:
-    radial-gradient(
-      ellipse 120% 60% at 8% 18%,
-      color-mix(in oklch, var(--color-brand-500) 4%, transparent) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 100% 50% at 92% 80%,
-      color-mix(in oklch, var(--color-brand-700) 3%, transparent) 0%,
-      transparent 60%
-    );
-}
-
-.dark .bg-cloud-pattern {
-  background-image:
-    radial-gradient(
-      ellipse 120% 60% at 8% 18%,
-      color-mix(in oklch, var(--color-brand-500) 8%, transparent) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 100% 50% at 92% 80%,
-      color-mix(in oklch, var(--color-brand-700) 8%, transparent) 0%,
-      transparent 60%
-    );
+/* Inline links inside prose. */
+@utility link {
+  color: var(--accent-ink);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in oklch, var(--accent-ink) 35%, transparent);
+  text-underline-offset: 3px;
+  &:hover {
+    text-decoration-color: currentColor;
+  }
 }

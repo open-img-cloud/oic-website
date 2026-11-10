@@ -1,190 +1,271 @@
 ---
-import { Image } from "astro:assets";
 import Base from "~/layouts/Base.astro";
-import { loadEnrichedImages } from "~/lib/images";
-import ImageCard from "~/components/ImageCard.astro";
-import logoIcon from "~/assets/open-images-icon.png";
+import Terminal from "~/components/Terminal.astro";
+import ImageRow from "~/components/ImageRow.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import { CERT_IDENTITY_REGEXP, formatDate, loadEnrichedImages } from "~/lib/images";
 
 const images = await loadEnrichedImages();
-const featured = images.slice(0, 3);
-const sample = images[0];
-const sampleOs = sample?.os_name ?? "alpaquita-linux";
+const active = images.filter((i) => i.status !== "archive");
+const archived = images.filter((i) => i.status === "archive");
+
+const artifacts = images.flatMap((i) => [
+  ...i.latest.artifacts,
+  ...i.previous.flatMap((r) => r.artifacts),
+]);
+const published = artifacts.filter((a) => a.manifest);
+const signedShare = published.length
+  ? Math.round((published.filter((a) => a.manifest?.signed).length / published.length) * 100)
+  : 0;
+const lastBuild = images
+  .map((i) => i.builtAt)
+  .filter((d): d is string => !!d)
+  .sort()
+  .at(-1);
+
+// Hero terminal: a real, published artifact (first featured image with a manifest).
+const demoImage =
+  images.find((i) => i.featured && i.latest.artifacts.some((a) => a.fileUrl)) ?? images[0];
+const demo = demoImage?.latest.artifacts.find((a) => a.fileUrl) ?? null;
+const demoFile = demo?.filename ?? "image.qcow2";
+const demoPath = demo?.fileUrl?.replace("https://", "") ?? "images.openimages.cloud/…";
+
+const stats = [
+  { value: String(active.length), label: "maintained images" },
+  { value: String(published.length), label: "published artifacts" },
+  { value: `${signedShare}%`, label: "cosign-signed" },
+  { value: formatDate(lastBuild), label: "latest build" },
+];
+
+const steps = [
+  {
+    title: "Watch upstream",
+    body: "A daily job detects new upstream releases and opens a pull request bumping the pinned version.",
+    detail: "detect-upstream.sh",
+  },
+  {
+    title: "Build",
+    body: "Images are customised from official upstream artefacts with libguestfs, diskimage-builder or a Nix flake, inside a signed builder container.",
+    detail: "pinned builder digest",
+  },
+  {
+    title: "Boot-test",
+    body: "Each image boots in QEMU with a ConfigDrive, then again on a live OpenStack: cloud-init, SSH and DNS must pass.",
+    detail: "qemu + Infomaniak",
+  },
+  {
+    title: "Sign",
+    body: "Keyless cosign signatures bound to the GitHub Actions identity of the build workflow, logged in Sigstore's Rekor.",
+    detail: "sigstore bundle",
+  },
+  {
+    title: "Publish",
+    body: "Immutable versioned paths on Swiss object storage, served through a CDN, with checksums and a provenance manifest.",
+    detail: "MANIFEST.json",
+  },
+];
+
+const verifySnippet = `cosign verify-blob ${demoFile} \\
+  --bundle ${demoFile}.bundle --new-bundle-format \\
+  --certificate-identity-regexp '${CERT_IDENTITY_REGEXP}' \\
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com`;
 ---
 
 <Base title="Open Image Cloud">
-  <section class="relative overflow-hidden">
-    <div
-      aria-hidden="true"
-      class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_45%_at_50%_0%,color-mix(in_oklch,var(--color-brand-500)_15%,transparent)_0%,transparent_70%)]"
-    ></div>
-    <div class="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-28 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+  <!-- Hero -->
+  <section class="relative isolate overflow-hidden">
+    <div aria-hidden="true" class="bg-grid absolute inset-0 -z-10 opacity-70"></div>
+    <div class="mx-auto grid max-w-6xl gap-12 px-4 pt-16 pb-20 sm:px-6 sm:pt-24 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
       <div>
-        <p class="text-brand-700 dark:text-brand-300 font-mono text-xs tracking-widest uppercase">
-          open source · signed · reproducible
-        </p>
-        <h1 class="mt-4 text-4xl leading-[1.05] font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-slate-50">
-          Cloud images
-          <span class="from-brand-600 via-brand-500 to-brand-600 dark:from-brand-300 dark:via-brand-500 dark:to-brand-300 bg-gradient-to-r bg-clip-text text-transparent">
-            you can actually trust.
-          </span>
+        <p class="eyebrow">Open source · Signed · Reproducible</p>
+        <h1 class="text-ink mt-5 text-4xl leading-[1.05] font-semibold tracking-[-0.025em] text-balance sm:text-5xl lg:text-[3.5rem]">
+          Cloud images you can verify, not just trust.
         </h1>
-        <p class="mt-5 max-w-xl text-lg text-slate-600 dark:text-slate-300/90">
-          Cloud-init-ready,{" "}
-          <strong class="font-semibold text-slate-900 dark:text-slate-100">signed</strong>,
-          reproducible qcow2 images for OpenStack and Proxmox — built in the open on GitHub Actions,
-          with keyless cosign signatures and a public manifest for every release.
+        <p class="text-ink-muted mt-6 max-w-xl text-lg leading-relaxed text-pretty">
+          Cloud-init-ready qcow2 images for OpenStack and Proxmox, built in the open from official
+          upstream releases. Every file ships with a keyless signature and a manifest saying exactly
+          how it was made.
         </p>
-        <div class="mt-7 flex flex-wrap gap-3">
+        <div class="mt-8 flex flex-wrap gap-3">
           <a
             href="/images/"
-            class="bg-brand-500 hover:bg-brand-600 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium text-white shadow-[0_8px_24px_-12px_rgba(91,141,239,0.6)] transition-colors"
+            class="bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-colors dark:text-slate-950"
           >
             Browse the catalog
             <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" fill="none" aria-hidden="true">
               <path
                 d="M9.5 3.5l4 4-4 4M2 7.5h11"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="1.6"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               ></path>
             </svg>
           </a>
           <a
-            href="https://github.com/open-img-cloud"
-            class="inline-flex items-center gap-2 rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-900/40 dark:hover:text-slate-50"
+            href="/verify/"
+            class="border-line-strong text-ink hover:surface-sunken inline-flex items-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors"
           >
-            <svg viewBox="0 0 16 16" class="h-4 w-4" fill="currentColor" aria-hidden="true">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
-            </svg>
-            View on GitHub
+            How to verify
           </a>
         </div>
-        <p class="mt-6 text-xs tracking-wide text-slate-500 dark:text-slate-400">
-          Start with{" "}
-          <a
-            href={`/images/${sampleOs}/`}
-            class="text-brand-700 dark:text-brand-300 hover:underline"
-          >
-            {sample?.title ?? "Alpaquita Linux"}
-          </a>{" "}
-          — verify and boot in two commands.
-        </p>
       </div>
-      <div class="relative flex items-center justify-center lg:justify-end">
-        <div
-          aria-hidden="true"
-          class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,color-mix(in_oklch,var(--color-brand-500)_22%,transparent)_0%,transparent_60%)] blur-2xl"
-        ></div>
-        <Image
-          src={logoIcon}
-          alt="Open Image Cloud logo"
-          width={420}
-          height={420}
-          loading="eager"
-          class="w-64 max-w-full sm:w-80 lg:w-[26rem]"
-        />
-      </div>
+
+      <Terminal title={`verify · ${demoImage?.title ?? "image"}`} class="min-w-0">
+        <span class="t-line">
+          <span class="t-prompt">$</span>
+          <span class="t-cmd">curl</span>
+          <span class="t-flag">-fLO</span> <span class="t-str">{demoPath}</span>
+        </span>
+        <span class="t-line">
+          <span class="t-prompt">$</span>
+          <span class="t-cmd">curl</span>
+          <span class="t-flag">-fLO</span> <span class="t-str">{demoPath}.bundle</span>
+        </span>
+        <span class="t-line"> </span>
+        <span class="t-line">
+          <span class="t-prompt">$</span>
+          <span class="t-cmd">cosign verify-blob</span>
+          {demoFile}
+        </span>
+        <span class="t-cont t-flag">--bundle {demoFile}.bundle --new-bundle-format</span>
+        <span class="t-cont t-flag">
+          --certificate-identity-regexp '…/open-img-cloud/.github/…'
+        </span>
+        <span class="t-cont t-flag">
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com
+        </span>
+        <span class="t-line t-ok">Verified OK</span>
+        <span class="t-line"> </span>
+        <span class="t-line">
+          <span class="t-prompt">$</span>
+          <span class="t-cmd">jq</span>
+          <span class="t-str">'.built_at, .build_url'</span> MANIFEST
+          {demo?.label ? `-${demo.manifest?.variant}` : ""}.json
+        </span>
+        <span class="t-line t-out">"{demo?.manifest?.built_at ?? "2026-01-01T00:00:00Z"}"</span>
+        <span class="t-line t-out">
+          "{demo?.manifest?.build_url?.replace("https://", "") ?? "github.com/…"}"
+        </span>
+      </Terminal>
+    </div>
+
+    <!-- Stats -->
+    <div class="border-line border-y">
+      <dl class="divide-line mx-auto grid max-w-6xl grid-cols-2 divide-x sm:grid-cols-4">
+        {stats.map((s) => (
+          <div class="border-line px-4 py-6 sm:px-6 max-sm:[&:nth-child(-n+2)]:border-b">
+            <dt class="eyebrow">{s.label}</dt>
+            <dd class="text-ink mt-2 text-2xl font-semibold tracking-tight tabular-nums">
+              {s.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </div>
   </section>
 
-  <section class="dark:bg-navy-900/30 border-t border-slate-200 bg-slate-50/70 dark:border-slate-800/60">
-    <div class="mx-auto grid max-w-6xl gap-8 px-6 py-20 sm:grid-cols-3">
+  <!-- Catalog -->
+  <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6" aria-labelledby="catalog-title">
+    <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <div class="bg-brand-500/15 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md">
-          <svg
-            viewBox="0 0 24 24"
-            class="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z"></path>
-            <path d="M12 7v5l3 2"></path>
-          </svg>
-        </div>
-        <h3 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">
-          Reproducible
-        </h3>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Every release is built from a pinned upstream source and a tagged builder container. The
-          exact commit, run URL and builder digest are embedded in the per-image
-          <code class="font-mono text-xs">MANIFEST.json</code>.
-        </p>
-      </div>
-      <div>
-        <div class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-          <svg
-            viewBox="0 0 24 24"
-            class="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <path d="M9 12l2 2 4-4"></path>
-          </svg>
-        </div>
-        <h3 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">Signed</h3>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Keyless <code class="font-mono text-xs">cosign</code> signatures via GitHub OIDC. Verify
-          any image with a single command — no key management on your side.
-        </p>
-      </div>
-      <div>
-        <div class="bg-brand-700/25 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md">
-          <svg
-            viewBox="0 0 24 24"
-            class="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M17.5 19a4.5 4.5 0 0 0 0-9 7 7 0 0 0-13.5 2.5A4.5 4.5 0 0 0 6 19"></path>
-          </svg>
-        </div>
-        <h3 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">
-          Open infrastructure
-        </h3>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Source of truth on a self-hosted Garage cluster, mirrored to Cloudflare R2 behind a public
-          CDN. Reusable workflows in
-          <a
-            href="https://github.com/open-img-cloud/.github"
-            class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
-          >
-            .github
-          </a>
-          power every image repo.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <section class="border-t border-slate-200 dark:border-slate-800/60">
-    <div class="mx-auto max-w-6xl px-6 py-20">
-      <div class="flex items-baseline justify-between">
-        <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-          Featured images
+        <p class="eyebrow">Catalog</p>
+        <h2 id="catalog-title" class="text-ink mt-3 text-3xl font-semibold tracking-tight">
+          {active.length} images, one standard.
         </h2>
-        <a href="/images/" class="text-brand-700 hover:text-brand-500 dark:text-brand-300 text-sm">
-          All images →
+        <p class="text-ink-muted mt-3 max-w-2xl">
+          Same cloud-init policy, same signing, same layout on the registry, whichever distribution
+          you pick.
+        </p>
+      </div>
+      <a href="/images/" class="link text-sm">
+        Full catalog
+      </a>
+    </div>
+    <div class="border-line mt-8 overflow-hidden rounded-xl border">
+      <div class="border-line surface-sunken hidden grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem] gap-x-4 border-b px-5 py-2.5 md:grid">
+        <span></span>
+        <span class="eyebrow">Image</span>
+        <span class="eyebrow">Latest</span>
+        <span class="eyebrow">Built</span>
+        <span class="eyebrow text-right">Size</span>
+        <span></span>
+      </div>
+      <ul class="divide-line divide-y">
+        {active.map((image) => (
+          <ImageRow image={image} />
+        ))}
+      </ul>
+    </div>
+    {archived.length > 0 && (
+      <p class="text-ink-faint mt-4 text-sm">
+        Also available for existing workloads:{" "}
+        {archived.map((i, idx) => (
+          <>
+            {idx > 0 && ", "}
+            <a class="link" href={`/images/${i.os_name}/`}>
+              {i.title}
+            </a>
+          </>
+        ))}{" "}
+        (end of life upstream).
+      </p>
+    )}
+  </section>
+
+  <!-- How it works -->
+  <section
+    id="how-it-works"
+    class="border-line surface-sunken border-y"
+    aria-labelledby="how-title"
+  >
+    <div class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      <p class="eyebrow">How it works</p>
+      <h2 id="how-title" class="text-ink mt-3 text-3xl font-semibold tracking-tight">
+        From upstream release to verified download.
+      </h2>
+      <p class="text-ink-muted mt-3 max-w-2xl">
+        Every step runs in public GitHub Actions workflows. Nothing is built on a laptop.
+      </p>
+      <ol class="mt-12 grid gap-px overflow-hidden rounded-xl border border-line bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-5">
+        {steps.map((step, i) => (
+          <li class="surface flex flex-col p-6">
+            <span class="text-accent font-mono text-xs">0{i + 1}</span>
+            <h3 class="text-ink mt-3 font-semibold">{step.title}</h3>
+            <p class="text-ink-muted mt-2 text-sm leading-relaxed">{step.body}</p>
+            <p class="text-ink-faint mt-auto pt-5 font-mono text-[11px]">{step.detail}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="text-ink-faint mt-6 text-sm">
+        Workflows and standards live in{" "}
+        <a class="link" href="https://github.com/open-img-cloud/.github">
+          open-img-cloud/.github
+        </a>
+        .
+      </p>
+    </div>
+  </section>
+
+  <!-- Verify -->
+  <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6" aria-labelledby="verify-title">
+    <div class="grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:items-center">
+      <div>
+        <p class="eyebrow">Verification</p>
+        <h2 id="verify-title" class="text-ink mt-3 text-3xl font-semibold tracking-tight">
+          No keys to manage. One command.
+        </h2>
+        <p class="text-ink-muted mt-4 leading-relaxed">
+          Signatures are tied to the identity of our build workflow through GitHub OIDC and recorded
+          in Sigstore's public transparency log. If the command prints
+          <code class="text-ink font-mono text-sm">Verified OK</code>, the file was produced by our
+          CI, unmodified.
+        </p>
+        <a href="/verify/" class="link mt-6 inline-block text-sm">
+          Step-by-step verification guide
         </a>
       </div>
-      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {featured.map((image) => (
-          <ImageCard image={image} />
-        ))}
-      </div>
+      <CodeBlock code={verifySnippet} label="bash" />
     </div>
   </section>
 </Base>

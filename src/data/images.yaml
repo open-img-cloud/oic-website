@@ -8,6 +8,13 @@
 #   <os_name>/<version>/<filename>
 #   <os_name>/<version>/MANIFEST.json            (no variant)
 #   <os_name>/<version>/MANIFEST-<variant>.json  (with variant)
+#
+# Optional presentation fields:
+#   status       stable (default) | archive | preview  (IMAGE_STANDARDS.md §I)
+#   status_note  one-line banner on the image page (EOL date, known issue…)
+#   login_user   default cloud-init user, shown in the quick start
+#   featured     true → shown on the home page
+#   variants[].hint  short explanation of the variant
 
 images:
   - os_name: alpine-linux
@@ -15,7 +22,7 @@ images:
     tagline: Minimal, security-oriented distro built around musl libc and BusyBox.
     description: |
       Cloud-init-ready, signed Alpine Linux images derived from the upstream
-      `nocloud_alpine` cloud release. Two firmware variants (legacy BIOS and
+      `generic_alpine` cloud release. Two firmware variants (legacy BIOS and
       UEFI) cover both classic OpenStack and modern Proxmox deployments.
     repo: open-img-cloud/alpine-linux
     upstream_homepage: https://www.alpinelinux.org/
@@ -24,12 +31,16 @@ images:
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
     logo: alpine-linux.svg
+    login_user: alpine
+    featured: true
     variants:
       - id: bios
         label: BIOS
+        hint: Legacy boot, works on any hypervisor
         filename_template: "alpine-{version}-bios-x86_64.qcow2"
       - id: uefi
         label: UEFI
+        hint: Needs hw_firmware_type=uefi on OpenStack, OVMF on Proxmox
         filename_template: "alpine-{version}-uefi-x86_64.qcow2"
 
   - os_name: amazon-linux-2
@@ -37,9 +48,8 @@ images:
     tagline: AWS's long-term-support base image, derived from the RHEL/CentOS 7 family.
     description: |
       Cloud-init-ready, signed Amazon Linux 2 qcow2 image based on AWS's
-      official KVM cloud release. Long-term support window through 2026,
-      ideal for keeping legacy AWS-style workloads running on OpenStack
-      and Proxmox.
+      official KVM cloud release. Kept available for workloads that still
+      depend on it; new deployments should target Amazon Linux 2023.
     repo: open-img-cloud/amazon-linux-2
     upstream_homepage: https://aws.amazon.com/amazon-linux-2/
     latest_version: "2.0.20261102.0"
@@ -47,6 +57,9 @@ images:
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
     logo: amazon.svg
+    login_user: ec2-user
+    status: archive
+    status_note: Amazon Linux 2 reached end of life on 2025-06-30. Builds continue for existing workloads; use Amazon Linux 2023 for new deployments.
 
   - os_name: amazon-linux-2023
     title: Amazon Linux 2023
@@ -58,6 +71,8 @@ images:
       on OpenStack and Proxmox.
     repo: open-img-cloud/amazon-linux-2023
     upstream_homepage: https://aws.amazon.com/linux/amazon-linux-2023/
+    login_user: ec2-user
+    featured: true
     latest_version: "2023.12.20261102.0"
     format: qcow2
     arch: x86_64
@@ -78,12 +93,15 @@ images:
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
     logo: alpaquita.svg
+    login_user: alpaquita
     variants:
       - id: glibc
         label: glibc
+        hint: GNU C library, widest binary compatibility
         filename_template: "alpaquita-{version}-glibc-x86_64.qcow2"
       - id: musl
         label: musl
+        hint: musl libc, smallest footprint
         filename_template: "alpaquita-{version}-musl-x86_64.qcow2"
 
   - os_name: oracle-linux-9
@@ -96,6 +114,7 @@ images:
     repo: open-img-cloud/oracle-linux-9
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "9.8-b293"
+    login_user: cloud-user
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -111,6 +130,8 @@ images:
     repo: open-img-cloud/oracle-linux-10
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "10.1-b291"
+    login_user: cloud-user
+    featured: true
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -127,6 +148,7 @@ images:
     repo: open-img-cloud/nixos
     upstream_homepage: https://nixos.org/
     latest_version: "25.11"
+    login_user: nixos
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]

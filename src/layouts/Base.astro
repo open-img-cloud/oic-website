@@ -10,27 +10,29 @@ interface Props {
 }
 
 const { title, description, ogImage = "/img/og.png" } = Astro.props;
-const fullTitle = title === "Open Image Cloud" ? title : `${title} — Open Image Cloud`;
+const fullTitle = title === "Open Image Cloud" ? title : `${title} · Open Image Cloud`;
 const desc =
   description ??
-  "Cloud-init-ready, signed, reproducible cloud images for OpenStack and Proxmox. Built in the open.";
+  "Signed, reproducible, cloud-init-ready qcow2 images for OpenStack and Proxmox. Built in the open, verifiable by anyone.";
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
 ---
 
 <!doctype html>
-<html lang="en" class="dark:bg-navy-950 bg-white text-slate-900 dark:text-slate-100">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a1730" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1424" media="(prefers-color-scheme: dark)" />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" href="/img/icon-128.png" />
     <link rel="canonical" href={canonical} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
+    <meta property="og:site_name" content="Open Image Cloud" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:type" content="website" />
@@ -39,25 +41,54 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImageUrl} />
     <script is:inline>
-      // Apply theme before paint to avoid FOUC.
+      // Apply the theme before first paint to avoid a flash.
       // Priority: localStorage("theme") → prefers-color-scheme.
       (function () {
         try {
           const saved = localStorage.getItem("theme");
           const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          const isDark = saved === "dark" || (saved == null && prefersDark);
-          if (isDark) document.documentElement.classList.add("dark");
+          if (saved === "dark" || (saved == null && prefersDark)) {
+            document.documentElement.classList.add("dark");
+          }
         } catch {
-          /* localStorage may be blocked; fall back to default light theme. */
+          /* localStorage may be blocked: keep the light default. */
         }
       })();
     </script>
   </head>
-  <body class="bg-cloud-pattern flex min-h-screen flex-col antialiased">
+  <body class="surface text-ink flex min-h-screen flex-col antialiased">
+    <a
+      href="#main"
+      class="surface-raised border-line text-ink sr-only z-50 rounded-md border px-3 py-2 text-sm focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+    >
+      Skip to content
+    </a>
     <Header />
-    <main class="flex-1">
+    <main id="main" class="flex-1">
       <slot />
     </main>
     <Footer />
+    <script>
+      // Copy-to-clipboard for every [data-copy] button (code blocks, hashes).
+      document.addEventListener("click", async (event) => {
+        const btn = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-copy]");
+        if (!btn) return;
+        const target = btn.dataset.copyTarget
+          ? document.getElementById(btn.dataset.copyTarget)
+          : null;
+        const text = btn.dataset.copy || target?.innerText || "";
+        try {
+          await navigator.clipboard.writeText(text.trimEnd());
+          const label = btn.querySelector("[data-copy-label]");
+          if (label) {
+            const previous = label.textContent;
+            label.textContent = "Copied";
+            setTimeout(() => (label.textContent = previous), 1500);
+          }
+        } catch {
+          /* Clipboard unavailable (insecure context): the text stays selectable. */
+        }
+      });
+    </script>
   </body>
 </html>
