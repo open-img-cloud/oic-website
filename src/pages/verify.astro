@@ -1,0 +1,153 @@
+---
+import Base from "~/layouts/Base.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import { CERT_IDENTITY_REGEXP, CERT_OIDC_ISSUER, loadEnrichedImages } from "~/lib/images";
+
+const images = await loadEnrichedImages();
+const sample =
+  images.find((i) => i.featured)?.latest.artifacts.find((a) => a.fileUrl) ??
+  images.flatMap((i) => i.latest.artifacts).find((a) => a.fileUrl);
+const file = sample?.filename ?? "image.qcow2";
+const fileUrl = sample?.fileUrl ?? "https://images.openimages.cloud/<os>/<version>/<file>";
+const dir = fileUrl.slice(0, fileUrl.lastIndexOf("/") + 1);
+const manifestName = sample?.manifestUrl.split("/").pop() ?? "MANIFEST.json";
+
+const download = `curl -fLO ${fileUrl}
+curl -fLO ${fileUrl}.bundle
+curl -fLO ${dir}${manifestName}`;
+
+const cosign = `cosign verify-blob ${file} \\
+  --bundle ${file}.bundle --new-bundle-format \\
+  --certificate-identity-regexp '${CERT_IDENTITY_REGEXP}' \\
+  --certificate-oidc-issuer ${CERT_OIDC_ISSUER}`;
+
+const checksum = `curl -fsSL ${fileUrl}.sha256 | sha256sum -c -`;
+
+const inspect = `jq '{version, sha256, built_at, commit, build_url, builder}' ${manifestName}`;
+
+const toc = [
+  { id: "why", label: "What a signature proves" },
+  { id: "install", label: "1. Install cosign" },
+  { id: "download", label: "2. Download" },
+  { id: "verify", label: "3. Verify the signature" },
+  { id: "provenance", label: "4. Inspect provenance" },
+  { id: "checksums", label: "Checksums only" },
+];
+---
+
+<Base
+  title="Verify an image"
+  description="How to verify an Open Image Cloud image with cosign keyless signatures, checksums and the provenance manifest."
+>
+  <article class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <p class="eyebrow">Guide</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">Verify an image</h1>
+    <p class="text-ink-muted mt-4 max-w-2xl text-lg leading-relaxed">
+      Check that a file was built by our public CI and has not been altered since, before you boot
+      it. It takes one command and no key management.
+    </p>
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <nav aria-label="On this page" class="hidden lg:block">
+        <ul class="sticky top-24 space-y-2 text-sm">
+          {toc.map((t) => (
+            <li>
+              <a href={`#${t.id}`} class="text-ink-muted hover:text-ink">
+                {t.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="min-w-0 max-w-3xl">
+        <section id="why">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">What a signature proves</h2>
+          <p class="text-ink-muted mt-3 leading-relaxed">
+            Images are signed with{" "}
+            <a class="link" href="https://docs.sigstore.dev/">
+              Sigstore
+            </a>
+            cosign in keyless mode. At build time GitHub Actions issues a short-lived OIDC identity
+            for the exact workflow that runs; Sigstore's certificate authority binds the signature
+            to that identity and records it in the public Rekor transparency log.
+          </p>
+          <ul class="text-ink-muted mt-4 space-y-2 leading-relaxed">
+            <li class="flex gap-3">
+              <span class="text-ok" aria-hidden="true">
+                ✓
+              </span>
+              The file is byte-for-byte what our build produced.
+            </li>
+            <li class="flex gap-3">
+              <span class="text-ok" aria-hidden="true">
+                ✓
+              </span>
+              It was produced by one of the reusable build workflows in
+              <a class="link" href="https://github.com/open-img-cloud/.github">
+                open-img-cloud/.github
+              </a>
+              , not by a person or another repository.
+            </li>
+            <li class="flex gap-3">
+              <span class="text-ok" aria-hidden="true">
+                ✓
+              </span>
+              The signing event is publicly logged, so it cannot be issued silently.
+            </li>
+          </ul>
+        </section>
+
+        <section id="install" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">1. Install cosign</h2>
+          <p class="text-ink-muted mt-3 leading-relaxed">
+            Any recent cosign 2.x or 3.x release works. See the
+            <a class="link" href="https://docs.sigstore.dev/cosign/system_config/installation/">
+              installation guide
+            </a>
+            , or use a package manager:
+          </p>
+          <CodeBlock code="brew install cosign" label="Homebrew (macOS, Linux)" />
+        </section>
+
+        <section id="download" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">2. Download</h2>
+          <p class="text-ink-muted mt-3 leading-relaxed">
+            Fetch the image, its signature bundle and its manifest. They sit side by side under the
+            same versioned path. Example with {file}:
+          </p>
+          <CodeBlock code={download} />
+        </section>
+
+        <section id="verify" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">3. Verify the signature</h2>
+          <CodeBlock code={cosign} />
+          <p class="text-ink-muted leading-relaxed">
+            The output must be <code class="text-ok font-mono">Verified OK</code>. The identity
+            pattern matches our three build workflows (libguestfs, diskimage-builder and Nix) on the{" "}
+            <code class="font-mono text-sm">open-img-cloud/.github</code> repository: a signature
+            from anywhere else is rejected.
+          </p>
+        </section>
+
+        <section id="provenance" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">4. Inspect provenance</h2>
+          <p class="text-ink-muted mt-3 leading-relaxed">
+            The manifest records what was built, from which commit, by which CI run and with which
+            builder container digest. Open the CI run to read the full build log.
+          </p>
+          <CodeBlock code={inspect} />
+        </section>
+
+        <section id="checksums" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Checksums only</h2>
+          <p class="text-ink-muted mt-3 leading-relaxed">
+            Without cosign you can still detect a corrupted download. Checksums alone don't prove
+            who built the file, so prefer the signature when you can.
+          </p>
+          <CodeBlock code={checksum} />
+        </section>
+      </div>
+    </div>
+  </article>
+</Base>

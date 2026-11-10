@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs><radialGradient id="fade" cx="0.3" cy="0.45" r="0.75"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><mask id="m"><rect width="{w}" height="{h}" fill="url(#fade)"/></mask><radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#4f8ef0" stop-opacity=".28"/><stop offset="1" stop-color="#4f8ef0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4f8ef0"/>
+      <stop offset="1" stop-color="#2459c4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0b1424"/>
+  <g stroke="#22324f" stroke-width="1" mask="url(#m)"><path d="M0 0V630"/><path d="M48 0V630"/><path d="M96 0V630"/><path d="M144 0V630"/><path d="M192 0V630"/><path d="M240 0V630"/><path d="M288 0V630"/><path d="M336 0V630"/><path d="M384 0V630"/><path d="M432 0V630"/><path d="M480 0V630"/><path d="M528 0V630"/><path d="M576 0V630"/><path d="M624 0V630"/><path d="M672 0V630"/><path d="M720 0V630"/><path d="M768 0V630"/><path d="M816 0V630"/><path d="M864 0V630"/><path d="M912 0V630"/><path d="M960 0V630"/><path d="M1008 0V630"/><path d="M1056 0V630"/><path d="M1104 0V630"/><path d="M1152 0V630"/><path d="M1200 0V630"/><path d="M0 0H1200"/><path d="M0 48H1200"/><path d="M0 96H1200"/><path d="M0 144H1200"/><path d="M0 192H1200"/><path d="M0 240H1200"/><path d="M0 288H1200"/><path d="M0 336H1200"/><path d="M0 384H1200"/><path d="M0 432H1200"/><path d="M0 480H1200"/><path d="M0 528H1200"/><path d="M0 576H1200"/><path d="M0 624H1200"/></g>
+  <circle cx="244.4" cy="314.4" r="268.8" fill="url(#glow)"/>
+  <g transform="translate(110 180) scale(4.2)">
+  <!-- Rounded hexagon (pointy top) -->
+  <path d="M32 3.5 57 18v28L32 60.5 7 46V18Z" fill="url(#g)" stroke="url(#g)" stroke-width="5" stroke-linejoin="round"/>
+  <g transform="translate(0 2.3)">
+  <!-- Stacked image layers, isometric -->
+  <path d="M17.5 36.5 32 44.8l14.5-8.3" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17.5 29.8 32 38.1l14.5-8.3" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 14.5 46.5 22.8 32 31.1 17.5 22.8Z" fill="#fff" stroke="#fff" stroke-width="3.6" stroke-linejoin="round"/>
+  <!-- Verified check on the top layer -->
+  <path d="m27.2 22.9 3.4 2.9 6.1-5.6" fill="none" stroke="#2459c4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+</g>
+  <text x="430" y="275.4" font-family="JetBrains Mono" font-weight="500" font-size="17" letter-spacing="2.3800000000000003" fill="#7f93b5">SIGNED · REPRODUCIBLE · OPEN SOURCE</text>
+  <text x="430" y="345.24" font-family="Inter" font-weight="600" font-size="72" letter-spacing="-1.8" fill="#f2f5fb">Open Image Cloud</text>
+  <text x="430" y="402.24" font-family="Inter" font-weight="400" font-size="30" fill="#aab8d0">Verifiable cloud images for OpenStack &amp; Proxmox</text>
+</svg>

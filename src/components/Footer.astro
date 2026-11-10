@@ -1,32 +1,85 @@
 ---
+import { loadEnrichedImages } from "~/lib/images";
+
+const images = (await loadEnrichedImages()).filter((i) => i.status !== "archive");
 const year = new Date().getFullYear();
+
+const project = [
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/verify/", label: "Verify an image" },
+  { href: "https://images.openimages.cloud/", label: "Image registry" },
+  {
+    href: "https://github.com/open-img-cloud/.github/blob/main/docs/IMAGE_STANDARDS.md",
+    label: "Image standards",
+  },
+];
+const source = [
+  { href: "https://github.com/open-img-cloud", label: "GitHub organisation" },
+  { href: "https://github.com/open-img-cloud/.github", label: "Build workflows" },
+  { href: "https://github.com/open-img-cloud/oic-website", label: "This website" },
+  { href: "https://github.com/open-img-cloud/.github/issues", label: "Request an image" },
+];
 ---
 
-<footer class="dark:bg-navy-950/60 border-t border-slate-200/70 bg-slate-50/60 dark:border-slate-800/60">
-  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between dark:text-slate-400">
-    <p>
-      &copy; {year} Open Image Cloud — released under the{" "}
-      <a
-        class="underline hover:text-slate-900 dark:hover:text-slate-100"
-        href="https://www.apache.org/licenses/LICENSE-2.0"
-      >
-        Apache-2.0 license
-      </a>
-      .
-    </p>
-    <nav class="flex gap-4">
-      <a
-        class="hover:text-slate-900 dark:hover:text-slate-100"
-        href="https://github.com/open-img-cloud"
-      >
-        GitHub
-      </a>
-      <a
-        class="hover:text-slate-900 dark:hover:text-slate-100"
-        href="https://images.openimages.cloud/"
-      >
-        Image registry
-      </a>
+<footer class="border-line surface-sunken border-t">
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <div>
+      <p class="text-ink font-semibold tracking-tight">Open Image Cloud</p>
+      <p class="text-ink-muted mt-3 max-w-xs text-sm leading-relaxed">
+        Signed, reproducible cloud images for OpenStack and Proxmox. Stored in Switzerland, served
+        worldwide.
+      </p>
+    </div>
+    <nav aria-label="Images">
+      <p class="eyebrow">Images</p>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {images.map((image) => (
+          <li>
+            <a href={`/images/${image.os_name}/`} class="text-ink-muted hover:text-ink">
+              {image.title}
+            </a>
+          </li>
+        ))}
+      </ul>
     </nav>
+    <nav aria-label="Project">
+      <p class="eyebrow">Project</p>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {project.map((l) => (
+          <li>
+            <a href={l.href} class="text-ink-muted hover:text-ink">
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    <nav aria-label="Source">
+      <p class="eyebrow">Source</p>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {source.map((l) => (
+          <li>
+            <a href={l.href} class="text-ink-muted hover:text-ink">
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+  <div class="border-line border-t">
+    <div class="text-ink-faint mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs sm:flex-row sm:justify-between sm:px-6">
+      <p>
+        © {year} Open Image Cloud. Images under their upstream licenses, tooling under GPL-2.0.
+        Distribution logos are trademarks of their respective owners.
+      </p>
+      <p>
+        Website under{" "}
+        <a class="link" href="https://www.apache.org/licenses/LICENSE-2.0">
+          Apache-2.0
+        </a>
+        .
+      </p>
+    </div>
   </div>
 </footer>

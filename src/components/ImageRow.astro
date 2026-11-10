@@ -1,0 +1,69 @@
+---
+import { formatBytes, formatDate, type EnrichedImage } from "~/lib/images";
+import StatusBadge from "~/components/StatusBadge.astro";
+
+interface Props {
+  image: EnrichedImage;
+}
+const { image } = Astro.props;
+const logoUrl = image.logo ? `/img/logos/${image.logo}` : null;
+const sizes = image.latest.artifacts.map((a) => a.sizeBytes).filter((n): n is number => n != null);
+const size = sizes.length ? Math.min(...sizes) : null;
+const variants = image.latest.artifacts.map((a) => a.label).filter(Boolean) as string[];
+const searchText = [image.title, image.os_name, image.tagline, ...variants, ...image.tags]
+  .join(" ")
+  .toLowerCase();
+---
+
+<li data-image-row data-search={searchText} data-status={image.status}>
+  <a
+    href={`/images/${image.os_name}/`}
+    class="group grid grid-cols-[2.75rem_1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-4 transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_5%,transparent)] sm:px-5 md:grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]"
+  >
+    <span class="border-line row-span-2 flex h-11 w-11 bg-white dark:border-transparent items-center justify-center rounded-lg border md:row-span-1">
+      {logoUrl && (
+        <img
+          src={logoUrl}
+          alt=""
+          width="26"
+          height="26"
+          loading="lazy"
+          decoding="async"
+          class="h-6.5 w-6.5"
+        />
+      )}
+    </span>
+    <span class="min-w-0">
+      <span class="flex flex-wrap items-center gap-2">
+        <span class="text-ink font-semibold tracking-tight">{image.title}</span>
+        {image.status !== "stable" && <StatusBadge status={image.status} />}
+      </span>
+      <span class="text-ink-muted mt-0.5 block truncate text-sm">{image.tagline}</span>
+    </span>
+    <span class="text-ink justify-self-end font-mono text-sm md:justify-self-start">
+      {image.latest_version}
+      {variants.length > 0 && (
+        <span class="text-ink-faint block font-sans text-xs">{variants.join(" · ")}</span>
+      )}
+    </span>
+    <span class="text-ink-muted col-start-2 hidden text-sm md:col-start-auto md:block">
+      {formatDate(image.builtAt)}
+    </span>
+    <span class="text-ink-muted hidden text-right font-mono text-sm md:block">
+      {formatBytes(size)}
+    </span>
+    <svg
+      viewBox="0 0 16 16"
+      class="text-ink-faint group-hover:text-ink hidden h-4 w-4 transition-transform group-hover:translate-x-0.5 md:block"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M6 3.5l4.5 4.5L6 12.5"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      ></path>
+    </svg>
+  </a>
+</li>

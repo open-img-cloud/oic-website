@@ -1,0 +1,33 @@
+---
+import type { ImageStatus } from "~/lib/images";
+
+interface Props {
+  status: ImageStatus;
+}
+const { status } = Astro.props;
+const styles: Record<ImageStatus, { label: string; cls: string }> = {
+  stable: {
+    label: "Stable",
+    cls: "text-ok border-[color-mix(in_oklch,var(--ok)_35%,transparent)]",
+  },
+  archive: {
+    label: "Archive",
+    cls: "text-warn border-[color-mix(in_oklch,var(--warn)_40%,transparent)]",
+  },
+  preview: {
+    label: "Preview",
+    cls: "text-accent border-[color-mix(in_oklch,var(--accent)_40%,transparent)]",
+  },
+};
+const s = styles[status];
+---
+
+<span
+  class:list={[
+    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+    s.cls,
+  ]}
+>
+  <span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true"></span>
+  {s.label}
+</span>

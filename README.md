@@ -42,18 +42,47 @@ DNS: apex `openimages.cloud` (and `www` → apex) on the same Cloudflare zone as
 
 ```
 src/
-  data/images.yaml         curated list of images (os, repo, latest version, paths)
-  layouts/                 base HTML layout
+  data/images.yaml         curated catalog: os, repo, latest/previous versions, variants,
+                           status (stable | archive | preview), login user, featured
+  lib/images.ts            build-time enrichment: fetches each MANIFEST.json and the file
+                           size (HEAD) from images.openimages.cloud; cosign identity constants
+  layouts/Base.astro       HTML shell, theme bootstrap, copy-to-clipboard handler
   pages/
-    index.astro            landing page
-    images/index.astro     catalog
-    images/[os].astro      image detail (versions, checksums, cosign verify, usage)
-  components/              reusable UI components
-  lib/images.ts            catalog loader + build-time MANIFEST.json fetcher
-public/                    static assets
+    index.astro            landing: verify terminal, stats, catalog, how it works
+    images/index.astro     catalog with client-side filter
+    images/[os].astro      image page: downloads, quick start (OpenStack, Proxmox, verify),
+                           provenance panel, previous releases
+    verify.astro           step-by-step verification guide
+  components/              Header, Footer, ImageRow, StatusBadge, CodeBlock, Terminal, ThemeToggle
+  styles/global.css        Tailwind v4 theme, semantic light/dark tokens, self-hosted fonts
+public/                    static assets (logos, favicons, og image)
 ```
 
-The catalog is pure-static: the build script reads `src/data/images.yaml`, fetches each image's `MANIFEST.json` from the published bucket, and renders the pages. If a fetch fails, the build degrades gracefully (image listed without enriched metadata) so the site stays publishable.
+The catalog is pure-static: the build reads `src/data/images.yaml`, fetches each image's
+`MANIFEST.json` and file size from the published bucket, and renders the pages. A failed fetch
+degrades gracefully (the image is listed without enriched metadata), so the site always builds.
+
+Fonts (Inter, JetBrains Mono) are self-hosted through Fontsource: the site makes no third-party
+requests.
+
+**Signature identity.** Keyless signatures carry the identity of the reusable build workflow in
+`open-img-cloud/.github`, not of the image repository. The `--certificate-identity-regexp`
+shown on the site comes from `CERT_IDENTITY_REGEXP` in `src/lib/images.ts`; keep it in sync
+with `IMAGE_STANDARDS.md`, section A.
+
+## Distribution logos
+
+`public/img/logos/` holds the upstream marks, used only to identify each image. They are
+trademarks of their respective owners.
+
+| File                                              | Source                                                                                                                                         |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `alpine-linux.svg`, `oracle.svg`, `openstack.svg` | [Simple Icons](https://simpleicons.org) (CC0 paths), official brand colours                                                                    |
+| `nixos.svg`                                       | [NixOS/nixos-artwork](https://github.com/NixOS/nixos-artwork) `logo/nix-snowflake-colours.svg`                                                 |
+| `amazon.svg`                                      | AWS logo, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Amazon_Web_Services_Logo.svg) (Amazon Linux has no separate public mark) |
+| `alpaquita.svg`                                   | BellSoft Alpaquita mark, redrawn in SVG from the official artwork                                                                              |
+
+Logo tiles stay white in dark mode so every mark keeps its official colours.
 
 ## License
 
