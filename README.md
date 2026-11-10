@@ -34,7 +34,7 @@ pnpm build           # production build into ./dist
 
 ## Deploy
 
-The site is deployed to [Cloudflare Pages](https://pages.cloudflare.com), connected to this repository. Production deploys on push to `main`; preview deploys on pull requests.
+The site is deployed to [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) (Static Assets, `wrangler.toml`) by the `deploy.yml` workflow: on push to `main`, daily (to refresh the catalog from published `MANIFEST.json` files), and on demand. It needs the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. Pull requests are built by `ci.yml` without deploying.
 
 DNS: apex `openimages.cloud` (and `www` → apex) on the same Cloudflare zone as `images.openimages.cloud`.
 
@@ -49,7 +49,7 @@ src/
     images/index.astro     catalog
     images/[os].astro      image detail (versions, checksums, cosign verify, usage)
   components/              reusable UI components
-  lib/manifest.ts          build-time MANIFEST.json fetcher
+  lib/images.ts            catalog loader + build-time MANIFEST.json fetcher
 public/                    static assets
 ```
 
