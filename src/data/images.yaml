@@ -19,7 +19,7 @@ images:
       UEFI) cover both classic OpenStack and modern Proxmox deployments.
     repo: open-img-cloud/alpine-linux
     upstream_homepage: https://www.alpinelinux.org/
-    latest_version: "3.23.4"
+    latest_version: "3.24.1"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]

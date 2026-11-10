@@ -1,0 +1,45 @@
+name: deploy
+
+# Builds the static site and deploys it to Cloudflare Workers (Static Assets),
+# bound to openimages.cloud and www.openimages.cloud (see wrangler.toml).
+# Also runs daily so the catalog picks up newly published MANIFEST.json files.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '30 7 * * *'  # daily 07:30 UTC, after the upstream watchers
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        run: pnpm build
+
+      - name: Deploy to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler deploy
