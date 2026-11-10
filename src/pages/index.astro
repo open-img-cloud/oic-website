@@ -16,29 +16,23 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
     <div
       aria-hidden="true"
       class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_45%_at_50%_0%,color-mix(in_oklch,var(--color-brand-500)_15%,transparent)_0%,transparent_70%)]"
-    >
-    </div>
-    <div
-      class="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-28 lg:grid-cols-[1.2fr_1fr] lg:items-center"
-    >
+    ></div>
+    <div class="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-28 lg:grid-cols-[1.2fr_1fr] lg:items-center">
       <div>
         <p class="text-brand-700 dark:text-brand-300 font-mono text-xs tracking-widest uppercase">
           open source · signed · reproducible
         </p>
-        <h1
-          class="mt-4 text-4xl leading-[1.05] font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-slate-50"
-        >
+        <h1 class="mt-4 text-4xl leading-[1.05] font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-slate-50">
           Cloud images
-          <span
-            class="from-brand-600 via-brand-500 to-brand-600 dark:from-brand-300 dark:via-brand-500 dark:to-brand-300 bg-gradient-to-r bg-clip-text text-transparent"
-            >you can actually trust.</span
-          >
+          <span class="from-brand-600 via-brand-500 to-brand-600 dark:from-brand-300 dark:via-brand-500 dark:to-brand-300 bg-gradient-to-r bg-clip-text text-transparent">
+            you can actually trust.
+          </span>
         </h1>
         <p class="mt-5 max-w-xl text-lg text-slate-600 dark:text-slate-300/90">
-          Cloud-init-ready, <strong class="font-semibold text-slate-900 dark:text-slate-100"
-            >signed</strong
-          >, reproducible qcow2 images for OpenStack and Proxmox — built in the open on GitHub
-          Actions, with keyless cosign signatures and a public manifest for every release.
+          Cloud-init-ready,{" "}
+          <strong class="font-semibold text-slate-900 dark:text-slate-100">signed</strong>,
+          reproducible qcow2 images for OpenStack and Proxmox — built in the open on GitHub Actions,
+          with keyless cosign signatures and a public manifest for every release.
         </p>
         <div class="mt-7 flex flex-wrap gap-3">
           <a
@@ -52,7 +46,8 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
                 stroke="currentColor"
                 stroke-width="1.5"
                 stroke-linecap="round"
-                stroke-linejoin="round"></path>
+                stroke-linejoin="round"
+              ></path>
             </svg>
           </a>
           <a
@@ -60,9 +55,7 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
             class="inline-flex items-center gap-2 rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-900/40 dark:hover:text-slate-50"
           >
             <svg viewBox="0 0 16 16" class="h-4 w-4" fill="currentColor" aria-hidden="true">
-              <path
-                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"
-              ></path>
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
             </svg>
             View on GitHub
           </a>
@@ -72,16 +65,17 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
           <a
             href={`/images/${sampleOs}/`}
             class="text-brand-700 dark:text-brand-300 hover:underline"
-            >{sample?.title ?? "Alpaquita Linux"}</a
-          > — verify and boot in two commands.
+          >
+            {sample?.title ?? "Alpaquita Linux"}
+          </a>{" "}
+          — verify and boot in two commands.
         </p>
       </div>
       <div class="relative flex items-center justify-center lg:justify-end">
         <div
           aria-hidden="true"
           class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,color-mix(in_oklch,var(--color-brand-500)_22%,transparent)_0%,transparent_60%)] blur-2xl"
-        >
-        </div>
+        ></div>
         <Image
           src={logoIcon}
           alt="Open Image Cloud logo"
@@ -94,14 +88,10 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
     </div>
   </section>
 
-  <section
-    class="dark:bg-navy-900/30 border-t border-slate-200 bg-slate-50/70 dark:border-slate-800/60"
-  >
+  <section class="dark:bg-navy-900/30 border-t border-slate-200 bg-slate-50/70 dark:border-slate-800/60">
     <div class="mx-auto grid max-w-6xl gap-8 px-6 py-20 sm:grid-cols-3">
       <div>
-        <div
-          class="bg-brand-500/15 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md"
-        >
+        <div class="bg-brand-500/15 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md">
           <svg
             viewBox="0 0 24 24"
             class="h-5 w-5"
@@ -126,9 +116,7 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
         </p>
       </div>
       <div>
-        <div
-          class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-        >
+        <div class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
           <svg
             viewBox="0 0 24 24"
             class="h-5 w-5"
@@ -145,14 +133,12 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
         </div>
         <h3 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">Signed</h3>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Keyless <code class="font-mono text-xs">cosign</code> signatures via GitHub OIDC. Verify any
-          image with a single command — no key management on your side.
+          Keyless <code class="font-mono text-xs">cosign</code> signatures via GitHub OIDC. Verify
+          any image with a single command — no key management on your side.
         </p>
       </div>
       <div>
-        <div
-          class="bg-brand-700/25 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md"
-        >
+        <div class="bg-brand-700/25 text-brand-700 dark:text-brand-300 inline-flex h-9 w-9 items-center justify-center rounded-md">
           <svg
             viewBox="0 0 24 24"
             class="h-5 w-5"
@@ -174,8 +160,10 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
           CDN. Reusable workflows in
           <a
             href="https://github.com/open-img-cloud/.github"
-            class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline">.github</a
+            class="text-brand-700 dark:text-brand-300 underline-offset-2 hover:underline"
           >
+            .github
+          </a>
           power every image repo.
         </p>
       </div>
@@ -188,12 +176,14 @@ const sampleOs = sample?.os_name ?? "alpaquita-linux";
         <h2 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
           Featured images
         </h2>
-        <a href="/images/" class="text-brand-700 hover:text-brand-500 dark:text-brand-300 text-sm"
-          >All images →</a
-        >
+        <a href="/images/" class="text-brand-700 hover:text-brand-500 dark:text-brand-300 text-sm">
+          All images →
+        </a>
       </div>
       <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {featured.map((image) => <ImageCard image={image} />)}
+        {featured.map((image) => (
+          <ImageCard image={image} />
+        ))}
       </div>
     </div>
   </section>

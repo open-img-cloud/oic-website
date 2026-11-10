@@ -20,9 +20,7 @@ const { title = "bash", class: className, ...rest } = Astro.props;
     <span class="h-2.5 w-2.5 rounded-full bg-emerald-400/70" aria-hidden="true"></span>
     <span class="ml-3 font-mono text-[11px] tracking-wide text-slate-400">{title}</span>
   </div>
-  <div
-    class="terminal-body overflow-x-auto px-4 py-3.5 font-mono text-[12.5px] leading-[1.7] whitespace-pre sm:px-5 sm:py-4 sm:text-[13px]"
-  >
+  <div class="terminal-body overflow-x-auto px-4 py-3.5 font-mono text-[12.5px] leading-[1.7] whitespace-pre sm:px-5 sm:py-4 sm:text-[13px]">
     <slot />
   </div>
 </div>
