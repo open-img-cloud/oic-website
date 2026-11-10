@@ -42,7 +42,7 @@ images:
       and Proxmox.
     repo: open-img-cloud/amazon-linux-2
     upstream_homepage: https://aws.amazon.com/amazon-linux-2/
-    latest_version: "2.0.20260508.0"
+    latest_version: "2.0.20261102.0"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -58,7 +58,7 @@ images:
       on OpenStack and Proxmox.
     repo: open-img-cloud/amazon-linux-2023
     upstream_homepage: https://aws.amazon.com/linux/amazon-linux-2023/
-    latest_version: "2023.11.20260509.0"
+    latest_version: "2023.12.20261102.0"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -73,7 +73,7 @@ images:
       Produced in both glibc and musl variants for OpenStack and Proxmox.
     repo: open-img-cloud/alpaquita-linux
     upstream_homepage: https://bell-sw.com/alpaquita-linux/
-    latest_version: "2026.04.14"
+    latest_version: "2026.11.09"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -95,7 +95,7 @@ images:
       RHEL 9 / Rocky 9 / AlmaLinux 9 workloads on OpenStack and Proxmox.
     repo: open-img-cloud/oracle-linux-9
     upstream_homepage: https://www.oracle.com/linux/
-    latest_version: "9.7-b269"
+    latest_version: "9.8-b293"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -110,7 +110,7 @@ images:
       with the Unbreakable Enterprise Kernel for OpenStack and Proxmox.
     repo: open-img-cloud/oracle-linux-10
     upstream_homepage: https://www.oracle.com/linux/
-    latest_version: "10.1-b270"
+    latest_version: "10.1-b291"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
