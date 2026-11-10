@@ -16,19 +16,19 @@ const header = "grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]";
   <section class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
     <p class="eyebrow">Catalog</p>
     <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">Image catalog</h1>
-    <p class="text-ink-muted mt-4 max-w-2xl leading-relaxed">
+    <p class="text-ink-muted mt-4 leading-relaxed text-pretty">
       Each image lives at a versioned, immutable path on{" "}
       <a class="link" href="https://images.openimages.cloud/">
         images.openimages.cloud
       </a>
       , next to its checksums, signature bundle and{" "}
-      <code class="font-mono text-sm">MANIFEST.json</code>. A{" "}
+      <code class="font-mono text-sm">MANIFEST.json</code>. A&nbsp;
       <code class="font-mono text-sm">latest/</code> alias follows each release, but pin a version
       in anything you want to reproduce.
     </p>
 
-    <div class="mt-10 flex flex-wrap items-center gap-3">
-      <label class="relative block w-full sm:w-80">
+    <div class="mt-10">
+      <label class="relative block w-full">
         <span class="sr-only">Filter images</span>
         <svg
           viewBox="0 0 24 24"
@@ -46,12 +46,16 @@ const header = "grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]";
           data-image-filter
           placeholder="Filter: alpine, uefi, octavia…"
           autocomplete="off"
-          class="border-line-strong surface text-ink placeholder:text-ink-faint w-full rounded-lg border py-2 pr-3 pl-9 text-sm focus:outline-none focus-visible:border-[var(--accent)]"
+          class="border-line-strong surface text-ink placeholder:text-ink-faint w-full rounded-lg border py-2.5 pr-24 pl-9 text-sm focus:outline-none focus-visible:border-[var(--accent)]"
         />
+        <span
+          class="text-ink-faint pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs tabular-nums"
+          data-filter-count
+          aria-live="polite"
+        >
+          {images.length} images
+        </span>
       </label>
-      <p class="text-ink-faint text-sm" data-filter-count aria-live="polite">
-        {images.length} images
-      </p>
     </div>
 
     <div class="border-line mt-6 overflow-hidden rounded-xl border">
