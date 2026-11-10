@@ -70,6 +70,20 @@ requests.
 shown on the site comes from `CERT_IDENTITY_REGEXP` in `src/lib/images.ts`; keep it in sync
 with `IMAGE_STANDARDS.md`, section A.
 
+## Distribution logos
+
+`public/img/logos/` holds the upstream marks, used only to identify each image. They are
+trademarks of their respective owners.
+
+| File                                              | Source                                                                                                                                         |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `alpine-linux.svg`, `oracle.svg`, `openstack.svg` | [Simple Icons](https://simpleicons.org) (CC0 paths), official brand colours                                                                    |
+| `nixos.svg`                                       | [NixOS/nixos-artwork](https://github.com/NixOS/nixos-artwork) `logo/nix-snowflake-colours.svg`                                                 |
+| `amazon.svg`                                      | AWS logo, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Amazon_Web_Services_Logo.svg) (Amazon Linux has no separate public mark) |
+| `alpaquita.svg`                                   | BellSoft Alpaquita mark, redrawn in SVG from the official artwork                                                                              |
+
+Logo tiles stay white in dark mode so every mark keeps its official colours.
+
 ## License
 
 [Apache-2.0](LICENSE).

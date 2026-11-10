@@ -20,7 +20,7 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
     href={`/images/${image.os_name}/`}
     class="group grid grid-cols-[2.75rem_1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-4 transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_5%,transparent)] sm:px-5 md:grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]"
   >
-    <span class="border-line surface-raised row-span-2 flex h-11 w-11 items-center justify-center rounded-lg border md:row-span-1">
+    <span class="border-line row-span-2 flex h-11 w-11 bg-white dark:border-transparent items-center justify-center rounded-lg border md:row-span-1">
       {logoUrl && (
         <img
           src={logoUrl}
