@@ -20,27 +20,27 @@
     "deploy:dry-run": "wrangler deploy --dry-run"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.9",
-    "@astrojs/mdx": "^5.0.4",
-    "@astrojs/sitemap": "^3.7.2",
-    "@tailwindcss/vite": "^4.2.4",
-    "astro": "^6.3.1",
-    "tailwindcss": "^4.2.4",
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/mdx": "^8.1.3",
+    "@astrojs/sitemap": "^3.7.4",
+    "@tailwindcss/vite": "^4.3.5",
+    "astro": "^7.4.7",
+    "tailwindcss": "^4.3.5",
     "typescript": "^6.0.3",
-    "yaml": "^2.8.4"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.6.2",
-    "eslint": "^10.3.0",
-    "eslint-plugin-astro": "^1.7.0",
-    "globals": "^17.6.0",
-    "prettier": "^3.8.3",
-    "prettier-plugin-astro": "^0.14.1",
-    "prettier-plugin-tailwindcss": "^0.8.0",
-    "sharp": "^0.34.5",
-    "typescript-eslint": "^8.59.2",
-    "wrangler": "^4.90.0"
+    "@types/node": "^25.9.9",
+    "eslint": "^10.14.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-astro": "^1.1.2",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "sharp": "^0.35.5",
+    "typescript-eslint": "^8.72.1",
+    "wrangler": "^4.158.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
