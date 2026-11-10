@@ -1,6 +1,5 @@
 ---
-import { Image } from "astro:assets";
-import logoIcon from "~/assets/open-images-icon.png";
+import Logo from "~/components/Logo.astro";
 import ThemeToggle from "~/components/ThemeToggle.astro";
 
 const links = [
@@ -18,7 +17,7 @@ const currentPath = Astro.url.pathname;
       class="text-ink flex items-center gap-2.5 font-semibold tracking-tight"
       aria-label="Open Image Cloud, home"
     >
-      <Image src={logoIcon} alt="" width={32} height={32} loading="eager" class="h-8 w-8" />
+      <Logo class="h-8 w-8" />
       <span class="hidden sm:inline">Open Image Cloud</span>
     </a>
     <nav class="flex items-center gap-1 text-sm" aria-label="Main">

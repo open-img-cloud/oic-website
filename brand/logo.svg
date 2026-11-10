@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Open Image Cloud">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4f8ef0"/>
+      <stop offset="1" stop-color="#2459c4"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded hexagon (pointy top) -->
+  <path d="M32 3.5 57 18v28L32 60.5 7 46V18Z" fill="url(#g)" stroke="url(#g)" stroke-width="5" stroke-linejoin="round"/>
+  <g transform="translate(0 2.3)">
+  <!-- Stacked image layers, isometric -->
+  <path d="M17.5 36.5 32 44.8l14.5-8.3" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17.5 29.8 32 38.1l14.5-8.3" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 14.5 46.5 22.8 32 31.1 17.5 22.8Z" fill="#fff" stroke="#fff" stroke-width="3.6" stroke-linejoin="round"/>
+  <!-- Verified check on the top layer -->
+  <path d="m27.2 22.9 3.4 2.9 6.1-5.6" fill="none" stroke="#2459c4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
