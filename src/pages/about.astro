@@ -1,0 +1,131 @@
+---
+import Base from "~/layouts/Base.astro";
+import { loadEnrichedImages } from "~/lib/images";
+
+const count = (await loadEnrichedImages()).length;
+
+const principles = [
+  {
+    title: "Official sources",
+    text: "Each image starts from what the distribution publishes, verified against its own checksums or keys. No third-party base, no hidden layer.",
+  },
+  {
+    title: "Minimal, identical changes",
+    text: "Only what a cloud image needs: one cloud-init policy, guest agent, serial console, cleanup. The same rules for every distribution, documented per image.",
+  },
+  {
+    title: "Verifiable",
+    text: "Built in public CI, signed with Sigstore cosign by the build workflow itself, with a provenance manifest for every file.",
+  },
+  {
+    title: "Tested where it runs",
+    text: "Each release boots on a real OpenStack cloud and must pass the same checks before it is considered good.",
+  },
+  {
+    title: "Always current",
+    text: "Images follow upstream releases automatically, every day, instead of whenever someone has time.",
+  },
+  {
+    title: "Open",
+    text: "All the tooling is GPL-2.0 on GitHub. Fork it, audit it, or run the same pipeline for your own images.",
+  },
+];
+---
+
+<Base
+  title="About"
+  description="Why Open Image Cloud exists: signed, tested and current cloud images for OpenStack and Proxmox, built from official sources."
+>
+  <article class="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
+    <p class="eyebrow">About</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">
+      Cloud images you do not have to rebuild yourself
+    </h1>
+    <p class="text-ink-muted mt-4 text-lg leading-relaxed">
+      Running OpenStack or Proxmox means maintaining a shelf of base images: downloading them from a
+      dozen projects, each with its own format, default user, cloud-init quirks and release rhythm,
+      then checking that they still boot. Open Image Cloud does that work once, in the open, for{" "}
+      {count} images, and publishes the result in one place with one set of rules.
+    </p>
+
+    <section class="mt-14">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Principles</h2>
+      <dl class="mt-6 grid gap-6 sm:grid-cols-2">
+        {principles.map((p) => (
+          <div class="border-line rounded-xl border p-5">
+            <dt class="text-ink font-medium">{p.title}</dt>
+            <dd class="text-ink-muted mt-2 text-sm leading-relaxed">{p.text}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+
+    <section class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Who it is for</h2>
+      <p class="mt-3">
+        Cloud operators who publish public images to their users, teams running private OpenStack or
+        Proxmox clusters, and anyone who wants a known-good, verifiable image to start from.
+      </p>
+    </section>
+
+    <section class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">How it runs</h2>
+      <ul class="mt-3 list-disc space-y-1.5 pl-5">
+        <li>One repository per image, all sharing the same build workflows on GitHub Actions.</li>
+        <li>
+          Files stored on Infomaniak Object Storage in Switzerland, served worldwide through
+          Cloudflare.
+        </li>
+        <li>
+          Machine-readable catalog at{" "}
+          <a class="link" href="https://images.openimages.cloud/index.json">
+            index.json
+          </a>
+          , plus an export for the osism openstack-image-manager, so updates can be automated.
+        </li>
+        <li>
+          Every image is tested before and after publication:{" "}
+          <a class="link" href="/quality/">
+            see what is checked
+          </a>
+          .
+        </li>
+      </ul>
+    </section>
+
+    <section class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">What it is not</h2>
+      <ul class="mt-3 list-disc space-y-1.5 pl-5">
+        <li>
+          Not affiliated with the distributions it packages. Their names and logos belong to their
+          owners, and each image keeps its upstream license.
+        </li>
+        <li>
+          Not a commercial service: images come as they are, without a support contract. Problems
+          are tracked in public on GitHub.
+        </li>
+        <li>No proprietary system images we are not allowed to redistribute.</li>
+      </ul>
+    </section>
+
+    <section class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Next</h2>
+      <ul class="mt-3 list-disc space-y-1.5 pl-5">
+        <li>A small tool to import and keep images up to date in OpenStack and Proxmox.</li>
+        <li>More OpenStack service images, after Octavia: Manila and Trove.</li>
+        <li>More BSD: FreeBSD, then OPNsense.</li>
+        <li>
+          Testing every release before the <code class="font-mono text-sm">latest/</code> alias
+          moves.
+        </li>
+      </ul>
+      <p class="mt-6">
+        Missing an image?{" "}
+        <a class="link" href="https://github.com/open-img-cloud/.github/issues">
+          Open a request
+        </a>
+        .
+      </p>
+    </section>
+  </article>
+</Base>
