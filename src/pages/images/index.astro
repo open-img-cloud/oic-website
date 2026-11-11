@@ -1,12 +1,17 @@
 ---
 import Base from "~/layouts/Base.astro";
 import ImageRow from "~/components/ImageRow.astro";
-import { loadEnrichedImages } from "~/lib/images";
+import { downloadsWindowLabel, loadDownloadStats, loadEnrichedImages } from "~/lib/images";
 
 const images = await loadEnrichedImages();
+// Download counts: shown only when the router statistics endpoint answered at build time.
+const stats = await loadDownloadStats();
+const showDownloads = stats != null;
 const active = images.filter((i) => i.status !== "archive");
 const archived = images.filter((i) => i.status === "archive");
-const header = "grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]";
+const header = showDownloads
+  ? "grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_6rem_1rem]"
+  : "grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]";
 ---
 
 <Base
@@ -70,11 +75,16 @@ const header = "grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]";
         <span class="eyebrow">Latest</span>
         <span class="eyebrow">Built</span>
         <span class="eyebrow text-right">Size</span>
+        {stats && (
+          <span class="eyebrow text-right" title={`Downloads, ${downloadsWindowLabel(stats)}`}>
+            Downloads
+          </span>
+        )}
         <span></span>
       </div>
       <ul class="divide-line divide-y" data-image-list>
         {active.map((image) => (
-          <ImageRow image={image} />
+          <ImageRow image={image} showDownloads={showDownloads} />
         ))}
       </ul>
     </div>
@@ -92,7 +102,7 @@ const header = "grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]";
         <div class="border-line mt-4 overflow-hidden rounded-xl border">
           <ul class="divide-line divide-y" data-image-list>
             {archived.map((image) => (
-              <ImageRow image={image} />
+              <ImageRow image={image} showDownloads={showDownloads} />
             ))}
           </ul>
         </div>
