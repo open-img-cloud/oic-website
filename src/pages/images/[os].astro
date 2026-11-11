@@ -50,6 +50,7 @@ const minDisk = minDiskGiB(primary?.virtualSize);
 const glanceProps: Record<string, string> = {
   ...(image.os_distro && { os_distro: image.os_distro }),
   ...(image.os_version && { os_version: image.os_version }),
+  ...(image.login_user && { os_admin_user: image.login_user }),
   ...firmwareProperties(primary?.firmware ?? "bios"),
   hw_qemu_guest_agent: "yes",
   ...image.glance_properties,

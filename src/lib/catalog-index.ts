@@ -122,7 +122,11 @@ function indexImage(image: EnrichedImage): IndexImage | null {
     latest_version: image.latest_version,
     versions_url: image.versionsUrl,
     tags: image.tags,
-    glance_properties: { ...DEFAULT_GLANCE_PROPERTIES, ...image.glance_properties },
+    glance_properties: {
+      ...DEFAULT_GLANCE_PROPERTIES,
+      ...(image.login_user && { os_admin_user: image.login_user }),
+      ...image.glance_properties,
+    },
     artifacts,
   };
 }
