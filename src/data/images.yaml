@@ -108,6 +108,109 @@ images:
         hint: musl libc, smallest footprint
         filename_template: "alpaquita-{version}-musl-x86_64.qcow2"
 
+  - os_name: debian-13
+    title: Debian 13
+    tagline: "The universal operating system, Debian 13 \"trixie\"."
+    description: |
+      Cloud-init-ready, signed Debian 13 qcow2 image built from the
+      official Debian genericcloud release, verified against the
+      upstream SHA512SUMS, with qemu-guest-agent added.
+    repo: open-img-cloud/debian-13
+    upstream_homepage: https://www.debian.org/
+    latest_version: "13-20261103-2651"
+    login_user: debian
+    status_note: "Current Debian stable: security support until 2028-08, then Debian LTS until 2030-06-30."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    logo: debian.svg
+
+  - os_name: debian-12
+    title: Debian 12
+    tagline: "The universal operating system, Debian 12 \"bookworm\"."
+    description: |
+      Cloud-init-ready, signed Debian 12 qcow2 image built from the
+      official Debian genericcloud release, verified against the
+      upstream SHA512SUMS, with qemu-guest-agent added.
+    repo: open-img-cloud/debian-12
+    upstream_homepage: https://www.debian.org/
+    latest_version: "12-20261026-2643"
+    login_user: debian
+    status_note: "Debian LTS until 2028-06-30. Prefer Debian 13 for new deployments."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    logo: debian.svg
+
+  - os_name: ubuntu-26.04
+    title: Ubuntu 26.04 LTS
+    tagline: "Ubuntu 26.04 LTS (Resolute Raccoon), long-term support release from Canonical."
+    description: |
+      Cloud-init-ready, signed Ubuntu 26.04 LTS qcow2 image built from
+      the official Ubuntu server cloud image, verified against the
+      upstream SHA256SUMS, with qemu-guest-agent added.
+    repo: open-img-cloud/ubuntu-26.04
+    upstream_homepage: https://ubuntu.com/
+    latest_version: "26.04-20261016"
+    login_user: ubuntu
+    status_note: "Standard support until April 2031."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, lts]
+    logo: ubuntu.svg
+
+  - os_name: ubuntu-24.04
+    title: Ubuntu 24.04 LTS
+    tagline: "Ubuntu 24.04 LTS (Noble Numbat), long-term support release from Canonical."
+    description: |
+      Cloud-init-ready, signed Ubuntu 24.04 LTS qcow2 image built from
+      the official Ubuntu server cloud image, verified against the
+      upstream SHA256SUMS, with qemu-guest-agent added.
+    repo: open-img-cloud/ubuntu-24.04
+    upstream_homepage: https://ubuntu.com/
+    latest_version: "24.04-20261017"
+    login_user: ubuntu
+    status_note: "Standard support until May 2029."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, lts]
+    logo: ubuntu.svg
+
+  - os_name: ubuntu-22.04
+    title: Ubuntu 22.04 LTS
+    tagline: "Ubuntu 22.04 LTS (Jammy Jellyfish), long-term support release from Canonical."
+    description: |
+      Cloud-init-ready, signed Ubuntu 22.04 LTS qcow2 image built from
+      the official Ubuntu server cloud image, verified against the
+      upstream SHA256SUMS, with qemu-guest-agent added.
+    repo: open-img-cloud/ubuntu-22.04
+    upstream_homepage: https://ubuntu.com/
+    latest_version: "22.04-20261106"
+    login_user: ubuntu
+    status_note: "Standard support until April 2027 (then Ubuntu Pro / ESM). Prefer 24.04 or 26.04 for new deployments."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, lts]
+    logo: ubuntu.svg
+
+  - os_name: rocky-linux-10
+    title: Rocky Linux 10
+    tagline: Community enterprise Linux, binary-compatible with RHEL 10.
+    description: |
+      Cloud-init-ready, signed Rocky Linux 10 qcow2 image built from the
+      official Rocky GenericCloud release, verified against the upstream
+      checksum list. Like RHEL 10 it needs an x86-64-v3 CPU (Haswell or newer)
+      exposed by the hypervisor CPU model.
+    repo: open-img-cloud/rocky-linux-10
+    upstream_homepage: https://rockylinux.org/
+    latest_version: "10.2-20260525.0"
+    login_user: rocky
+    status_note: "Requires an x86-64-v3 CPU (Haswell or newer). Supported until 2035-05-31."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: rocky-linux.svg
+
   - os_name: rocky-linux-9
     title: Rocky Linux 9
     tagline: Community enterprise Linux, binary-compatible with RHEL 9.
@@ -124,6 +227,24 @@ images:
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
     logo: rocky-linux.svg
 
+  - os_name: almalinux-10
+    title: AlmaLinux 10
+    tagline: Community enterprise Linux, binary-compatible with RHEL 10.
+    description: |
+      Cloud-init-ready, signed AlmaLinux 10 qcow2 image built from the
+      official AlmaLinux GenericCloud release, verified against the upstream
+      checksum list. Like RHEL 10 it needs an x86-64-v3 CPU (Haswell or newer)
+      exposed by the hypervisor CPU model.
+    repo: open-img-cloud/almalinux-10
+    upstream_homepage: https://almalinux.org/
+    latest_version: "10.2-20261109.0"
+    login_user: almalinux
+    status_note: "Requires an x86-64-v3 CPU (Haswell or newer)."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: almalinux.svg
+
   - os_name: almalinux-9
     title: AlmaLinux 9
     tagline: Community enterprise Linux, binary-compatible with RHEL 9.
@@ -136,6 +257,40 @@ images:
     upstream_homepage: https://almalinux.org/
     latest_version: "9.8-20261102"
     login_user: almalinux
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: almalinux.svg
+
+  - os_name: rocky-linux-8
+    title: Rocky Linux 8
+    tagline: Community enterprise Linux, binary-compatible with RHEL 8.
+    description: |
+      Cloud-init-ready, signed Rocky Linux 8 qcow2 image built from the
+      official Rocky GenericCloud release, verified against the upstream
+      checksum list. For existing RHEL 8 workloads.
+    repo: open-img-cloud/rocky-linux-8
+    upstream_homepage: https://rockylinux.org/
+    latest_version: "8.10-20240528.0"
+    login_user: rocky
+    status_note: "Rocky Linux 8 is supported until 2029-05-31. The upstream 8.x cloud image is no longer refreshed (May 2024): run dnf update on first boot. Prefer Rocky Linux 9 or 10 for new deployments."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: rocky-linux.svg
+
+  - os_name: almalinux-8
+    title: AlmaLinux 8
+    tagline: Community enterprise Linux, binary-compatible with RHEL 8.
+    description: |
+      Cloud-init-ready, signed AlmaLinux 8 qcow2 image built from the
+      official AlmaLinux GenericCloud release, verified against the upstream
+      checksum list. For existing RHEL 8 workloads.
+    repo: open-img-cloud/almalinux-8
+    upstream_homepage: https://almalinux.org/
+    latest_version: "8.10-20261026"
+    login_user: almalinux
+    status_note: "AlmaLinux 8 is supported until 2029-03-01. Prefer AlmaLinux 9 or 10 for new deployments."
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
