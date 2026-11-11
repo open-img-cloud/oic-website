@@ -217,6 +217,26 @@ images:
     tags: [openstack, proxmox, cloud-init, signed, lts]
     logo: ubuntu.svg
 
+  - os_name: centos-stream-10
+    title: CentOS Stream 10
+    os_distro: centos
+    os_version: "10"
+    tagline: The continuously delivered distribution just ahead of RHEL 10.
+    description: |
+      Cloud-init-ready, signed CentOS Stream 10 qcow2 image built from the
+      official CentOS GenericCloud compose, verified against the upstream
+      checksum. A new image follows each weekly compose. Like RHEL 10 it
+      needs an x86-64-v3 CPU (Haswell or newer).
+    repo: open-img-cloud/centos-stream-10
+    upstream_homepage: https://www.centos.org/
+    latest_version: "10-20261106.0"
+    login_user: cloud-user
+    status_note: "Requires an x86-64-v3 CPU (Haswell or newer). Weekly upstream composes; maintained until the end of RHEL 10 full support (expected 2030)."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: centos.svg
+
   - os_name: rocky-linux-10
     title: Rocky Linux 10
     os_distro: rocky
@@ -384,6 +404,45 @@ images:
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
     logo: oracle.svg
+
+  - os_name: gentoo-linux
+    title: Gentoo Linux
+    os_distro: gentoo
+    os_version: null
+    tagline: Source-based rolling distribution, systemd profile.
+    description: |
+      Cloud-init-ready, signed Gentoo qcow2 image built from a fresh stage3
+      (verified with the Gentoo release key) with diskimage-builder:
+      systemd profile, binary distribution kernel, cloud-init,
+      systemd-networkd and qemu-guest-agent. Rebuilt from the latest stage3.
+    repo: open-img-cloud/gentoo-linux
+    upstream_homepage: https://www.gentoo.org/
+    latest_version: "2026.11.08"
+    login_user: gentoo
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rolling]
+    logo: gentoo.svg
+
+  - os_name: opensuse-leap-16
+    title: openSUSE Leap 16
+    os_distro: opensuse
+    os_version: "16.0"
+    tagline: Community distribution built from SUSE Linux Enterprise 16.
+    description: |
+      Cloud-init-ready, signed openSUSE Leap 16 qcow2 image built from the
+      official Minimal-VM Cloud appliance, verified against the upstream
+      SHA-256. It ships the SLE 16 cloud-init configuration: the default
+      user is sles.
+    repo: open-img-cloud/opensuse-leap-16
+    upstream_homepage: https://www.opensuse.org/
+    latest_version: "16.0-18.92"
+    login_user: sles
+    status_note: "Leap 16.0 is maintained until six months after the release of Leap 16.1."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    logo: opensuse.svg
 
   - os_name: nixos
     title: NixOS
