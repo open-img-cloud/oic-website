@@ -1,6 +1,6 @@
 ---
 import Base from "~/layouts/Base.astro";
-import { firmwareProperties, inOsismExport, minDiskGiB } from "~/lib/catalog-index";
+import { glanceProperties, inOsismExport, minDiskGiB } from "~/lib/catalog-index";
 import CodeBlock from "~/components/CodeBlock.astro";
 import StatusBadge from "~/components/StatusBadge.astro";
 import {
@@ -47,14 +47,12 @@ const fileUrl =
   primary?.fileUrl ?? `https://images.openimages.cloud/${image.os_name}/${image.latest_version}/`;
 const sha256 = primary?.manifest?.sha256;
 const minDisk = minDiskGiB(primary?.virtualSize);
-const glanceProps: Record<string, string> = {
-  ...(image.os_distro && { os_distro: image.os_distro }),
-  ...(image.os_version && { os_version: image.os_version }),
-  ...(image.login_user && { os_admin_user: image.login_user }),
-  ...firmwareProperties(primary?.firmware ?? "bios"),
-  hw_qemu_guest_agent: "yes",
-  ...image.glance_properties,
-};
+const glanceProps = glanceProperties(image, {
+  arch: primary?.arch ?? "x86_64",
+  firmware: primary?.firmware ?? "bios",
+  version: primary?.manifest?.version ?? image.latest_version,
+  sha256,
+});
 
 const openstack = `curl -fLO ${fileUrl}${sha256 ? `\necho "${sha256}  ${file}" | sha256sum -c -` : ""}
 

@@ -19,12 +19,79 @@ import {
 
 export const INDEX_SCHEMA = "oic-index/v1";
 
-/** Glance properties every catalog image supports, overridable per image in images.yaml. */
+/**
+ * Glance properties every catalog image supports, overridable per image in images.yaml
+ * (glance_properties). All images ship qemu-guest-agent, virtio-scsi and multiqueue-capable
+ * virtio-net drivers; os_require_quiesce makes Nova freeze the filesystems through the agent
+ * before a snapshot.
+ */
 export const DEFAULT_GLANCE_PROPERTIES: Record<string, string> = {
+  os_type: "linux",
   hw_qemu_guest_agent: "yes",
   hw_disk_bus: "scsi",
   hw_scsi_model: "virtio-scsi",
+  hw_vif_multiqueue_enabled: "true",
+  os_require_quiesce: "yes",
 };
+
+/**
+ * Supported by every image but left to the operator: on some clouds the flavor must allow it
+ * (hw_rng:allowed=True) or Nova refuses to boot.
+ */
+export const OPTIONAL_GLANCE_PROPERTIES: Record<string, string> = {
+  hw_rng_model: "virtio",
+};
+
+/** Keys of the osism image meta schema we may pass through (it rejects unknown keys). */
+const OSISM_META_KEYS = new Set([
+  "os_type",
+  "os_admin_user",
+  "hw_qemu_guest_agent",
+  "hw_disk_bus",
+  "hw_scsi_model",
+  "hw_vif_multiqueue_enabled",
+  "hw_rng_model",
+  "hw_firmware_type",
+  "hw_machine_type",
+]);
+
+interface GlanceImageInput {
+  os_name: string;
+  os_distro?: string | null;
+  os_version?: string | null;
+  login_user?: string | null;
+  glance_properties?: Record<string, string>;
+}
+
+interface GlanceArtifactInput {
+  arch: string;
+  firmware: Firmware;
+  version: string;
+  sha256?: string | null;
+}
+
+/**
+ * Full Glance property set for one artifact, shared by the image page snippet and index.json:
+ * OS identity, defaults, firmware, and oic_* keys that let tools recognise our images in Glance
+ * and detect a newer version.
+ */
+export function glanceProperties(
+  img: GlanceImageInput,
+  a: GlanceArtifactInput,
+): Record<string, string> {
+  return {
+    ...(img.os_distro && { os_distro: img.os_distro }),
+    ...(img.os_version && { os_version: img.os_version }),
+    ...(img.login_user && { os_admin_user: img.login_user }),
+    architecture: a.arch,
+    ...DEFAULT_GLANCE_PROPERTIES,
+    ...firmwareProperties(a.firmware),
+    ...img.glance_properties,
+    oic_id: img.os_name,
+    oic_version: a.version,
+    ...(a.sha256 && { oic_sha256: a.sha256 }),
+  };
+}
 
 /** Glance properties a UEFI artifact needs on top of the image ones. */
 export function firmwareProperties(firmware: Firmware): Record<string, string> {
@@ -53,6 +120,8 @@ export interface IndexArtifact {
   build_url: string | null;
   commit: string | null;
   signed: boolean;
+  /** Complete property set to pass to `openstack image create` for this artifact. */
+  glance_properties: Record<string, string>;
 }
 
 export interface IndexImage {
@@ -68,6 +137,7 @@ export interface IndexImage {
   versions_url: string | null;
   tags: string[];
   glance_properties: Record<string, string>;
+  optional_glance_properties: Record<string, string>;
   artifacts: IndexArtifact[];
 }
 
@@ -107,6 +177,12 @@ function indexImage(image: EnrichedImage): IndexImage | null {
       build_url: m.build_url ?? null,
       commit: m.commit ?? null,
       signed: m.signed,
+      glance_properties: glanceProperties(image, {
+        arch: a.arch,
+        firmware: a.firmware,
+        version: m.version,
+        sha256: m.sha256,
+      }),
     });
   }
   if (artifacts.length === 0) return null;
@@ -123,10 +199,12 @@ function indexImage(image: EnrichedImage): IndexImage | null {
     versions_url: image.versionsUrl,
     tags: image.tags,
     glance_properties: {
-      ...DEFAULT_GLANCE_PROPERTIES,
+      os_type: DEFAULT_GLANCE_PROPERTIES.os_type,
       ...(image.login_user && { os_admin_user: image.login_user }),
+      ...DEFAULT_GLANCE_PROPERTIES,
       ...image.glance_properties,
     },
+    optional_glance_properties: OPTIONAL_GLANCE_PROPERTIES,
     artifacts,
   };
 }
@@ -184,6 +262,16 @@ function osismDay(iso: string | null): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : new Date(d.toISOString().slice(0, 10));
 }
 
+/** Artifact Glance properties reduced to what the osism schema accepts, with its types. */
+function osismMeta(props: Record<string, string>): Record<string, string | boolean> {
+  const meta: Record<string, string | boolean> = {};
+  for (const [k, v] of Object.entries(props)) {
+    if (!OSISM_META_KEYS.has(k)) continue;
+    meta[k] = k === "hw_vif_multiqueue_enabled" ? v === "true" : v;
+  }
+  return meta;
+}
+
 /**
  * osism openstack-image-manager definitions (github.com/osism/openstack-image-manager,
  * etc/schema.yaml and etc/images/*.yml): one image per artifact, `multi: true` so the latest
@@ -213,8 +301,7 @@ export function buildOsismImages(index: CatalogIndex): string {
           meta: {
             architecture: a.arch,
             hypervisor_type: "qemu",
-            ...img.glance_properties,
-            ...firmwareProperties(a.firmware),
+            ...osismMeta(a.glance_properties),
             os_distro: img.os_distro,
             ...(img.os_version && { os_version: img.os_version }),
             os_purpose: "generic",
