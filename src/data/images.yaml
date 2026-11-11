@@ -13,7 +13,8 @@
 #   status       stable (default) | archive | preview  (IMAGE_STANDARDS.md §I)
 #   status_note  one-line banner on the image page (EOL date, known issue…)
 #   login_user   default cloud-init user, shown in the quick start
-#   featured     true → shown on the home page
+#   featured     1..6: shown on the home page, in this order (others are
+#                summarised as family logos linking to the catalog)
 #   variants[].hint  short explanation of the variant
 #
 # Optional platform fields (exported in /index.json and /osism/images.yml):
@@ -28,6 +29,7 @@
 images:
   - os_name: alpine-linux
     title: Alpine Linux
+    featured: 4
     os_distro: alpinelinux
     tagline: Minimal, security-oriented distro built around musl libc and BusyBox.
     description: |
@@ -42,7 +44,6 @@ images:
     tags: [openstack, proxmox, cloud-init, signed]
     logo: alpine-linux.svg
     login_user: alpine
-    featured: true
     variants:
       - id: bios
         label: BIOS
@@ -77,6 +78,7 @@ images:
 
   - os_name: amazon-linux-2023
     title: Amazon Linux 2023
+    featured: 5
     os_distro: amzn
     os_version: "2023"
     tagline: Fedora-derived AL2023 image, modern dnf-based AWS workhorse.
@@ -90,7 +92,6 @@ images:
     repo: open-img-cloud/amazon-linux-2023
     upstream_homepage: https://aws.amazon.com/linux/amazon-linux-2023/
     login_user: ec2-user
-    featured: true
     latest_version: "2023.12.20261109.0"
     format: qcow2
     arch: x86_64
@@ -126,6 +127,7 @@ images:
 
   - os_name: debian-13
     title: Debian 13
+    featured: 2
     os_distro: debian
     tagline: 'The universal operating system, Debian 13 "trixie".'
     description: |
@@ -180,6 +182,7 @@ images:
 
   - os_name: ubuntu-24.04
     title: Ubuntu 24.04 LTS
+    featured: 1
     os_distro: ubuntu
     tagline: "Ubuntu 24.04 LTS (Noble Numbat), long-term support release from Canonical."
     description: |
@@ -235,6 +238,7 @@ images:
 
   - os_name: rocky-linux-9
     title: Rocky Linux 9
+    featured: 3
     os_distro: rocky
     tagline: Community enterprise Linux, binary-compatible with RHEL 9.
     description: |
@@ -376,7 +380,6 @@ images:
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "10.1-b291"
     login_user: cloud-user
-    featured: true
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]

@@ -1,7 +1,11 @@
 ---
 import { loadEnrichedImages } from "~/lib/images";
 
-const images = (await loadEnrichedImages()).filter((i) => i.status !== "archive");
+const all = await loadEnrichedImages();
+// Featured images only; the full list lives in the catalog.
+const images = all
+  .filter((i) => i.status !== "archive" && typeof i.featured === "number")
+  .sort((a, b) => (a.featured ?? 99) - (b.featured ?? 99));
 const year = new Date().getFullYear();
 
 const project = [
@@ -40,6 +44,11 @@ const source = [
             </a>
           </li>
         ))}
+        <li>
+          <a href="/images/" class="link">
+            All {all.length} images
+          </a>
+        </li>
       </ul>
     </nav>
     <nav aria-label="Project">
