@@ -5,8 +5,10 @@ import StatusBadge from "~/components/StatusBadge.astro";
 import {
   CERT_IDENTITY_REGEXP,
   CERT_OIDC_ISSUER,
+  downloadsWindowLabel,
   formatBytes,
   formatDate,
+  loadDownloadStats,
   loadEnrichedImages,
   shortSha,
   type Artifact,
@@ -23,6 +25,10 @@ interface Props {
 }
 
 const { image } = Astro.props;
+// Download counts, null when the statistics endpoint was unavailable at build time.
+const stats = await loadDownloadStats();
+const downloadsLabel = stats ? downloadsWindowLabel(stats) : "";
+const plural = (n: number) => `${n.toLocaleString("en-US")} download${n === 1 ? "" : "s"}`;
 const repoUrl = `https://github.com/${image.repo}`;
 const logoUrl = image.logo ? `/img/logos/${image.logo}` : null;
 const artifacts = image.latest.artifacts;
@@ -99,7 +105,19 @@ const provenance = [
     href: p.upstream_url,
   },
   { label: "Signature", value: image.signed ? "cosign keyless" : "unsigned" },
-].filter(Boolean) as { label: string; value: string; href?: string; mono?: boolean }[];
+  image.downloads != null && {
+    label: "Downloads",
+    value: image.downloads.toLocaleString("en-US"),
+    title: `All versions, ${downloadsLabel}`,
+    mono: true,
+  },
+].filter(Boolean) as {
+  label: string;
+  value: string;
+  href?: string;
+  mono?: boolean;
+  title?: string;
+}[];
 ---
 
 <Base title={image.title} description={`${image.title}: ${image.tagline}`}>
@@ -216,6 +234,9 @@ const provenance = [
                     <a class="hover:text-ink" href={`${a.fileUrl}.sha256`}>
                       .sha256
                     </a>
+                    {a.downloads != null && (
+                      <span title={downloadsLabel}>{plural(a.downloads)}</span>
+                    )}
                     <a
                       class="hover:text-ink"
                       href={`https://images.openimages.cloud/${image.os_name}/${image.latest_version}/`}
@@ -299,6 +320,11 @@ const provenance = [
                     <th class="eyebrow px-4 py-2.5 font-normal">File</th>
                     <th class="eyebrow px-4 py-2.5 text-right font-normal">Size</th>
                     <th class="eyebrow px-4 py-2.5 font-normal">Built</th>
+                    {stats && (
+                      <th class="eyebrow px-4 py-2.5 text-right font-normal" title={downloadsLabel}>
+                        Downloads
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody class="divide-line divide-y">
@@ -319,6 +345,11 @@ const provenance = [
                           {formatBytes(a.sizeBytes)}
                         </td>
                         <td class="text-ink-muted px-4 py-3">{formatDate(a.manifest?.built_at)}</td>
+                        {stats && (
+                          <td class="text-ink-muted px-4 py-3 text-right font-mono">
+                            {a.downloads?.toLocaleString("en-US") ?? ""}
+                          </td>
+                        )}
                       </tr>
                     )),
                   )}
@@ -340,6 +371,7 @@ const provenance = [
               <div class="flex items-baseline justify-between gap-4">
                 <dt class="text-ink-faint shrink-0">{row.label}</dt>
                 <dd
+                  title={row.title}
                   class:list={[
                     "text-ink min-w-0 truncate text-right",
                     row.mono && "font-mono text-xs",

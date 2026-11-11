@@ -63,6 +63,8 @@ export interface Artifact {
   manifestUrl: string;
   manifest: Manifest | null;
   sizeBytes: number | null;
+  /** Downloads of this file (latest/ and versioned paths), null if stats are unavailable. */
+  downloads: number | null;
 }
 
 export interface Release {
@@ -79,6 +81,21 @@ export interface EnrichedImage extends ImageEntry {
   /** Manifest used for the provenance panel (first available latest artifact). */
   provenance: Manifest | null;
   signed: boolean;
+  /** Downloads of every version of the image, null if stats are unavailable. */
+  downloads: number | null;
+}
+
+/** https://images.openimages.cloud/_stats.json, served by the images-router Worker. */
+export interface DownloadStats {
+  generated_at: string;
+  since: string;
+  /** "all-time", or "rolling-90d" when the router keeps no long-term totals. */
+  window: string;
+  total: number;
+  images: Record<
+    string,
+    { total: number; versions: Record<string, number>; files: Record<string, number> }
+  >;
 }
 
 export const IMAGES_BASE_URL = (
@@ -163,6 +180,7 @@ async function artifact(
     manifestUrl,
     manifest,
     sizeBytes: fileUrl ? await fetchSize(fileUrl) : null,
+    downloads: null,
   };
 }
 
@@ -174,12 +192,48 @@ async function release(image: ImageEntry, version: string): Promise<Release> {
   };
 }
 
-export async function enrichImage(image: ImageEntry): Promise<EnrichedImage> {
+async function fetchDownloadStats(): Promise<DownloadStats | null> {
+  const target = `${IMAGES_BASE_URL}/_stats.json`;
+  const res = await timedFetch(target);
+  if (!res?.ok) {
+    if (res) console.warn(`[images] ${target} → HTTP ${res.status}, download counts hidden`);
+    return null;
+  }
+  try {
+    const stats = (await res.json()) as DownloadStats;
+    return stats && typeof stats.images === "object" && stats.images ? stats : null;
+  } catch {
+    console.warn(`[images] ${target} is not valid JSON, download counts hidden`);
+    return null;
+  }
+}
+
+let statsCache: Promise<DownloadStats | null> | null = null;
+
+/** Download statistics, fetched once per build; null hides every count. */
+export function loadDownloadStats(): Promise<DownloadStats | null> {
+  statsCache ??= fetchDownloadStats();
+  return statsCache;
+}
+
+/** Fills the download counts of an artifact list in place. */
+function attachDownloads(artifacts: Artifact[], files: Record<string, number> | undefined) {
+  for (const a of artifacts) {
+    a.downloads = files ? (a.filename ? (files[a.filename] ?? 0) : null) : null;
+  }
+}
+
+export async function enrichImage(
+  image: ImageEntry,
+  stats: DownloadStats | null = null,
+): Promise<EnrichedImage> {
   const [latest, previous] = await Promise.all([
     release(image, image.latest_version),
     // Previous releases are single-artifact (no variant matrix) in the catalog today.
     Promise.all((image.previous_versions ?? []).map((v) => release({ ...image, variants: [] }, v))),
   ]);
+  const imageStats = stats ? (stats.images[image.os_name] ?? { total: 0, files: {} }) : null;
+  for (const rel of [latest, ...previous]) attachDownloads(rel.artifacts, imageStats?.files);
   const manifests = latest.artifacts.map((a) => a.manifest).filter((m): m is Manifest => !!m);
   const builtAt =
     manifests
@@ -195,6 +249,7 @@ export async function enrichImage(image: ImageEntry): Promise<EnrichedImage> {
     builtAt,
     provenance: manifests[0] ?? null,
     signed: manifests.length > 0 && manifests.every((m) => m.signed),
+    downloads: imageStats ? imageStats.total : null,
   };
 }
 
@@ -202,7 +257,9 @@ let cache: Promise<EnrichedImage[]> | null = null;
 
 /** Loaded once per build and shared by every page. */
 export function loadEnrichedImages(): Promise<EnrichedImage[]> {
-  cache ??= Promise.all(loadImages().map(enrichImage));
+  cache ??= loadDownloadStats().then((stats) =>
+    Promise.all(loadImages().map((image) => enrichImage(image, stats))),
+  );
   return cache;
 }
 
@@ -216,6 +273,21 @@ export function formatBytes(bytes: number | null): string {
     i++;
   }
   return `${n >= 100 || i === 0 ? Math.round(n) : n.toFixed(1)} ${units[i]}`;
+}
+
+const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
+
+/** 1234 → "1.2K"; null (stats unavailable) → "". */
+export function formatCount(n: number | null | undefined): string {
+  return n == null ? "" : compact.format(n);
+}
+
+/** Human label of the statistics window, e.g. "last 90 days" or "since Aug 13, 2026". */
+export function downloadsWindowLabel(stats: DownloadStats): string {
+  if (stats.window.startsWith("rolling-")) {
+    return `last ${stats.window.replace(/^rolling-(\d+)d$/, "$1")} days`;
+  }
+  return `since ${formatDate(stats.since)}`;
 }
 
 export function formatDate(iso: string | null | undefined): string {
