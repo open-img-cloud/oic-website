@@ -1,0 +1,234 @@
+---
+import Base from "~/layouts/Base.astro";
+
+const toc = [
+  { id: "source", label: "1. Upstream source" },
+  { id: "build", label: "2. Build" },
+  { id: "boot", label: "3. Boot test" },
+  { id: "sign", label: "4. Signature" },
+  { id: "validate", label: "5. Publication checks" },
+  { id: "runtime", label: "6. Real OpenStack test" },
+  { id: "continuous", label: "7. Afterwards" },
+];
+
+type Level = "required" | "rolling";
+const runtime: { check: string; detail: string; level: Level }[] = [
+  {
+    check: "Upload and boot",
+    detail:
+      "Imported into Glance, booted with a standard flavor (upsized when the image needs a bigger disk).",
+    level: "required",
+  },
+  {
+    check: "SSH with the injected key",
+    detail: "Login as the documented default user with the key from the cloud metadata.",
+    level: "required",
+  },
+  {
+    check: "cloud-init finished cleanly",
+    detail: "cloud-init status is done; on error the test prints its warnings and tracebacks.",
+    level: "required",
+  },
+  {
+    check: "DNS",
+    detail: "The guest resolves public names with the resolvers it received.",
+    level: "required",
+  },
+  {
+    check: "No password login over SSH",
+    detail: "Asked from outside: the server must not offer password authentication.",
+    level: "required",
+  },
+  {
+    check: "Hostname from metadata",
+    detail: "The guest takes the instance name given by OpenStack.",
+    level: "rolling",
+  },
+  {
+    check: "Disk grown to the flavor",
+    detail: "Partition and filesystem (or ZFS pool) extended to the root disk of the flavor.",
+    level: "rolling",
+  },
+  {
+    check: "Administrator access",
+    detail: "The default user becomes root without a password (sudo or doas).",
+    level: "rolling",
+  },
+  {
+    check: "IPv6",
+    detail:
+      "The guest configures the IPv6 address Neutron assigned to its port and reaches the IPv6 Internet.",
+    level: "rolling",
+  },
+];
+---
+
+<Base
+  title="How images are tested"
+  description="Every check an Open Image Cloud image goes through, from the upstream download to a real boot on OpenStack."
+>
+  <article class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <p class="eyebrow">Quality</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">How images are tested</h1>
+    <p class="text-ink-muted mt-4 max-w-2xl text-lg leading-relaxed">
+      Every image follows the same pipeline, in public CI, each time upstream releases a new
+      version. Any failing step stops the release. This page lists what is checked and what is not
+      checked yet.
+    </p>
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <nav aria-label="On this page" class="hidden lg:block">
+        <ul class="sticky top-24 space-y-2 text-sm">
+          {toc.map((t) => (
+            <li>
+              <a href={`#${t.id}`} class="text-ink-muted hover:text-ink">
+                {t.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="text-ink-muted min-w-0 max-w-3xl space-y-14 leading-relaxed">
+        <section id="source">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">1. Upstream source</h2>
+          <p class="mt-3">
+            We start from what the distribution itself publishes: its official cloud image, or its
+            official sources for the images we build from scratch (FreeBSD, Gentoo, NixOS, Octavia).
+            The download is verified against the checksum list the project publishes (SHA-256 or
+            SHA-512), or against its signing key. A missing entry or a mismatch fails the build.
+          </p>
+        </section>
+
+        <section id="build">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">2. Build</h2>
+          <p class="mt-3">
+            Changes are kept to what a cloud image needs, the same way for every image:
+          </p>
+          <ul class="mt-3 list-disc space-y-1.5 pl-5">
+            <li>
+              one cloud-init policy: OpenStack and ConfigDrive datasources, root login disabled,
+              password authentication disabled;
+            </li>
+            <li>
+              QEMU guest agent, serial console, security updates where the distribution expects it;
+            </li>
+            <li>
+              cleanup: machine id, SSH host keys, logs and package caches are removed so that every
+              instance starts fresh;
+            </li>
+            <li>sparse, compressed qcow2.</li>
+          </ul>
+          <p class="mt-3">
+            Each image documents its own adjustments in its repository, for example a workaround for
+            a known upstream bug.
+          </p>
+        </section>
+
+        <section id="boot">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">3. Boot test</h2>
+          <p class="mt-3">
+            Before signing, images built with libguestfs are booted in QEMU/KVM with a ConfigDrive
+            seed: the CI logs in over SSH with a generated key and checks that cloud-init did not
+            end in error. A failure stops the release before anything is published.
+          </p>
+        </section>
+
+        <section id="sign">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">4. Signature and provenance</h2>
+          <p class="mt-3">
+            The image is signed with Sigstore cosign in keyless mode by the build workflow itself,
+            and the signature is recorded in the public Rekor log. A manifest records the version,
+            checksums (SHA-256 and SHA-512), sizes, firmware, source commit, CI run and builder.{" "}
+            <a class="link" href="/verify/">
+              How to verify an image
+            </a>
+            .
+          </p>
+        </section>
+
+        <section id="validate">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">5. Publication checks</h2>
+          <p class="mt-3">
+            Right after the upload, the CI downloads the image back through the public CDN, like a
+            user would, and checks the manifest fields, the checksum files, the cache headers, the
+            size, and the cosign signature.
+          </p>
+        </section>
+
+        <section id="runtime">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">
+            6. Test on a real OpenStack cloud
+          </h2>
+          <p class="mt-3">
+            Each release is then booted on Infomaniak Public Cloud, in one of two regions picked at
+            random, through the same steps as a user: Glance import, instance creation, SSH login.
+          </p>
+          <div class="border-line mt-5 overflow-hidden rounded-xl border">
+            <table class="w-full text-left text-sm">
+              <thead class="surface-sunken">
+                <tr>
+                  <th class="eyebrow px-4 py-2.5">Check</th>
+                  <th class="eyebrow hidden px-4 py-2.5 md:table-cell">What it means</th>
+                  <th class="eyebrow px-4 py-2.5">Level</th>
+                </tr>
+              </thead>
+              <tbody class="divide-line divide-y">
+                {runtime.map((r) => (
+                  <tr>
+                    <td class="text-ink px-4 py-3 font-medium">{r.check}</td>
+                    <td class="hidden px-4 py-3 md:table-cell">{r.detail}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      {r.level === "required" ? (
+                        <span class="text-ok">Required</span>
+                      ) : (
+                        <span>Required or reported</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-4">
+            <strong class="text-ink">Required or reported:</strong> these checks fail the release
+            for images held to the full contract (FreeBSD today), and are reported as warnings for
+            the others while the whole catalog is brought to the same level. They will all become
+            required.
+          </p>
+          <p class="mt-3">
+            <strong class="text-ink">Known limit:</strong> this test runs right after publication,
+            so a failing release is visible for the time it takes to fix and republish it. Running
+            it before the <code class="font-mono text-sm">latest/</code> alias is updated is on the
+            roadmap.
+          </p>
+        </section>
+
+        <section id="continuous">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">7. Afterwards</h2>
+          <ul class="mt-3 list-disc space-y-1.5 pl-5">
+            <li>
+              <strong class="text-ink">Daily:</strong> each image watches its upstream and proposes
+              a new release as soon as one is published.
+            </li>
+            <li>
+              <strong class="text-ink">Weekly:</strong> an audit downloads every published image
+              again and re-checks its manifest, checksums and signature; any problem opens a public
+              issue.
+            </li>
+          </ul>
+          <p class="mt-4">
+            The exact rules live in the{" "}
+            <a
+              class="link"
+              href="https://github.com/open-img-cloud/.github/blob/main/docs/IMAGE_STANDARDS.md"
+            >
+              image standards
+            </a>
+            , and every run is public on GitHub.
+          </p>
+        </section>
+      </div>
+    </div>
+  </article>
+</Base>
