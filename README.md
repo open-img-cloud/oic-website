@@ -46,6 +46,8 @@ src/
                            status (stable | archive | preview), login user, featured
   lib/images.ts            build-time enrichment: fetches each MANIFEST.json and the file
                            size (HEAD) from images.openimages.cloud; cosign identity constants
+  lib/catalog-index.ts     machine-readable exports: index.json (oic-index/v1) and the osism
+                           openstack-image-manager definitions
   layouts/Base.astro       HTML shell, theme bootstrap, copy-to-clipboard handler
   pages/
     index.astro            landing: verify terminal, stats, catalog, how it works
@@ -53,6 +55,8 @@ src/
     images/[os].astro      image page: downloads, quick start (OpenStack, Proxmox, verify),
                            provenance panel, previous releases
     verify.astro           step-by-step verification guide
+    index.json.ts          /index.json, catalog index for automation (oic-index/v1)
+    osism/images.yml.ts    /osism/images.yml, osism openstack-image-manager definitions
   components/              Header, Footer, ImageRow, StatusBadge, CodeBlock, Terminal, ThemeToggle
   styles/global.css        Tailwind v4 theme, semantic light/dark tokens, self-hosted fonts
 public/                    static assets (logos, favicons, og image)
@@ -64,6 +68,13 @@ degrades gracefully (the image is listed without enriched metadata), so the site
 
 Fonts (Inter, JetBrains Mono) are self-hosted through Fontsource: the site makes no third-party
 requests.
+
+**Machine-readable catalog.** The build also writes `dist/index.json` (schema `oic-index/v1`:
+latest version of every non-preview image with versioned URLs, sha256/sha512, sizes, firmware,
+arch and the cosign identity) and `dist/osism/images.yml` (same images for osism
+openstack-image-manager, validated against its `etc/schema.yaml`). The `images-router` Worker
+relays both as `https://images.openimages.cloud/index.json` and `/osism/images.yml`. Optional
+`os_distro`, `os_version` and `glance_properties` fields in `images.yaml` feed them.
 
 **Signature identity.** Keyless signatures carry the identity of the reusable build workflow in
 `open-img-cloud/.github`, not of the image repository. The `--certificate-identity-regexp`

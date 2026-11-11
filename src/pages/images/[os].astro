@@ -1,5 +1,6 @@
 ---
 import Base from "~/layouts/Base.astro";
+import { glanceProperties, inOsismExport, minDiskGiB } from "~/lib/catalog-index";
 import CodeBlock from "~/components/CodeBlock.astro";
 import StatusBadge from "~/components/StatusBadge.astro";
 import {
@@ -7,6 +8,7 @@ import {
   CERT_OIDC_ISSUER,
   downloadsWindowLabel,
   formatBytes,
+  IMAGES_BASE_URL,
   formatDate,
   loadDownloadStats,
   loadEnrichedImages,
@@ -35,37 +37,52 @@ const artifacts = image.latest.artifacts;
 const primary: Artifact | undefined = artifacts.find((a) => a.fileUrl) ?? artifacts[0];
 const p = image.provenance;
 const loginUser = image.login_user;
-const isUefi = (a?: Artifact) => !!a?.filename?.includes("uefi");
+const isUefi = primary?.firmware === "uefi";
 const glanceName = `${image.os_name}-${image.latest_version}${primary?.label ? `-${primary.label.toLowerCase()}` : ""}`;
 
-// Quick-start snippets, built from the primary (first published) artifact.
+// Quick-start snippets, built from the primary (first published) artifact. They use the
+// versioned URL, never latest/, so the checksum below always matches the downloaded file.
 const file = primary?.filename ?? `${image.os_name}.qcow2`;
-const fileUrl = primary?.fileUrl ?? `https://images.openimages.cloud/${image.os_name}/latest/`;
-const uefiProps = isUefi(primary)
-  ? "\n  --property hw_firmware_type=uefi \\\n  --property hw_machine_type=q35 \\"
-  : "";
+const fileUrl =
+  primary?.fileUrl ?? `https://images.openimages.cloud/${image.os_name}/${image.latest_version}/`;
+const sha256 = primary?.manifest?.sha256;
+const minDisk = minDiskGiB(primary?.virtualSize);
+const glanceProps = glanceProperties(image, {
+  arch: primary?.arch ?? "x86_64",
+  firmware: primary?.firmware ?? "bios",
+  version: primary?.manifest?.version ?? image.latest_version,
+  sha256,
+});
 
-const openstack = `curl -fLO ${fileUrl}
+const openstack = `curl -fLO ${fileUrl}${sha256 ? `\necho "${sha256}  ${file}" | sha256sum -c -` : ""}
 
 openstack image create \\
   --disk-format qcow2 --container-format bare \\
-  --file ${file} \\${uefiProps}
-  --property hw_qemu_guest_agent=yes \\
+  --file ${file} \\${minDisk ? `\n  --min-disk ${minDisk} \\` : ""}
+${Object.entries(glanceProps)
+  .map(([k, v]) => `  --property ${k}=${v} \\`)
+  .join("\n")}
   ${glanceName}`;
 
-const proxmoxUefi = isUefi(primary)
+const proxmoxUefi = isUefi
   ? " \\\n  --bios ovmf --machine q35 --efidisk0 local-lvm:0,efitype=4m"
   : "";
-const proxmox = `wget ${fileUrl}
+const proxmox = `# Download into the "import" content of a file storage; PVE checks the sha256.
+pvesh create /nodes/$(hostname)/storage/local/download-url \\
+  --content import --filename ${file} \\
+  --url ${fileUrl}${sha256 ? ` \\\n  --checksum ${sha256} --checksum-algorithm sha256` : ""}
 
 qm create 9000 --name ${image.os_name} --memory 2048 --cores 2 \\
-  --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-pci \\
+  --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-single \\
   --serial0 socket --vga serial0 --agent enabled=1${proxmoxUefi}
-qm set 9000 --scsi0 local-lvm:0,import-from=$PWD/${file}
+qm set 9000 --scsi0 local-lvm:0,import-from=local:import/${file},discard=on
 qm set 9000 --ide2 local-lvm:cloudinit --boot order=scsi0${
   loginUser ? ` \\\n  --ciuser ${loginUser}` : ""
 } --sshkeys ~/.ssh/id_ed25519.pub --ipconfig0 ip=dhcp
 qm template 9000`;
+
+const osism = `curl -fsSo oic-images.yml ${IMAGES_BASE_URL}/osism/images.yml
+openstack-image-manager --cloud admin --images oic-images.yml --latest`;
 
 const verify = `curl -fLO ${fileUrl}
 curl -fLO ${fileUrl}.bundle
@@ -264,10 +281,20 @@ const provenance = [
           <CodeBlock code={openstack} label="OpenStack Glance" />
           <h3 class="text-ink mt-6 text-sm font-semibold">Proxmox VE</h3>
           <p class="text-ink-muted mt-1 text-sm">
-            Creates a cloud-init template (VM 9000) on <code class="font-mono">local-lvm</code>.
-            Adjust the storage, bridge and SSH key path to your setup.
+            Creates a cloud-init template (VM 9000) on <code class="font-mono">local-lvm</code>. The{" "}
+            <code class="font-mono">local</code> storage needs the Import content type (default on
+            new Proxmox VE 9.1 installs). Adjust the storages, bridge and SSH key path to your
+            setup.
           </p>
-          <CodeBlock code={proxmox} label="Proxmox VE 8" />
+          <CodeBlock code={proxmox} label="Proxmox VE 9" />
+          <p class="text-ink-muted text-sm">
+            In the web UI: Datacenter &gt; Storage, edit <code class="font-mono">local</code> and
+            add Import to its content; then on that storage, Import &gt; Download from URL with the
+            URL above and the SHA-256 checksum, and pick the downloaded file as the import source
+            when adding the VM disk. On Proxmox VE 8, download the file with{" "}
+            <code class="font-mono">wget</code> and use{" "}
+            <code class="font-mono">import-from=/root/{file}</code> instead.
+          </p>
           <h3 class="text-ink mt-6 text-sm font-semibold">Verify before booting</h3>
           <CodeBlock code={verify} label="cosign 2.x / 3.x" />
           <p class="text-ink-muted text-sm">
@@ -277,6 +304,44 @@ const provenance = [
             </a>
             .
           </p>
+        </section>
+
+        <!-- Keep up to date -->
+        <section class="mt-14" aria-labelledby="sync-title">
+          <h2 id="sync-title" class="text-ink text-xl font-semibold tracking-tight">
+            Keep images up to date
+          </h2>
+          <p class="text-ink-muted mt-3 text-sm leading-relaxed">
+            Automation should not scrape this page. The{" "}
+            <a class="link" href={`${IMAGES_BASE_URL}/index.json`}>
+              catalog index
+            </a>{" "}
+            lists the latest version of every image with versioned URLs, SHA-256 and SHA-512
+            digests, sizes, firmware and the cosign identity
+            {image.versionsUrl && (
+              <>
+                ; the{" "}
+                <a class="link" href={image.versionsUrl}>
+                  version history
+                </a>{" "}
+                of this image lists every published release
+              </>
+            )}
+            .
+            {inOsismExport(image.os_name, image.os_distro) && (
+              <>
+                {" "}
+                OpenStack operators using{" "}
+                <a class="link" href="https://github.com/osism/openstack-image-manager">
+                  openstack-image-manager
+                </a>{" "}
+                can point it at the ready-made definitions:
+              </>
+            )}
+          </p>
+          {inOsismExport(image.os_name, image.os_distro) && (
+            <CodeBlock code={osism} label="osism openstack-image-manager" />
+          )}
         </section>
 
         <!-- About -->
