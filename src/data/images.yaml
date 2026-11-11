@@ -108,6 +108,25 @@ images:
         hint: musl libc, smallest footprint
         filename_template: "alpaquita-{version}-musl-x86_64.qcow2"
 
+  - os_name: oracle-linux-8
+    title: Oracle Linux 8
+    tagline: Enterprise RHEL-compatible distribution from Oracle, RHEL 8 family.
+    description: |
+      Cloud-init-ready, signed Oracle Linux 8 qcow2 image based on
+      Oracle's official KVM cloud release. For existing RHEL 8 / Rocky 8 /
+      AlmaLinux 8 workloads on OpenStack and Proxmox; new deployments
+      should prefer Oracle Linux 9 or 10. The image declares a 37 GB
+      virtual disk: use a flavor with at least a 40 GB root disk.
+    repo: open-img-cloud/oracle-linux-8
+    upstream_homepage: https://www.oracle.com/linux/
+    latest_version: "8.10-b287"
+    login_user: cloud-user
+    status_note: Oracle Linux 8 is in Oracle premier support until July 2029 (extended support to July 2032). Prefer Oracle Linux 9 or 10 for new deployments.
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    logo: oracle.svg
+
   - os_name: oracle-linux-9
     title: Oracle Linux 9
     tagline: Enterprise RHEL-compatible distribution from Oracle, RHEL 9 family.
@@ -115,6 +134,8 @@ images:
       Cloud-init-ready, signed Oracle Linux 9 qcow2 image based on
       Oracle's official KVM cloud release. Drop-in replacement for
       RHEL 9 / Rocky 9 / AlmaLinux 9 workloads on OpenStack and Proxmox.
+      The image declares a 37 GB virtual disk: use a flavor with at least
+      a 40 GB root disk.
     repo: open-img-cloud/oracle-linux-9
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "9.8-b293"
@@ -131,6 +152,8 @@ images:
       Cloud-init-ready, signed Oracle Linux 10 qcow2 image based on
       Oracle's official KVM cloud release. RHEL 10-compatible base
       with the Unbreakable Enterprise Kernel for OpenStack and Proxmox.
+      The image declares a 37 GB virtual disk: use a flavor with at least
+      a 40 GB root disk.
     repo: open-img-cloud/oracle-linux-10
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "10.1-b291"
