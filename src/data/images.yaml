@@ -108,6 +108,39 @@ images:
         hint: musl libc, smallest footprint
         filename_template: "alpaquita-{version}-musl-x86_64.qcow2"
 
+  - os_name: rocky-linux-9
+    title: Rocky Linux 9
+    tagline: Community enterprise Linux, binary-compatible with RHEL 9.
+    description: |
+      Cloud-init-ready, signed Rocky Linux 9 qcow2 image built from the
+      official Rocky GenericCloud release, verified against the upstream
+      checksum list. Drop-in for RHEL 9 workloads on OpenStack and Proxmox.
+    repo: open-img-cloud/rocky-linux-9
+    upstream_homepage: https://rockylinux.org/
+    latest_version: "9.8-20260525.0"
+    login_user: rocky
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: rocky-linux.svg
+
+  - os_name: almalinux-9
+    title: AlmaLinux 9
+    tagline: Community enterprise Linux, binary-compatible with RHEL 9.
+    description: |
+      Cloud-init-ready, signed AlmaLinux 9 qcow2 image built from the
+      official AlmaLinux GenericCloud release, verified against the
+      upstream checksum list. Drop-in for RHEL 9 workloads on OpenStack
+      and Proxmox.
+    repo: open-img-cloud/almalinux-9
+    upstream_homepage: https://almalinux.org/
+    latest_version: "9.8-20261102"
+    login_user: almalinux
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: almalinux.svg
+
   - os_name: oracle-linux-8
     title: Oracle Linux 8
     tagline: Enterprise RHEL-compatible distribution from Oracle, RHEL 8 family.
