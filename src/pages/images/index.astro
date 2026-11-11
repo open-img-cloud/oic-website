@@ -138,5 +138,11 @@ const header = showDownloads
         archive.hidden = !rows.some((r) => r.dataset.status === "archive" && !r.hidden);
       }
     });
+    // ?q=<terms> pre-fills the filter (family links on the home page).
+    const q = new URLSearchParams(location.search).get("q");
+    if (input && q) {
+      input.value = q;
+      input.dispatchEvent(new Event("input"));
+    }
   </script>
 </Base>

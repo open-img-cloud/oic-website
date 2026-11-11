@@ -32,7 +32,8 @@ export interface ImageEntry {
   /** Default cloud-init login user, shown in the quick start. */
   login_user?: string;
   /** Featured on the home page. */
-  featured?: boolean;
+  /** Home page position (1 first); absent: listed in the catalog only. */
+  featured?: number;
   /** OpenStack `os_distro` (libosinfo short distro name), e.g. "debian", "rocky", "ol". */
   os_distro?: string;
   /**

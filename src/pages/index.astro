@@ -7,7 +7,27 @@ import { CERT_IDENTITY_REGEXP, formatDate, loadEnrichedImages } from "~/lib/imag
 
 const images = await loadEnrichedImages();
 const active = images.filter((i) => i.status !== "archive");
-const archived = images.filter((i) => i.status === "archive");
+
+// Home page: up to six featured images, the rest summarised by family.
+const featured = active
+  .filter((i) => typeof i.featured === "number")
+  .sort((a, b) => (a.featured ?? 99) - (b.featured ?? 99))
+  .slice(0, 6);
+const featuredNames = new Set(featured.map((i) => i.os_name));
+const familyOf = (title: string) => title.replace(/\s+\d[\w.]*(\s+LTS)?$/i, "").trim();
+const families = [
+  ...images
+    .filter((i) => !featuredNames.has(i.os_name))
+    .reduce((acc, i) => {
+      const name = familyOf(i.title);
+      const f = acc.get(name) ?? { name, logo: i.logo, count: 0 };
+      f.count += 1;
+      acc.set(name, f);
+      return acc;
+    }, new Map<string, { name: string; logo?: string; count: number }>())
+    .values(),
+];
+const others = images.length - featured.length;
 
 const artifacts = images.flatMap((i) => [
   ...i.latest.artifacts,
@@ -24,8 +44,7 @@ const lastBuild = images
   .at(-1);
 
 // Hero terminal: a real, published artifact (first featured image with a manifest).
-const demoImage =
-  images.find((i) => i.featured && i.latest.artifacts.some((a) => a.fileUrl)) ?? images[0];
+const demoImage = featured.find((i) => i.latest.artifacts.some((a) => a.fileUrl)) ?? images[0];
 const demo = demoImage?.latest.artifacts.find((a) => a.fileUrl) ?? null;
 const demoFile = demo?.filename ?? "image.qcow2";
 const demoPath = demo?.fileUrl?.replace("https://", "") ?? "images.openimages.cloud/…";
@@ -179,7 +198,7 @@ const verifySnippet = `cosign verify-blob ${demoFile} \\
         </p>
       </div>
       <a href="/images/" class="link text-sm">
-        Full catalog
+        See all {images.length} images
       </a>
     </div>
     <div class="border-line mt-8 overflow-hidden rounded-xl border">
@@ -192,24 +211,37 @@ const verifySnippet = `cosign verify-blob ${demoFile} \\
         <span></span>
       </div>
       <ul class="divide-line divide-y">
-        {active.map((image) => (
+        {featured.map((image) => (
           <ImageRow image={image} />
         ))}
       </ul>
     </div>
-    {archived.length > 0 && (
-      <p class="text-ink-faint mt-4 text-sm">
-        Also available for existing workloads:{" "}
-        {archived.map((i, idx) => (
-          <>
-            {idx > 0 && ", "}
-            <a class="link" href={`/images/${i.os_name}/`}>
-              {i.title}
-            </a>
-          </>
-        ))}{" "}
-        (end of life upstream).
-      </p>
+    {families.length > 0 && (
+      <div class="mt-6">
+        <p class="text-ink-muted text-sm">And {others} more, from these families:</p>
+        <ul class="mt-3 flex flex-wrap gap-2">
+          {families.map((f) => (
+            <li>
+              <a
+                href={`/images/?q=${encodeURIComponent(f.name.toLowerCase())}`}
+                class="border-line text-ink hover:border-[var(--accent)] inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors"
+              >
+                {f.logo && (
+                  <img src={`/img/logos/${f.logo}`} alt="" width="16" height="16" class="h-4 w-4" />
+                )}
+                {f.name}
+                {f.count > 1 && <span class="text-ink-faint">{f.count}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a
+          href="/images/"
+          class="mt-6 inline-flex items-center rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white"
+        >
+          See all {images.length} images
+        </a>
+      </div>
     )}
   </section>
 
