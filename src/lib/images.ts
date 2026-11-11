@@ -136,7 +136,7 @@ export const IMAGES_BASE_URL = (
  * the job_workflow_ref). Keep in sync with IMAGE_STANDARDS.md, section A.
  */
 export const CERT_IDENTITY_REGEXP =
-  "^https://github.com/open-img-cloud/\\.github/\\.github/workflows/build-(libguestfs|dib|nix-flake)-image\\.yml@";
+  "^https://github.com/open-img-cloud/\\.github/\\.github/workflows/build-(libguestfs|dib|nix-flake|freebsd)-image\\.yml@";
 export const CERT_OIDC_ISSUER = "https://token.actions.githubusercontent.com";
 
 const FETCH_TIMEOUT_MS = 8000;
