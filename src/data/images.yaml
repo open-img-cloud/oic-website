@@ -50,9 +50,11 @@ images:
       Cloud-init-ready, signed Amazon Linux 2 qcow2 image based on AWS's
       official KVM cloud release. Kept available for workloads that still
       depend on it; new deployments should target Amazon Linux 2023.
+      The image declares a 25 GB virtual disk: use a flavor with at least
+      a 25 GB root disk.
     repo: open-img-cloud/amazon-linux-2
     upstream_homepage: https://aws.amazon.com/amazon-linux-2/
-    latest_version: "2.0.20261102.0"
+    latest_version: "2.0.20261109.1"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -69,11 +71,13 @@ images:
       AWS's official KVM cloud release with kernel 6.1. Faster-moving
       successor to Amazon Linux 2, drop-in for AL2023-targeted workloads
       on OpenStack and Proxmox.
+      The image declares a 25 GB virtual disk: use a flavor with at least
+      a 25 GB root disk.
     repo: open-img-cloud/amazon-linux-2023
     upstream_homepage: https://aws.amazon.com/linux/amazon-linux-2023/
     login_user: ec2-user
     featured: true
-    latest_version: "2023.12.20261102.0"
+    latest_version: "2023.12.20261109.0"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -147,7 +151,7 @@ images:
       shops on OpenStack and Proxmox.
     repo: open-img-cloud/nixos
     upstream_homepage: https://nixos.org/
-    latest_version: "25.11"
+    latest_version: "26.05"
     login_user: nixos
     format: qcow2
     arch: x86_64
