@@ -33,7 +33,18 @@ export interface ImageEntry {
   login_user?: string;
   /** Featured on the home page. */
   featured?: boolean;
+  /** OpenStack `os_distro` (libosinfo short distro name), e.g. "debian", "rocky", "ol". */
+  os_distro?: string;
+  /**
+   * OpenStack `os_version`. Derived from latest_version when absent ("9.8-20260525.0" gives
+   * "9.8"); set to null to leave it out (version is not an OS release, e.g. a build date).
+   */
+  os_version?: string | null;
+  /** Extra Glance properties for this image, merged over DEFAULT_GLANCE_PROPERTIES. */
+  glance_properties?: Record<string, string>;
 }
+
+export type Firmware = "uefi" | "bios";
 
 /** MANIFEST.json as written by the reusable build workflows in open-img-cloud/.github. */
 export interface Manifest {
@@ -51,9 +62,17 @@ export interface Manifest {
   builder?: { image?: string; digest?: string };
   signed: boolean;
   bundle?: string;
+  /** Added by publish-image in Nov 2026: absent from manifests published before. */
+  sha512?: string | null;
+  size?: number | null;
+  virtual_size?: number | null;
+  firmware?: Firmware | null;
+  arch?: string | null;
 }
 
 export interface Artifact {
+  /** Variant id (MANIFEST-<id>.json), or null for single-artifact images. */
+  variantId: string | null;
   /** Variant label, or null for single-artifact images. */
   label: string | null;
   hint: string | null;
@@ -63,6 +82,11 @@ export interface Artifact {
   manifestUrl: string;
   manifest: Manifest | null;
   sizeBytes: number | null;
+  /** Disk size seen by the guest, from the manifest; null on older manifests. */
+  virtualSize: number | null;
+  /** From the manifest, else guessed from the file name (older manifests). */
+  firmware: Firmware;
+  arch: string;
   /** Downloads of this file (latest/ and versioned paths), null if stats are unavailable. */
   downloads: number | null;
 }
@@ -83,6 +107,9 @@ export interface EnrichedImage extends ImageEntry {
   signed: boolean;
   /** Downloads of every version of the image, null if stats are unavailable. */
   downloads: number | null;
+  /** <os>/versions.json (oic-versions/v1), null when the bucket does not have one yet. */
+  versionsUrl: string | null;
+  os_version: string | null;
 }
 
 /** https://images.openimages.cloud/_stats.json, served by the images-router Worker. */
@@ -157,6 +184,17 @@ async function fetchSize(target: string): Promise<number | null> {
   return Number.isFinite(len) && len > 0 ? len : null;
 }
 
+async function exists(target: string): Promise<boolean> {
+  return !!(await timedFetch(target, { method: "HEAD" }))?.ok;
+}
+
+/** "9.8-20260525.0" → "9.8", "13-20261103-2651" → "13", "24.04-20261017" → "24.04". */
+export function deriveOsVersion(image: ImageEntry): string | null {
+  if (image.os_version !== undefined) return image.os_version;
+  const head = image.latest_version.split("-")[0];
+  return /^\d+(\.\d+)*$/.test(head) ? head : null;
+}
+
 async function artifact(
   image: ImageEntry,
   version: string,
@@ -172,6 +210,7 @@ async function artifact(
     manifest?.filename ?? variant?.filename_template?.replaceAll("{version}", version) ?? null;
   const fileUrl = manifest && filename ? url(image.os_name, version, filename) : null;
   return {
+    variantId: variant?.id ?? null,
     label: variant?.label ?? null,
     hint: variant?.hint ?? null,
     filename,
@@ -179,7 +218,10 @@ async function artifact(
     bundleUrl: fileUrl ? `${fileUrl}.bundle` : null,
     manifestUrl,
     manifest,
-    sizeBytes: fileUrl ? await fetchSize(fileUrl) : null,
+    sizeBytes: manifest?.size ?? (fileUrl ? await fetchSize(fileUrl) : null),
+    virtualSize: manifest?.virtual_size ?? null,
+    firmware: manifest?.firmware ?? (filename?.includes("uefi") ? "uefi" : "bios"),
+    arch: manifest?.arch ?? image.arch ?? "x86_64",
     downloads: null,
   };
 }
@@ -227,10 +269,12 @@ export async function enrichImage(
   image: ImageEntry,
   stats: DownloadStats | null = null,
 ): Promise<EnrichedImage> {
-  const [latest, previous] = await Promise.all([
+  const versionsUrl = `${IMAGES_BASE_URL}/${image.os_name}/versions.json`;
+  const [latest, previous, hasVersions] = await Promise.all([
     release(image, image.latest_version),
     // Previous releases are single-artifact (no variant matrix) in the catalog today.
     Promise.all((image.previous_versions ?? []).map((v) => release({ ...image, variants: [] }, v))),
+    exists(versionsUrl),
   ]);
   const imageStats = stats ? (stats.images[image.os_name] ?? { total: 0, files: {} }) : null;
   for (const rel of [latest, ...previous]) attachDownloads(rel.artifacts, imageStats?.files);
@@ -250,6 +294,8 @@ export async function enrichImage(
     provenance: manifests[0] ?? null,
     signed: manifests.length > 0 && manifests.every((m) => m.signed),
     downloads: imageStats ? imageStats.total : null,
+    versionsUrl: hasVersions ? versionsUrl : null,
+    os_version: deriveOsVersion(image),
   };
 }
 

@@ -15,10 +15,20 @@
 #   login_user   default cloud-init user, shown in the quick start
 #   featured     true → shown on the home page
 #   variants[].hint  short explanation of the variant
+#
+# Optional platform fields (exported in /index.json and /osism/images.yml):
+#   os_distro         OpenStack os_distro, libosinfo distro name where one exists
+#                     (alpinelinux, debian, ubuntu, rocky, almalinux, ol, nixos, gentoo),
+#                     else amzn / alpaquita
+#   os_version        OpenStack os_version; derived from latest_version when absent
+#                     ("9.8-20260525.0" gives "9.8"), null to leave it out
+#   glance_properties extra Glance properties, merged over the defaults
+#                     (hw_qemu_guest_agent=yes, hw_disk_bus=scsi, hw_scsi_model=virtio-scsi)
 
 images:
   - os_name: alpine-linux
     title: Alpine Linux
+    os_distro: alpinelinux
     tagline: Minimal, security-oriented distro built around musl libc and BusyBox.
     description: |
       Cloud-init-ready, signed Alpine Linux images derived from the upstream
@@ -45,6 +55,8 @@ images:
 
   - os_name: amazon-linux-2
     title: Amazon Linux 2
+    os_distro: amzn
+    os_version: "2"
     tagline: AWS's long-term-support base image, derived from the RHEL/CentOS 7 family.
     description: |
       Cloud-init-ready, signed Amazon Linux 2 qcow2 image based on AWS's
@@ -65,6 +77,8 @@ images:
 
   - os_name: amazon-linux-2023
     title: Amazon Linux 2023
+    os_distro: amzn
+    os_version: "2023"
     tagline: Fedora-derived AL2023 image, modern dnf-based AWS workhorse.
     description: |
       Cloud-init-ready, signed Amazon Linux 2023 qcow2 image based on
@@ -85,6 +99,8 @@ images:
 
   - os_name: alpaquita-linux
     title: Alpaquita Linux
+    os_distro: alpaquita
+    os_version: null
     tagline: Lightweight Alpine-derived distribution from BellSoft, glibc and musl flavors.
     description: |
       Cloud-init-ready, signed Alpaquita Linux images, customized via
@@ -110,7 +126,8 @@ images:
 
   - os_name: debian-13
     title: Debian 13
-    tagline: "The universal operating system, Debian 13 \"trixie\"."
+    os_distro: debian
+    tagline: 'The universal operating system, Debian 13 "trixie".'
     description: |
       Cloud-init-ready, signed Debian 13 qcow2 image built from the
       official Debian genericcloud release, verified against the
@@ -127,7 +144,8 @@ images:
 
   - os_name: debian-12
     title: Debian 12
-    tagline: "The universal operating system, Debian 12 \"bookworm\"."
+    os_distro: debian
+    tagline: 'The universal operating system, Debian 12 "bookworm".'
     description: |
       Cloud-init-ready, signed Debian 12 qcow2 image built from the
       official Debian genericcloud release, verified against the
@@ -144,6 +162,7 @@ images:
 
   - os_name: ubuntu-26.04
     title: Ubuntu 26.04 LTS
+    os_distro: ubuntu
     tagline: "Ubuntu 26.04 LTS (Resolute Raccoon), long-term support release from Canonical."
     description: |
       Cloud-init-ready, signed Ubuntu 26.04 LTS qcow2 image built from
@@ -161,6 +180,7 @@ images:
 
   - os_name: ubuntu-24.04
     title: Ubuntu 24.04 LTS
+    os_distro: ubuntu
     tagline: "Ubuntu 24.04 LTS (Noble Numbat), long-term support release from Canonical."
     description: |
       Cloud-init-ready, signed Ubuntu 24.04 LTS qcow2 image built from
@@ -178,6 +198,7 @@ images:
 
   - os_name: ubuntu-22.04
     title: Ubuntu 22.04 LTS
+    os_distro: ubuntu
     tagline: "Ubuntu 22.04 LTS (Jammy Jellyfish), long-term support release from Canonical."
     description: |
       Cloud-init-ready, signed Ubuntu 22.04 LTS qcow2 image built from
@@ -195,6 +216,7 @@ images:
 
   - os_name: rocky-linux-10
     title: Rocky Linux 10
+    os_distro: rocky
     tagline: Community enterprise Linux, binary-compatible with RHEL 10.
     description: |
       Cloud-init-ready, signed Rocky Linux 10 qcow2 image built from the
@@ -213,6 +235,7 @@ images:
 
   - os_name: rocky-linux-9
     title: Rocky Linux 9
+    os_distro: rocky
     tagline: Community enterprise Linux, binary-compatible with RHEL 9.
     description: |
       Cloud-init-ready, signed Rocky Linux 9 qcow2 image built from the
@@ -229,6 +252,7 @@ images:
 
   - os_name: almalinux-10
     title: AlmaLinux 10
+    os_distro: almalinux
     tagline: Community enterprise Linux, binary-compatible with RHEL 10.
     description: |
       Cloud-init-ready, signed AlmaLinux 10 qcow2 image built from the
@@ -247,6 +271,7 @@ images:
 
   - os_name: almalinux-9
     title: AlmaLinux 9
+    os_distro: almalinux
     tagline: Community enterprise Linux, binary-compatible with RHEL 9.
     description: |
       Cloud-init-ready, signed AlmaLinux 9 qcow2 image built from the
@@ -264,6 +289,7 @@ images:
 
   - os_name: rocky-linux-8
     title: Rocky Linux 8
+    os_distro: rocky
     tagline: Community enterprise Linux, binary-compatible with RHEL 8.
     description: |
       Cloud-init-ready, signed Rocky Linux 8 qcow2 image built from the
@@ -281,6 +307,7 @@ images:
 
   - os_name: almalinux-8
     title: AlmaLinux 8
+    os_distro: almalinux
     tagline: Community enterprise Linux, binary-compatible with RHEL 8.
     description: |
       Cloud-init-ready, signed AlmaLinux 8 qcow2 image built from the
@@ -298,6 +325,7 @@ images:
 
   - os_name: oracle-linux-8
     title: Oracle Linux 8
+    os_distro: ol
     tagline: Enterprise RHEL-compatible distribution from Oracle, RHEL 8 family.
     description: |
       Cloud-init-ready, signed Oracle Linux 8 qcow2 image based on
@@ -317,6 +345,7 @@ images:
 
   - os_name: oracle-linux-9
     title: Oracle Linux 9
+    os_distro: ol
     tagline: Enterprise RHEL-compatible distribution from Oracle, RHEL 9 family.
     description: |
       Cloud-init-ready, signed Oracle Linux 9 qcow2 image based on
@@ -335,6 +364,7 @@ images:
 
   - os_name: oracle-linux-10
     title: Oracle Linux 10
+    os_distro: ol
     tagline: Latest Oracle Linux release, RHEL 10 family with UEK 8.
     description: |
       Cloud-init-ready, signed Oracle Linux 10 qcow2 image based on
@@ -354,6 +384,7 @@ images:
 
   - os_name: nixos
     title: NixOS
+    os_distro: nixos
     tagline: Reproducible, declarative Linux distribution built from a Nix flake.
     description: |
       Cloud-init-ready, signed NixOS qcow2 image built from a pinned
@@ -371,6 +402,8 @@ images:
 
   - os_name: octavia-amphora
     title: Octavia Amphora
+    os_distro: ubuntu
+    os_version: null
     tagline: OpenStack load balancer amphora image, built via diskimage-builder.
     description: |
       Cloud-init-ready, signed Octavia Amphora qcow2 with HAProxy
