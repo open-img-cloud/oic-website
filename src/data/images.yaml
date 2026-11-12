@@ -584,3 +584,24 @@ images:
     arch: x86_64
     tags: [openstack, manila, dib, signed]
     logo: openstack.svg
+
+  - os_name: trove-guest-image
+    title: Trove Guest Image
+    os_distro: ubuntu
+    os_version: null
+    tagline: Guest image for OpenStack Trove (Database as a Service).
+    description: |
+      Signed guest image for Trove, built from `openstack/trove` (pinned
+      commit per series) with `diskimage-builder`: Ubuntu 24.04 minimal,
+      the Trove guest agent and Docker CE. The database runs in a container
+      the agent pulls at instance creation. Unlike upstream, the `ubuntu`
+      user has no password: access is by SSH key only. Trove boots it,
+      tenants never do.
+    repo: open-img-cloud/trove-guest-image
+    upstream_homepage: https://docs.openstack.org/trove/latest/
+    login_user: ubuntu
+    latest_version: "2026.2"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, trove, dib, signed]
+    logo: openstack.svg
