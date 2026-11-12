@@ -266,10 +266,30 @@ function attachDownloads(artifacts: Artifact[], files: Record<string, number> | 
   }
 }
 
+/**
+ * The published latest/ alias is the source of truth for the current version: a release
+ * moves it, while images.yaml is only updated by hand. images.yaml stays the fallback when
+ * the manifest cannot be read (for example before the first release).
+ */
+async function resolveLatestVersion(image: ImageEntry): Promise<string> {
+  const first = image.variants?.[0] ?? null;
+  const manifest = await fetchManifest(
+    url(image.os_name, "latest", first ? `MANIFEST-${first.id}.json` : "MANIFEST.json"),
+  );
+  const published = manifest?.version?.trim();
+  if (published && published !== image.latest_version) {
+    console.warn(
+      `[images] ${image.os_name}: images.yaml says ${image.latest_version}, latest/ is ${published}; using ${published}`,
+    );
+  }
+  return published || image.latest_version;
+}
+
 export async function enrichImage(
-  image: ImageEntry,
+  entry: ImageEntry,
   stats: DownloadStats | null = null,
 ): Promise<EnrichedImage> {
+  const image: ImageEntry = { ...entry, latest_version: await resolveLatestVersion(entry) };
   const versionsUrl = `${IMAGES_BASE_URL}/${image.os_name}/versions.json`;
   const [latest, previous, hasVersions] = await Promise.all([
     release(image, image.latest_version),
