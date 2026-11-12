@@ -462,6 +462,29 @@ images:
     tags: [openstack, proxmox, cloud-init, signed]
     logo: nixos.svg
 
+  - os_name: freebsd-15
+    title: FreeBSD 15
+    os_distro: freebsd
+    os_version: "15.1"
+    tagline: The BSD operating system, on a ZFS root with cloud-init.
+    description: |
+      Cloud-init-ready, signed FreeBSD 15 qcow2 image built from the
+      official release distribution sets, verified against the release
+      MANIFEST, on a ZFS root that grows to the flavor disk. dhcpcd
+      configures IPv4 and the IPv6 address of the Neutron port.
+    repo: open-img-cloud/freebsd
+    upstream_homepage: https://www.freebsd.org/
+    latest_version: "15.1"
+    login_user: freebsd
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    logo: freebsd.svg
+    # qemu-guest-agent on FreeBSD can only freeze UFS, not ZFS: no quiesced snapshots.
+    glance_properties:
+      os_require_quiesce: "no"
+    status_note: "14.5 is the last FreeBSD 15 release; the 14 branch is supported until 2028-11-30. Prefer FreeBSD 15 for new deployments."
+
   - os_name: freebsd-14
     title: FreeBSD 14
     os_distro: freebsd
@@ -480,7 +503,10 @@ images:
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
     logo: freebsd.svg
-    status_note: "14.5 is the last FreeBSD 14 release; the 14 branch is supported until 2028-11-30. FreeBSD 15 images are coming."
+    # qemu-guest-agent on FreeBSD can only freeze UFS, not ZFS: no quiesced snapshots.
+    glance_properties:
+      os_require_quiesce: "no"
+    status_note: "14.5 is the last FreeBSD 14 release; the 14 branch is supported until 2028-11-30. Prefer FreeBSD 15 for new deployments."
 
   - os_name: octavia-amphora
     title: Octavia Amphora
