@@ -1,0 +1,17 @@
+# Sponsors of the project, shown on /sponsors/.
+#
+# Fields:
+#   name      display name (required)
+#   url       website (required)
+#   support   one or more of: time, money, resources (required)
+#   what      one sentence on what they provide (required)
+#   since     year the support started (optional)
+#   logo      file under public/img/sponsors/ (optional; the name is shown otherwise)
+#
+# Only list a sponsor after they have agreed to be named.
+sponsors:
+  - name: StackOps
+    url: https://stackops.ch/
+    support: [time]
+    what: Maintains the build pipeline, the images and the website.
+    since: 2026
