@@ -19,7 +19,7 @@
 #
 # Optional platform fields (exported in /index.json and /osism/images.yml):
 #   os_distro         OpenStack os_distro, libosinfo distro name where one exists
-#                     (alpinelinux, debian, ubuntu, rocky, almalinux, ol, nixos, gentoo),
+#                     (alpinelinux, debian, ubuntu, rocky, almalinux, ol, nixos, gentoo, freebsd),
 #                     else amzn / alpaquita
 #   os_version        OpenStack os_version; derived from latest_version when absent
 #                     ("9.8-20260525.0" gives "9.8"), null to leave it out
@@ -461,6 +461,26 @@ images:
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
     logo: nixos.svg
+
+  - os_name: freebsd-14
+    title: FreeBSD 14
+    os_distro: freebsd
+    os_version: "14.5"
+    tagline: The BSD operating system, on a ZFS root with cloud-init.
+    description: |
+      Cloud-init-ready, signed FreeBSD 14 qcow2 image built from the
+      official release distribution sets, verified against the release
+      MANIFEST, on a ZFS root that grows to the flavor disk. dhcpcd
+      configures IPv4 and the IPv6 address of the Neutron port.
+    repo: open-img-cloud/freebsd
+    upstream_homepage: https://www.freebsd.org/
+    latest_version: "14.5"
+    login_user: freebsd
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed]
+    logo: freebsd.svg
+    status_note: "14.5 is the last FreeBSD 14 release; the 14 branch is supported until 2028-11-30. FreeBSD 15 images are coming."
 
   - os_name: octavia-amphora
     title: Octavia Amphora
