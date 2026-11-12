@@ -55,6 +55,12 @@ const runtime: { check: string; detail: string; level: Level }[] = [
     level: "required",
   },
   {
+    check: "Guest agent",
+    detail:
+      "qemu-guest-agent runs in the guest, so OpenStack can freeze filesystems for consistent snapshots.",
+    level: "required",
+  },
+  {
     check: "IPv6",
     detail:
       "The guest configures the IPv6 address Neutron assigned to its port and reaches the IPv6 Internet.",
