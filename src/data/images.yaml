@@ -237,6 +237,42 @@ images:
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
     logo: centos.svg
 
+  - os_name: fedora-45
+    title: Fedora 45
+    os_distro: fedora
+    tagline: Fedora Cloud, the fast-moving upstream of RHEL.
+    description: |
+      Cloud-init-ready, signed Fedora 45 qcow2 image built from the
+      official Fedora Cloud Base Generic release, verified against the
+      upstream checksum list. Btrfs root filesystem.
+    repo: open-img-cloud/fedora-45
+    upstream_homepage: https://fedoraproject.org/cloud/
+    latest_version: "45-1.4"
+    login_user: fedora
+    status_note: "Supported until about a month after the Fedora 47 release."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, btrfs]
+    logo: fedora.svg
+
+  - os_name: fedora-44
+    title: Fedora 44
+    os_distro: fedora
+    tagline: Fedora Cloud, the fast-moving upstream of RHEL.
+    description: |
+      Cloud-init-ready, signed Fedora 44 qcow2 image built from the
+      official Fedora Cloud Base Generic release, verified against the
+      upstream checksum list. Btrfs root filesystem.
+    repo: open-img-cloud/fedora-44
+    upstream_homepage: https://fedoraproject.org/cloud/
+    latest_version: "44-1.7"
+    login_user: fedora
+    status_note: "Supported until about a month after the Fedora 46 release; prefer Fedora 45."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, btrfs]
+    logo: fedora.svg
+
   - os_name: rocky-linux-10
     title: Rocky Linux 10
     os_distro: rocky
