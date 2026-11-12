@@ -98,3 +98,15 @@ Logo tiles stay white in dark mode so every mark keeps its official colours.
 ## License
 
 [Apache-2.0](LICENSE).
+
+## Share images
+
+Each catalog page has its own Open Graph image, `public/img/og/<os_name>.png`, generated from
+`src/data/images.yaml` and the distribution logo:
+
+```sh
+node scripts/export-og.mjs   # needs Inter and JetBrains Mono, like scripts/export-brand.mjs
+```
+
+Run it when an image is added to the catalog; the images carry no version, so they do not
+change with releases. A page without one falls back to `public/img/og.png`.

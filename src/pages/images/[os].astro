@@ -1,4 +1,5 @@
 ---
+import { existsSync } from "node:fs";
 import Base from "~/layouts/Base.astro";
 import { glanceProperties, inOsismExport, minDiskGiB } from "~/lib/catalog-index";
 import CodeBlock from "~/components/CodeBlock.astro";
@@ -35,6 +36,10 @@ const SERVICE_IMAGES: Record<string, string> = {
   "trove-guest-image": "OpenStack Trove databases",
 };
 const serviceFor = SERVICE_IMAGES[image.os_name];
+// Share image made by scripts/export-og.mjs; the site-wide one until it has been generated.
+const ogImage = existsSync(`public/img/og/${image.os_name}.png`)
+  ? `/img/og/${image.os_name}.png`
+  : undefined;
 const imageWord = /image$/i.test(image.title) ? image.title : `${image.title} image`;
 const seoTitle = serviceFor
   ? `${imageWord} for OpenStack`
@@ -155,6 +160,7 @@ const provenance = [
 <Base
   title={seoTitle}
   description={seoDescription}
+  ogImage={ogImage}
   jsonLd={[
     {
       "@context": "https://schema.org",
