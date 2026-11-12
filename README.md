@@ -1,4 +1,24 @@
-# oic-website
+<p align="center">
+  <a href="https://openimages.cloud">
+    <img src="https://openimages.cloud/img/og.png" alt="openimages.cloud: signed, boot-tested cloud images for OpenStack and Proxmox" width="720">
+  </a>
+</p>
+
+<h1 align="center">oic-website</h1>
+
+<p align="center">
+  <a href="https://github.com/open-img-cloud/oic-website/actions/workflows/ci.yml"><img alt="ci" src="https://github.com/open-img-cloud/oic-website/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/open-img-cloud/oic-website/actions/workflows/deploy.yml"><img alt="deploy" src="https://github.com/open-img-cloud/oic-website/actions/workflows/deploy.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-555"></a>
+</p>
+
+<p align="center">
+  <a href="https://openimages.cloud"><b>Website</b></a> ·
+  <a href="https://openimages.cloud/images/">Catalog</a> ·
+  <a href="https://images.openimages.cloud/index.json">index.json</a> ·
+  <a href="https://github.com/open-img-cloud/docs">Documentation</a> ·
+  <a href="https://github.com/open-img-cloud/oic-website/issues">Report an issue</a>
+</p>
 
 Public website for the [Open Image Cloud](https://github.com/open-img-cloud) project: landing page and image catalog, served at <https://openimages.cloud>.
 
@@ -51,13 +71,16 @@ src/
   layouts/Base.astro       HTML shell, theme bootstrap, copy-to-clipboard handler
   pages/
     index.astro            landing: verify terminal, stats, catalog, how it works
+    about.astro            why the project exists
+    quality.astro          how images are tested (runtime contract)
+    sponsors.astro         sponsors
     images/index.astro     catalog with client-side filter
     images/[os].astro      image page: downloads, quick start (OpenStack, Proxmox, verify),
                            provenance panel, previous releases
     verify.astro           step-by-step verification guide
     index.json.ts          /index.json, catalog index for automation (oic-index/v1)
     osism/images.yml.ts    /osism/images.yml, osism openstack-image-manager definitions
-  components/              Header, Footer, ImageRow, StatusBadge, CodeBlock, Terminal, ThemeToggle
+  components/              Header, Footer, Logo, ImageRow, StatusBadge, CodeBlock, Terminal, ThemeToggle
   styles/global.css        Tailwind v4 theme, semantic light/dark tokens, self-hosted fonts
 public/                    static assets (logos, favicons, og image)
 ```
