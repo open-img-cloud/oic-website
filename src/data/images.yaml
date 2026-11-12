@@ -150,8 +150,9 @@ images:
     tagline: 'The universal operating system, Debian 12 "bookworm".'
     description: |
       Cloud-init-ready, signed Debian 12 qcow2 image built from the
-      official Debian genericcloud release, verified against the
-      upstream SHA512SUMS, with qemu-guest-agent added.
+      official Debian generic release (genericcloud lacks the CD-ROM
+      driver the config drive needs), verified against the upstream
+      SHA512SUMS, with qemu-guest-agent added.
     repo: open-img-cloud/debian-12
     upstream_homepage: https://www.debian.org/
     latest_version: "12-20261026-2643"
@@ -519,7 +520,6 @@ images:
     # qemu-guest-agent on FreeBSD can only freeze UFS, not ZFS: no quiesced snapshots.
     glance_properties:
       os_require_quiesce: "no"
-    status_note: "14.5 is the last FreeBSD 15 release; the 14 branch is supported until 2028-11-30. Prefer FreeBSD 15 for new deployments."
 
   - os_name: freebsd-14
     title: FreeBSD 14
