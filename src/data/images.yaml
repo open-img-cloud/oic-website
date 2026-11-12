@@ -528,3 +528,23 @@ images:
     arch: x86_64
     tags: [openstack, octavia, dib, signed]
     logo: openstack.svg
+
+  - os_name: manila-service-image
+    title: Manila Service Image
+    os_distro: ubuntu
+    os_version: null
+    tagline: Share server image for the OpenStack Manila generic driver (NFS and CIFS).
+    description: |
+      Signed service image for the Manila generic driver, built from
+      `openstack/manila-image-elements` (pinned commit) with
+      `diskimage-builder`: Ubuntu 22.04 minimal, nfs-kernel-server and
+      Samba. Unlike upstream, the `manila` user has no password: access
+      is by SSH key only. Manila boots it, tenants never do.
+    repo: open-img-cloud/manila-service-image
+    upstream_homepage: https://docs.openstack.org/manila/latest/admin/generic_driver.html
+    login_user: manila
+    latest_version: "2026.2"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, manila, dib, signed]
+    logo: openstack.svg
