@@ -1,4 +1,5 @@
 ---
+import Logo from "~/components/Logo.astro";
 import { loadEnrichedImages } from "~/lib/images";
 
 const all = await loadEnrichedImages();
@@ -81,9 +82,12 @@ const source = [
   </div>
   <div class="border-line border-t">
     <div class="text-ink-faint mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs sm:flex-row sm:justify-between sm:px-6">
-      <p>
-        © {year} Open Image Cloud. Images under their upstream licenses, tooling under GPL-2.0.
-        Distribution logos are trademarks of their respective owners.
+      <p class="flex items-start gap-2.5">
+        <Logo mono class="text-ink-muted h-5 w-5 shrink-0" title="Open Image Cloud" />
+        <span>
+          © {year} Open Image Cloud. Images under their upstream licenses, tooling under GPL-2.0.
+          Distribution logos are trademarks of their respective owners.
+        </span>
       </p>
       <p>
         Website under{" "}
