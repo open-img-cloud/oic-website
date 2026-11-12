@@ -1,4 +1,5 @@
 ---
+import Logo from "~/components/Logo.astro";
 import { loadEnrichedImages } from "~/lib/images";
 
 const all = await loadEnrichedImages();
@@ -13,6 +14,7 @@ const project = [
   { href: "/about/", label: "About the project" },
   { href: "/quality/", label: "How images are tested" },
   { href: "/verify/", label: "Verify an image" },
+  { href: "/sponsors/", label: "Sponsors" },
   { href: "https://images.openimages.cloud/", label: "Image registry" },
   {
     href: "https://github.com/open-img-cloud/.github/blob/main/docs/IMAGE_STANDARDS.md",
@@ -30,7 +32,10 @@ const source = [
 <footer class="border-line surface-sunken border-t">
   <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
     <div>
-      <p class="text-ink font-semibold tracking-tight">Open Image Cloud</p>
+      <p class="text-ink flex items-center gap-2.5 font-semibold tracking-tight">
+        <Logo mono class="h-7 w-7 shrink-0" />
+        Open Image Cloud
+      </p>
       <p class="text-ink-muted mt-3 max-w-xs text-sm leading-relaxed">
         Signed, reproducible cloud images for OpenStack and Proxmox. Stored in Switzerland, served
         worldwide.

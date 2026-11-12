@@ -5,50 +5,98 @@
 interface Props {
   class?: string;
   title?: string;
+  /** Single colour (currentColor), the layers cut out: follows the text colour and theme. */
+  mono?: boolean;
 }
-const { class: className, title } = Astro.props;
+const { class: className, title, mono = false } = Astro.props;
 const gid = "oic-logo-gradient";
+const mid = "oic-logo-mono-mask";
 ---
 
-<svg
-  viewBox="0 0 64 64"
-  class={className}
-  role={title ? "img" : undefined}
-  aria-label={title}
-  aria-hidden={title ? undefined : "true"}
->
-  <defs>
-    <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#4f8ef0"></stop>
-      <stop offset="1" stop-color="#2459c4"></stop>
-    </linearGradient>
-  </defs>
-  <path
-    d="M32 3.5 57 18v28L32 60.5 7 46V18Z"
-    fill={`url(#${gid})`}
-    stroke={`url(#${gid})`}
-    stroke-width="5"
-    stroke-linejoin="round"
-  ></path>
-  <g transform="translate(0 2.3)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+{mono ? (
+  <svg
+    viewBox="0 0 64 64"
+    class={className}
+    role={title ? "img" : undefined}
+    aria-label={title}
+    aria-hidden={title ? undefined : "true"}
+  >
+    <defs>
+      <mask id={mid} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+        <rect width="64" height="64" fill="#fff" />
+        <g
+          transform="translate(0 2.3)"
+          fill="none"
+          stroke="#000"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="3.6"
+        >
+          <path d="M17.5 36.5 32 44.8l14.5-8.3" stroke-opacity=".55" />
+          <path d="M17.5 29.8 32 38.1l14.5-8.3" stroke-opacity=".8" />
+          <path d="M32 14.5 46.5 22.8 32 31.1 17.5 22.8Z" fill="#000" />
+        </g>
+      </mask>
+    </defs>
     <path
-      d="M17.5 36.5 32 44.8l14.5-8.3"
-      stroke="#fff"
-      stroke-opacity=".55"
-      stroke-width="3.6"
-    ></path>
+      d="M32 3.5 57 18v28L32 60.5 7 46V18Z"
+      fill="currentColor"
+      stroke="currentColor"
+      stroke-width="5"
+      stroke-linejoin="round"
+      mask={`url(#${mid})`}
+    />
     <path
-      d="M17.5 29.8 32 38.1l14.5-8.3"
-      stroke="#fff"
-      stroke-opacity=".8"
-      stroke-width="3.6"
-    ></path>
+      d="m27.2 22.9 3.4 2.9 6.1-5.6"
+      transform="translate(0 2.3)"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.6"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+) : (
+  <svg
+    viewBox="0 0 64 64"
+    class={className}
+    role={title ? "img" : undefined}
+    aria-label={title}
+    aria-hidden={title ? undefined : "true"}
+  >
+    <defs>
+      <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#4f8ef0"></stop>
+        <stop offset="1" stop-color="#2459c4"></stop>
+      </linearGradient>
+    </defs>
     <path
-      d="M32 14.5 46.5 22.8 32 31.1 17.5 22.8Z"
-      fill="#fff"
-      stroke="#fff"
-      stroke-width="3.6"
+      d="M32 3.5 57 18v28L32 60.5 7 46V18Z"
+      fill={`url(#${gid})`}
+      stroke={`url(#${gid})`}
+      stroke-width="5"
+      stroke-linejoin="round"
     ></path>
-    <path d="m27.2 22.9 3.4 2.9 6.1-5.6" stroke="#2459c4" stroke-width="2.6"></path>
-  </g>
-</svg>
+    <g transform="translate(0 2.3)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path
+        d="M17.5 36.5 32 44.8l14.5-8.3"
+        stroke="#fff"
+        stroke-opacity=".55"
+        stroke-width="3.6"
+      ></path>
+      <path
+        d="M17.5 29.8 32 38.1l14.5-8.3"
+        stroke="#fff"
+        stroke-opacity=".8"
+        stroke-width="3.6"
+      ></path>
+      <path
+        d="M32 14.5 46.5 22.8 32 31.1 17.5 22.8Z"
+        fill="#fff"
+        stroke="#fff"
+        stroke-width="3.6"
+      ></path>
+      <path d="m27.2 22.9 3.4 2.9 6.1-5.6" stroke="#2459c4" stroke-width="2.6"></path>
+    </g>
+  </svg>
+)}
