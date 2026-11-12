@@ -1,4 +1,5 @@
 ---
+import { existsSync } from "node:fs";
 import Base from "~/layouts/Base.astro";
 import { glanceProperties, inOsismExport, minDiskGiB } from "~/lib/catalog-index";
 import CodeBlock from "~/components/CodeBlock.astro";
@@ -27,6 +28,25 @@ interface Props {
 }
 
 const { image } = Astro.props;
+
+// Search titles and descriptions: say what the page offers, in the words people search for.
+const SERVICE_IMAGES: Record<string, string> = {
+  "octavia-amphora": "OpenStack Octavia load balancers",
+  "manila-service-image": "the OpenStack Manila generic driver",
+  "trove-guest-image": "OpenStack Trove databases",
+};
+const serviceFor = SERVICE_IMAGES[image.os_name];
+// Share image made by scripts/export-og.mjs; the site-wide one until it has been generated.
+const ogImage = existsSync(`public/img/og/${image.os_name}.png`)
+  ? `/img/og/${image.os_name}.png`
+  : undefined;
+const imageWord = /image$/i.test(image.title) ? image.title : `${image.title} image`;
+const seoTitle = serviceFor
+  ? `${imageWord} for OpenStack`
+  : `${image.title} cloud image for OpenStack and Proxmox`;
+const seoDescription = serviceFor
+  ? `Signed ${imageWord} for ${serviceFor}, version ${image.latest_version}: qcow2 built per OpenStack series with diskimage-builder, verifiable with cosign.`
+  : `Signed ${image.title} qcow2 cloud image for OpenStack and Proxmox, version ${image.latest_version}: cloud-init ready${image.login_user ? `, user ${image.login_user}` : ""}, boot-tested, cosign-verifiable.`;
 // Download counts, null when the statistics endpoint was unavailable at build time.
 const stats = await loadDownloadStats();
 const downloadsLabel = stats ? downloadsWindowLabel(stats) : "";
@@ -137,7 +157,50 @@ const provenance = [
 }[];
 ---
 
-<Base title={image.title} description={`${image.title}: ${image.tagline}`}>
+<Base
+  title={seoTitle}
+  description={seoDescription}
+  ogImage={ogImage}
+  jsonLd={[
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Catalog",
+          item: "https://openimages.cloud/images/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: image.title,
+          item: `https://openimages.cloud/images/${image.os_name}/`,
+        },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: serviceFor ? imageWord : `${image.title} cloud image`,
+      description: seoDescription,
+      applicationCategory: "Operating system image",
+      operatingSystem: "OpenStack, Proxmox VE (QEMU/KVM)",
+      softwareVersion: image.latest_version,
+      ...(image.builtAt && { datePublished: image.builtAt.slice(0, 10) }),
+      ...(primary?.fileUrl && { downloadUrl: primary.fileUrl }),
+      ...(primary?.sizeBytes && { fileSize: formatBytes(primary.sizeBytes) }),
+      url: `https://openimages.cloud/images/${image.os_name}/`,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      publisher: {
+        "@type": "Organization",
+        name: "Open Image Cloud",
+        url: "https://openimages.cloud/",
+      },
+    },
+  ]}
+>
   <article class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
     <nav aria-label="Breadcrumb" class="text-ink-faint text-sm">
       <a href="/images/" class="hover:text-ink">
