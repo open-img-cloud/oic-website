@@ -556,8 +556,9 @@ images:
       deployment on OpenStack.
     repo: open-img-cloud/octavia-amphora
     upstream_homepage: https://docs.openstack.org/octavia/latest/
-    latest_version: "2026.1"
+    latest_version: "2026.2"
     previous_versions:
+      - "2026.1"
       - "2025.2"
       - "2025.1"
     format: qcow2
