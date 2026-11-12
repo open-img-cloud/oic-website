@@ -90,7 +90,28 @@ const verifySnippet = `cosign verify-blob ${demoFile} \\
   --certificate-oidc-issuer https://token.actions.githubusercontent.com`;
 ---
 
-<Base title="Open Image Cloud">
+<Base
+  title="Signed cloud images for OpenStack and Proxmox"
+  jsonLd={[
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Open Image Cloud",
+      alternateName: "openimages.cloud",
+      url: "https://openimages.cloud/",
+      logo: "https://openimages.cloud/img/icon-180.png",
+      description:
+        "Non-profit community project publishing signed, tested cloud images for OpenStack and Proxmox.",
+      sameAs: ["https://github.com/open-img-cloud"],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Open Image Cloud",
+      url: "https://openimages.cloud/",
+    },
+  ]}
+>
   <!-- Hero -->
   <section class="relative isolate overflow-hidden">
     <div aria-hidden="true" class="bg-grid absolute inset-0 -z-10 opacity-70"></div>

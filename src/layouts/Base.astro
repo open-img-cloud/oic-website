@@ -7,9 +7,11 @@ interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  /** schema.org structured data, rendered as JSON-LD. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title, description, ogImage = "/img/og.png" } = Astro.props;
+const { title, description, ogImage = "/img/og.png", jsonLd } = Astro.props;
 const fullTitle = title === "Open Image Cloud" ? title : `${title} · Open Image Cloud`;
 const desc =
   description ??
@@ -41,6 +43,12 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
     <meta property="og:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImageUrl} />
+    {jsonLd && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(jsonLd).replace(/</g, "\\u003c")}
+      />
+    )}
     <script is:inline>
       // Apply the theme before first paint to avoid a flash.
       // Priority: localStorage("theme") → prefers-color-scheme.
