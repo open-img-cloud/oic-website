@@ -19,7 +19,10 @@ const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, 
 
 // Background of the site-wide og.svg: navy, faded grid, glow behind the left tile.
 const brand = readFileSync("brand/og.svg", "utf8");
-const defs = brand.match(/<defs>[\s\S]*?<\/defs>/)[0];
+// brand/og.svg leaves the grid mask size as {w}/{h} placeholders: fill them in.
+const defs = brand
+  .match(/<defs>[\s\S]*?<\/defs>/)[0]
+  .replaceAll('width="{w}" height="{h}"', 'width="1200" height="630"');
 const background = [
   '<rect width="1200" height="630" fill="#0b1424"/>',
   brand.match(/<g stroke="#22324f"[\s\S]*?<\/g>/)[0],
