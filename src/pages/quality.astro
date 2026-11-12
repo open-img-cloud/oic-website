@@ -42,23 +42,23 @@ const runtime: { check: string; detail: string; level: Level }[] = [
   {
     check: "Hostname from metadata",
     detail: "The guest takes the instance name given by OpenStack.",
-    level: "rolling",
+    level: "required",
   },
   {
     check: "Disk grown to the flavor",
     detail: "Partition and filesystem (or ZFS pool) extended to the root disk of the flavor.",
-    level: "rolling",
+    level: "required",
   },
   {
     check: "Administrator access",
     detail: "The default user becomes root without a password (sudo or doas).",
-    level: "rolling",
+    level: "required",
   },
   {
     check: "IPv6",
     detail:
       "The guest configures the IPv6 address Neutron assigned to its port and reaches the IPv6 Internet.",
-    level: "rolling",
+    level: "required",
   },
 ];
 ---
@@ -191,10 +191,9 @@ const runtime: { check: string; detail: string; level: Level }[] = [
             </table>
           </div>
           <p class="mt-4">
-            <strong class="text-ink">Required or reported:</strong> these checks fail the release
-            for images held to the full contract (FreeBSD today), and are reported as warnings for
-            the others while the whole catalog is brought to the same level. They will all become
-            required.
+            Every check above is required: a release that fails one of them is not considered good.
+            Waits are generous enough for a slow cloud (DHCP leases over 2 minutes were measured in
+            one region), so a failure means the image is wrong, not that the cloud was slow.
           </p>
           <p class="mt-3">
             <strong class="text-ink">Known limit:</strong> this test runs right after publication,
