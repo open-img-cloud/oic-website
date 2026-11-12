@@ -12,19 +12,21 @@ const logoUrl = image.logo ? `/img/logos/${image.logo}` : null;
 const sizes = image.latest.artifacts.map((a) => a.sizeBytes).filter((n): n is number => n != null);
 const size = sizes.length ? Math.min(...sizes) : null;
 const variants = image.latest.artifacts.map((a) => a.label).filter(Boolean) as string[];
+const panelId = `quick-${image.os_name}`;
+const downloadable = image.latest.artifacts.filter((a) => a.fileUrl);
 const searchText = [image.title, image.os_name, image.tagline, ...variants, ...image.tags]
   .join(" ")
   .toLowerCase();
 ---
 
-<li data-image-row data-search={searchText} data-status={image.status}>
+<li data-image-row data-search={searchText} data-status={image.status} class="relative">
   <a
     href={`/images/${image.os_name}/`}
     class:list={[
-      "group grid grid-cols-[2.75rem_1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-4 transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_5%,transparent)] sm:px-5",
+      "group grid grid-cols-[2.75rem_1fr_auto] items-center gap-x-4 gap-y-1 py-4 pr-14 pl-4 transition-colors md:pr-5 hover:bg-[color-mix(in_oklch,var(--accent)_5%,transparent)] sm:pl-5",
       showDownloads
-        ? "md:grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_6rem_1rem]"
-        : "md:grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_1rem]",
+        ? "md:grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_6rem_2.25rem]"
+        : "md:grid-cols-[2.75rem_minmax(0,1fr)_9rem_8rem_6rem_2.25rem]",
     ]}
   >
     <span class="border-line row-span-2 flex h-11 w-11 bg-white dark:border-transparent items-center justify-center rounded-lg border md:row-span-1">
@@ -67,9 +69,20 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
         {formatCount(image.downloads)}
       </span>
     )}
+    <span class="hidden md:block" aria-hidden="true"></span>
+  </a>
+  <button
+    type="button"
+    data-row-toggle
+    aria-expanded="false"
+    aria-controls={panelId}
+    aria-label={`Quick info and download for ${image.title}`}
+    class="text-ink-faint hover:text-ink absolute top-5 right-2.5 flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-[var(--accent)] sm:right-3.5"
+  >
     <svg
       viewBox="0 0 16 16"
-      class="text-ink-faint group-hover:text-ink hidden h-4 w-4 transition-transform group-hover:translate-x-0.5 md:block"
+      class="h-4 w-4 transition-transform duration-200"
+      data-row-chevron
       fill="none"
       aria-hidden="true"
     >
@@ -80,5 +93,104 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
         stroke-linecap="round"
       ></path>
     </svg>
-  </a>
+  </button>
+  <div
+    id={panelId}
+    data-row-panel
+    hidden
+    class="border-line surface-sunken border-t px-4 py-5 sm:px-5"
+  >
+    <div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] md:pl-[3.75rem]">
+      <dl class="grid grid-cols-[auto_1fr] content-start gap-x-4 gap-y-1.5 text-sm">
+        <dt class="text-ink-faint">Version</dt>
+        <dd class="text-ink font-mono">{image.latest_version}</dd>
+        {image.login_user && (
+          <>
+            <dt class="text-ink-faint">Default user</dt>
+            <dd class="text-ink font-mono">{image.login_user}</dd>
+          </>
+        )}
+        <dt class="text-ink-faint">Built</dt>
+        <dd class="text-ink-muted">{formatDate(image.builtAt)}</dd>
+        <dt class="text-ink-faint">Signature</dt>
+        <dd class="text-ink-muted">
+          {image.signed ? (
+            <a class="link" href="/verify/">
+              cosign, verifiable
+            </a>
+          ) : (
+            "unsigned"
+          )}
+        </dd>
+        {image.status_note && (
+          <>
+            <dt class="text-ink-faint">Note</dt>
+            <dd class="text-ink-muted">{image.status_note}</dd>
+          </>
+        )}
+      </dl>
+      <div class="space-y-3">
+        {downloadable.map((a) => (
+          <div class="border-line surface flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-ink text-sm font-medium">
+                {a.label ?? "qcow2"}
+                <span class="text-ink-faint font-normal">
+                  {" "}
+                  {a.label?.toLowerCase() !== a.firmware
+                    ? `· ${a.firmware.toUpperCase()} `
+                    : ""}· {formatBytes(a.sizeBytes)}
+                </span>
+              </p>
+              {a.manifest?.sha256 && (
+                <button
+                  type="button"
+                  data-copy={a.manifest.sha256}
+                  class="text-ink-faint hover:text-ink mt-0.5 block max-w-full truncate text-left font-mono text-xs"
+                  title="Copy the SHA-256"
+                >
+                  sha256 {a.manifest.sha256.slice(0, 16)}… <span data-copy-label>Copy</span>
+                </button>
+              )}
+            </div>
+            <a
+              href={a.fileUrl}
+              download
+              class="inline-flex shrink-0 items-center gap-2 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            >
+              <svg viewBox="0 0 16 16" class="h-4 w-4" fill="none" aria-hidden="true">
+                <path
+                  d="M8 2.5v8m0 0L4.5 7M8 10.5 11.5 7M3 13.5h10"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+              Download
+            </a>
+          </div>
+        ))}
+        <p class="text-sm">
+          <a class="link" href={`/images/${image.os_name}/`}>
+            Glance and Proxmox commands, checksums, previous versions
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
 </li>
+
+<script>
+  // Row toggle: quick info and download panel under the row (bundled once per page).
+  document.addEventListener("click", (event) => {
+    const btn = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-row-toggle]");
+    if (!btn) return;
+    const panel = document.getElementById(btn.getAttribute("aria-controls") ?? "");
+    if (!panel) return;
+    const open = btn.getAttribute("aria-expanded") !== "true";
+    btn.setAttribute("aria-expanded", String(open));
+    panel.hidden = !open;
+    btn.querySelector("[data-row-chevron]")?.classList.toggle("rotate-90", open);
+  });
+</script>
