@@ -109,7 +109,7 @@ images:
       Produced in both glibc and musl variants for OpenStack and Proxmox.
     repo: open-img-cloud/alpaquita-linux
     upstream_homepage: https://bell-sw.com/alpaquita-linux/
-    latest_version: "2026.11.09"
+    latest_version: "2026.11.10"
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
