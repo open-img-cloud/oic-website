@@ -237,6 +237,7 @@ const OSISM_OS_DISTROS = new Set([
   "almalinux",
   "alpinelinux",
   "debian",
+  "fedora",
   "freebsd",
   "gentoo",
   "nixos",
