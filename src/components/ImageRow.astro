@@ -97,85 +97,90 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
   <div
     id={panelId}
     data-row-panel
-    hidden
-    class="border-line surface-sunken border-t px-4 py-5 sm:px-5"
+    inert
+    class="grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none data-[open]:grid-rows-[1fr] data-[open]:opacity-100"
   >
-    <div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] md:pl-[3.75rem]">
-      <dl class="grid grid-cols-[auto_1fr] content-start gap-x-4 gap-y-1.5 text-sm">
-        <dt class="text-ink-faint">Version</dt>
-        <dd class="text-ink font-mono">{image.latest_version}</dd>
-        {image.login_user && (
-          <>
-            <dt class="text-ink-faint">Default user</dt>
-            <dd class="text-ink font-mono">{image.login_user}</dd>
-          </>
-        )}
-        <dt class="text-ink-faint">Built</dt>
-        <dd class="text-ink-muted">{formatDate(image.builtAt)}</dd>
-        <dt class="text-ink-faint">Signature</dt>
-        <dd class="text-ink-muted">
-          {image.signed ? (
-            <a class="link" href="/verify/">
-              cosign, verifiable
-            </a>
-          ) : (
-            "unsigned"
-          )}
-        </dd>
-        {image.status_note && (
-          <>
-            <dt class="text-ink-faint">Note</dt>
-            <dd class="text-ink-muted">{image.status_note}</dd>
-          </>
-        )}
-      </dl>
-      <div class="space-y-3">
-        {downloadable.map((a) => (
-          <div class="border-line surface flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3">
-            <div class="min-w-0 flex-1">
-              <p class="text-ink text-sm font-medium">
-                {a.label ?? "qcow2"}
-                <span class="text-ink-faint font-normal">
-                  {" "}
-                  {a.label?.toLowerCase() !== a.firmware
-                    ? `· ${a.firmware.toUpperCase()} `
-                    : ""}· {formatBytes(a.sizeBytes)}
-                </span>
-              </p>
-              {a.manifest?.sha256 && (
-                <button
-                  type="button"
-                  data-copy={a.manifest.sha256}
-                  class="text-ink-faint hover:text-ink mt-0.5 block max-w-full truncate text-left font-mono text-xs"
-                  title="Copy the SHA-256"
-                >
-                  sha256 {a.manifest.sha256.slice(0, 16)}… <span data-copy-label>Copy</span>
-                </button>
+    <div class="min-h-0 overflow-hidden">
+      <div class="border-line surface-sunken border-t px-4 py-5 sm:px-5">
+        <div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] md:pl-[3.75rem]">
+          <dl class="grid grid-cols-[auto_1fr] content-start gap-x-4 gap-y-1.5 text-sm">
+            <dt class="text-ink-faint">Version</dt>
+            <dd class="text-ink font-mono">{image.latest_version}</dd>
+            {image.login_user && (
+              <>
+                <dt class="text-ink-faint">Default user</dt>
+                <dd class="text-ink font-mono">{image.login_user}</dd>
+              </>
+            )}
+            <dt class="text-ink-faint">Built</dt>
+            <dd class="text-ink-muted">{formatDate(image.builtAt)}</dd>
+            <dt class="text-ink-faint">Signature</dt>
+            <dd class="text-ink-muted">
+              {image.signed ? (
+                <a class="link" href="/verify/">
+                  cosign, verifiable
+                </a>
+              ) : (
+                "unsigned"
               )}
-            </div>
-            <a
-              href={a.fileUrl}
-              download
-              class="inline-flex shrink-0 items-center gap-2 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
-            >
-              <svg viewBox="0 0 16 16" class="h-4 w-4" fill="none" aria-hidden="true">
-                <path
-                  d="M8 2.5v8m0 0L4.5 7M8 10.5 11.5 7M3 13.5h10"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></path>
-              </svg>
-              Download
-            </a>
+            </dd>
+            {image.status_note && (
+              <>
+                <dt class="text-ink-faint">Note</dt>
+                <dd class="text-ink-muted">{image.status_note}</dd>
+              </>
+            )}
+          </dl>
+          <div class="space-y-3">
+            {downloadable.map((a) => (
+              <div class="border-line surface flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3">
+                <div class="min-w-0 flex-1">
+                  <p class="text-ink text-sm font-medium">
+                    {a.label ?? "qcow2"}
+                    <span class="text-ink-faint font-normal">
+                      {" "}
+                      {a.label?.toLowerCase() !== a.firmware
+                        ? `· ${a.firmware.toUpperCase()} `
+                        : ""}
+                      · {formatBytes(a.sizeBytes)}
+                    </span>
+                  </p>
+                  {a.manifest?.sha256 && (
+                    <button
+                      type="button"
+                      data-copy={a.manifest.sha256}
+                      class="text-ink-faint hover:text-ink mt-0.5 block max-w-full truncate text-left font-mono text-xs"
+                      title="Copy the SHA-256"
+                    >
+                      sha256 {a.manifest.sha256.slice(0, 16)}… <span data-copy-label>Copy</span>
+                    </button>
+                  )}
+                </div>
+                <a
+                  href={a.fileUrl}
+                  download
+                  class="inline-flex shrink-0 items-center gap-2 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+                >
+                  <svg viewBox="0 0 16 16" class="h-4 w-4" fill="none" aria-hidden="true">
+                    <path
+                      d="M8 2.5v8m0 0L4.5 7M8 10.5 11.5 7M3 13.5h10"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></path>
+                  </svg>
+                  Download
+                </a>
+              </div>
+            ))}
+            <p class="text-sm">
+              <a class="link" href={`/images/${image.os_name}/`}>
+                Glance and Proxmox commands, checksums, previous versions
+              </a>
+            </p>
           </div>
-        ))}
-        <p class="text-sm">
-          <a class="link" href={`/images/${image.os_name}/`}>
-            Glance and Proxmox commands, checksums, previous versions
-          </a>
-        </p>
+        </div>
       </div>
     </div>
   </div>
@@ -190,7 +195,9 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
     if (!panel) return;
     const open = btn.getAttribute("aria-expanded") !== "true";
     btn.setAttribute("aria-expanded", String(open));
-    panel.hidden = !open;
+    // Slides open (CSS grid rows 0fr to 1fr); inert keeps the closed panel out of the tab order.
+    panel.toggleAttribute("data-open", open);
+    panel.inert = !open;
     btn.querySelector("[data-row-chevron]")?.classList.toggle("rotate-90", open);
   });
 </script>
