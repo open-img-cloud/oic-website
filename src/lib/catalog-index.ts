@@ -253,6 +253,8 @@ const OSISM_EXCLUDED = new Set([
   "octavia-amphora",
   // Manila service image: booted by the Manila generic driver (service_image_name), not by tenants.
   "manila-service-image",
+  // Trove guest image: booted by Trove for database instances, not by tenants.
+  "trove-guest-image",
 ]);
 
 /** Whether an image is part of the osism export. */
@@ -334,8 +336,8 @@ export function buildOsismImages(index: CatalogIndex): string {
     "#   curl -fsSo /etc/oic-images.yml https://images.openimages.cloud/osism/images.yml",
     "#   openstack-image-manager --cloud admin --images /etc/oic-images.yml --latest",
     "#",
-    "# Left out: octavia-amphora and manila-service-image (service images, import them",
-    "# with the Octavia or Manila procedure),",
+    "# Left out: octavia-amphora, manila-service-image and trove-guest-image (service",
+    "# images, import them with the Octavia, Manila or Trove procedure),",
     "# and images whose os_distro is not in the osism schema (Amazon Linux, Alpaquita).",
     "# Checksums are sha256 from the signed MANIFEST; cosign signatures are not verified",
     "# by the image manager (see https://openimages.cloud/verify/).",
