@@ -43,6 +43,11 @@ export interface ImageEntry {
   os_version?: string | null;
   /** Extra Glance properties for this image, merged over DEFAULT_GLANCE_PROPERTIES. */
   glance_properties?: Record<string, string>;
+  /**
+   * Upstream test image republished unchanged (CirrOS): no cloud-init, well-known password.
+   * No Proxmox template commands, left out of the osism export.
+   */
+  test_image?: boolean;
 }
 
 export type Firmware = "uefi" | "bios";
