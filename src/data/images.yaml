@@ -583,6 +583,30 @@ images:
       os_require_quiesce: "no"
     status_note: "14.5 is the last FreeBSD 14 release; the 14 branch is supported until 2028-11-30. Prefer FreeBSD 15 for new deployments."
 
+  - os_name: cirros
+    title: CirrOS
+    os_distro: cirros
+    os_version: null
+    test_image: true
+    tagline: Tiny test image for OpenStack (Tempest, smoke checks), republished unchanged. Not for production.
+    description: |
+      The official CirrOS x86_64 disk image, byte for byte: verified against
+      the upstream SHA256SUMS, signed with Sigstore cosign and boot-tested.
+      No cloud-init (own metadata client), no guest agent, and a well-known
+      password (cirros / gocubsgo): for testing a cloud, never for workloads.
+    repo: open-img-cloud/cirros
+    upstream_homepage: https://github.com/cirros-dev/cirros
+    latest_version: "0.6.3"
+    login_user: cirros
+    status_note: "Test image with a well-known password (cirros / gocubsgo): never use it in production."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, test-image, tempest, signed]
+    logo: cirros.svg
+    glance_properties:
+      hw_qemu_guest_agent: "no"
+      os_require_quiesce: "no"
+
   - os_name: octavia-amphora
     title: Octavia Amphora
     os_distro: ubuntu

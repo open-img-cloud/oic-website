@@ -43,10 +43,14 @@ const ogImage = existsSync(`public/img/og/${image.os_name}.png`)
 const imageWord = /image$/i.test(image.title) ? image.title : `${image.title} image`;
 const seoTitle = serviceFor
   ? `${imageWord} for OpenStack`
-  : `${image.title} cloud image for OpenStack and Proxmox`;
+  : image.test_image
+    ? `${image.title} test image for OpenStack`
+    : `${image.title} cloud image for OpenStack and Proxmox`;
 const seoDescription = serviceFor
   ? `Signed ${imageWord} for ${serviceFor}, version ${image.latest_version}: qcow2 built per OpenStack series with diskimage-builder, verifiable with cosign.`
-  : `Signed ${image.title} qcow2 cloud image for OpenStack and Proxmox, version ${image.latest_version}: cloud-init ready${image.login_user ? `, user ${image.login_user}` : ""}, boot-tested, cosign-verifiable.`;
+  : image.test_image
+    ? `Signed ${image.title} ${image.latest_version} test image for OpenStack (Tempest, smoke checks), republished unchanged from upstream: checksum-verified, boot-tested, cosign-verifiable. Not for production.`
+    : `Signed ${image.title} qcow2 cloud image for OpenStack and Proxmox, version ${image.latest_version}: cloud-init ready${image.login_user ? `, user ${image.login_user}` : ""}, boot-tested, cosign-verifiable.`;
 // Download counts, null when the statistics endpoint was unavailable at build time.
 const stats = await loadDownloadStats();
 const downloadsLabel = stats ? downloadsWindowLabel(stats) : "";
@@ -342,22 +346,35 @@ const provenance = [
           )}
           <h3 class="text-ink mt-6 text-sm font-semibold">OpenStack</h3>
           <CodeBlock code={openstack} label="OpenStack Glance" />
-          <h3 class="text-ink mt-6 text-sm font-semibold">Proxmox VE</h3>
-          <p class="text-ink-muted mt-1 text-sm">
-            Creates a cloud-init template (VM 9000) on <code class="font-mono">local-lvm</code>. The{" "}
-            <code class="font-mono">local</code> storage needs the Import content type (default on
-            new Proxmox VE 9.1 installs). Adjust the storages, bridge and SSH key path to your
-            setup.
-          </p>
-          <CodeBlock code={proxmox} label="Proxmox VE 9" />
-          <p class="text-ink-muted text-sm">
-            In the web UI: Datacenter &gt; Storage, edit <code class="font-mono">local</code> and
-            add Import to its content; then on that storage, Import &gt; Download from URL with the
-            URL above and the SHA-256 checksum, and pick the downloaded file as the import source
-            when adding the VM disk. On Proxmox VE 8, download the file with{" "}
-            <code class="font-mono">wget</code> and use{" "}
-            <code class="font-mono">import-from=/root/{file}</code> instead.
-          </p>
+          {image.test_image ? (
+            <>
+              <h3 class="text-ink mt-6 text-sm font-semibold">Proxmox VE</h3>
+              <p class="text-ink-muted mt-1 text-sm">
+                The disk boots on Proxmox VE (BIOS or UEFI) and gets its address by DHCP, but this
+                test image ignores the Proxmox cloud-init drive: no SSH key or user is applied. Log
+                in on the console with the well-known password instead.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 class="text-ink mt-6 text-sm font-semibold">Proxmox VE</h3>
+              <p class="text-ink-muted mt-1 text-sm">
+                Creates a cloud-init template (VM 9000) on <code class="font-mono">local-lvm</code>.
+                The <code class="font-mono">local</code> storage needs the Import content type
+                (default on new Proxmox VE 9.1 installs). Adjust the storages, bridge and SSH key
+                path to your setup.
+              </p>
+              <CodeBlock code={proxmox} label="Proxmox VE 9" />
+              <p class="text-ink-muted text-sm">
+                In the web UI: Datacenter &gt; Storage, edit <code class="font-mono">local</code>{" "}
+                and add Import to its content; then on that storage, Import &gt; Download from URL
+                with the URL above and the SHA-256 checksum, and pick the downloaded file as the
+                import source when adding the VM disk. On Proxmox VE 8, download the file with{" "}
+                <code class="font-mono">wget</code> and use{" "}
+                <code class="font-mono">import-from=/root/{file}</code> instead.
+              </p>
+            </>
+          )}
           <h3 class="text-ink mt-6 text-sm font-semibold">Verify before booting</h3>
           <CodeBlock code={verify} label="cosign 2.x / 3.x" />
           <p class="text-ink-muted text-sm">

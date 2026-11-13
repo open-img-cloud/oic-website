@@ -255,6 +255,8 @@ const OSISM_EXCLUDED = new Set([
   "manila-service-image",
   // Trove guest image: booted by Trove for database instances, not by tenants.
   "trove-guest-image",
+  // CirrOS: test image, osism ships its own definition (os_purpose minimal, min_ram 64).
+  "cirros",
 ]);
 
 /** Whether an image is part of the osism export. */

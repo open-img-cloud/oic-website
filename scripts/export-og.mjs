@@ -46,7 +46,9 @@ function svgFor(image) {
     logoPath && existsSync(logoPath)
       ? `<image x="140" y="235" width="160" height="160" href="data:image/svg+xml;base64,${readFileSync(logoPath).toString("base64")}"/>`
       : "";
-  const subtitle = SERVICE[image.os_name] ?? "Cloud image for OpenStack & Proxmox";
+  const subtitle =
+    SERVICE[image.os_name] ??
+    (image.test_image ? "Test image for OpenStack" : "Cloud image for OpenStack & Proxmox");
   const titleSize = image.title.length > 18 ? 64 : 76;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
 ${defs}
