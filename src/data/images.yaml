@@ -238,6 +238,45 @@ images:
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
     logo: centos.svg
 
+  - os_name: centos-stream-9
+    title: CentOS Stream 9
+    os_distro: centos
+    os_version: "9"
+    tagline: The continuously delivered distribution just ahead of RHEL 9.
+    description: |
+      Cloud-init-ready, signed CentOS Stream 9 qcow2 image built from the
+      official CentOS GenericCloud compose, verified against the upstream
+      checksum. A new image follows each weekly compose. Like RHEL 9 it
+      needs an x86-64-v2 CPU (Nehalem or newer).
+    repo: open-img-cloud/centos-stream-9
+    upstream_homepage: https://www.centos.org/
+    latest_version: "9-20261109.0"
+    login_user: cloud-user
+    status_note: "Maintained until the end of RHEL 9 full support (expected 2027-05-31). Weekly upstream composes."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
+    logo: centos.svg
+
+  - os_name: arch-linux
+    title: Arch Linux
+    os_distro: arch
+    tagline: Lightweight rolling-release distribution, kept simple and up to date.
+    description: |
+      Cloud-init-ready, signed Arch Linux qcow2 image built from the
+      official arch-boxes cloud image, verified against the upstream SHA-256.
+      Btrfs root filesystem. Rolling release: each image is a snapshot of
+      the repositories on its build date, so run pacman -Syu after boot.
+    repo: open-img-cloud/arch-linux
+    upstream_homepage: https://archlinux.org/
+    latest_version: "20261101.620452"
+    login_user: arch
+    status_note: "Rolling release, no end of life. Upstream builds about twice a month; update with pacman -Syu after the first boot."
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, cloud-init, signed, rolling]
+    logo: arch-linux.svg
+
   - os_name: fedora-45
     title: Fedora 45
     os_distro: fedora
