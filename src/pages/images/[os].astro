@@ -357,22 +357,22 @@ const provenance = [
             </>
           ) : (
             <>
-            <h3 class="text-ink mt-6 text-sm font-semibold">Proxmox VE</h3>
-            <p class="text-ink-muted mt-1 text-sm">
-              Creates a cloud-init template (VM 9000) on <code class="font-mono">local-lvm</code>. The{" "}
-              <code class="font-mono">local</code> storage needs the Import content type (default on
-              new Proxmox VE 9.1 installs). Adjust the storages, bridge and SSH key path to your
-              setup.
-            </p>
-            <CodeBlock code={proxmox} label="Proxmox VE 9" />
-            <p class="text-ink-muted text-sm">
-              In the web UI: Datacenter &gt; Storage, edit <code class="font-mono">local</code> and
-              add Import to its content; then on that storage, Import &gt; Download from URL with the
-              URL above and the SHA-256 checksum, and pick the downloaded file as the import source
-              when adding the VM disk. On Proxmox VE 8, download the file with{" "}
-              <code class="font-mono">wget</code> and use{" "}
-              <code class="font-mono">import-from=/root/{file}</code> instead.
-            </p>
+              <h3 class="text-ink mt-6 text-sm font-semibold">Proxmox VE</h3>
+              <p class="text-ink-muted mt-1 text-sm">
+                Creates a cloud-init template (VM 9000) on <code class="font-mono">local-lvm</code>.
+                The <code class="font-mono">local</code> storage needs the Import content type
+                (default on new Proxmox VE 9.1 installs). Adjust the storages, bridge and SSH key
+                path to your setup.
+              </p>
+              <CodeBlock code={proxmox} label="Proxmox VE 9" />
+              <p class="text-ink-muted text-sm">
+                In the web UI: Datacenter &gt; Storage, edit <code class="font-mono">local</code>{" "}
+                and add Import to its content; then on that storage, Import &gt; Download from URL
+                with the URL above and the SHA-256 checksum, and pick the downloaded file as the
+                import source when adding the VM disk. On Proxmox VE 8, download the file with{" "}
+                <code class="font-mono">wget</code> and use{" "}
+                <code class="font-mono">import-from=/root/{file}</code> instead.
+              </p>
             </>
           )}
           <h3 class="text-ink mt-6 text-sm font-semibold">Verify before booting</h3>
