@@ -236,12 +236,15 @@ export function buildIndex(images: EnrichedImage[], now = new Date()): CatalogIn
 const OSISM_OS_DISTROS = new Set([
   "almalinux",
   "alpinelinux",
+  "arch",
+  "centos",
   "debian",
   "fedora",
   "freebsd",
   "gentoo",
   "nixos",
   "ol",
+  "opensuse",
   "rocky",
   "ubuntu",
 ]);
