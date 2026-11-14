@@ -1,0 +1,115 @@
+---
+import Base from "~/layouts/Base.astro";
+
+const contact = "privacy@openimages.cloud";
+const updated = "2026-11-14";
+---
+
+<Base
+  title="Privacy and legal notice"
+  description="What Open Image Cloud collects when you visit the website or download an image, who processes it, and who publishes the project."
+>
+  <article class="text-ink-muted mx-auto max-w-3xl px-4 py-14 leading-relaxed sm:px-6 sm:py-20">
+    <p class="eyebrow">Privacy</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">Privacy and legal notice</h1>
+    <p class="mt-4 text-lg">
+      Short version: no account, no cookie, no tracker, no advertising. The website and the image
+      downloads only handle the technical data any web server sees, and download counts are kept
+      without IP addresses.
+    </p>
+
+    <section class="mt-12">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Who is responsible</h2>
+      <p class="mt-3">
+        Open Image Cloud is a non-profit community project published by Kevin Allioli, who is the
+        controller for the processing described here. Contact:{" "}
+        <a class="link" href={`mailto:${contact}`}>
+          {contact}
+        </a>
+        .
+      </p>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">The website</h2>
+      <ul class="mt-3 list-disc space-y-2 pl-5">
+        <li>
+          openimages.cloud is a static site served by Cloudflare. To deliver a page, Cloudflare
+          necessarily receives your IP address, browser user agent and the requested address, and
+          keeps short-lived technical logs to operate and protect the service.
+        </li>
+        <li>
+          There is no analytics tool, no cookie and no third-party script, font or embed. Fonts are
+          served from the site itself.
+        </li>
+        <li>
+          The light or dark theme you pick is stored in your browser (local storage) and never sent
+          to us.
+        </li>
+      </ul>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Image downloads</h2>
+      <ul class="mt-3 list-disc space-y-2 pl-5">
+        <li>
+          Images are downloaded from images.openimages.cloud, which runs on Cloudflare and fetches
+          the files from object storage at Infomaniak in Switzerland. Infomaniak only sees
+          Cloudflare, not your address.
+        </li>
+        <li>
+          To publish download statistics, each download records the image, version and file, the
+          country derived by Cloudflare, the first word of the client's user agent (for example
+          "curl" or "mozilla") and the response size. No IP address and no identifier is stored.
+          These records are kept for 90 days at most; only daily totals may be kept longer.
+        </li>
+      </ul>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Email and GitHub</h2>
+      <p class="mt-3">
+        If you write to an openimages.cloud address, your message is used only to answer it. Issues,
+        pull requests and discussions happen on GitHub, under GitHub's own privacy policy.
+      </p>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Purpose and legal basis</h2>
+      <p class="mt-3">
+        The data above is processed only to run the website and the downloads, keep them secure and
+        publish aggregate download counts. This relies on a legitimate interest in operating the
+        service. Nothing is sold, shared for advertising or used to build profiles.
+      </p>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Your rights</h2>
+      <p class="mt-3">
+        Under the Swiss Federal Act on Data Protection and, where it applies, the GDPR, you can ask
+        for access to, correction or deletion of data about you, and object to its processing, by
+        writing to{" "}
+        <a class="link" href={`mailto:${contact}`}>
+          {contact}
+        </a>
+        . You can also complain to the Swiss Federal Data Protection and Information Commissioner or
+        to the data protection authority of your country.
+      </p>
+    </section>
+
+    <section class="mt-12">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Legal notice</h2>
+      <p class="mt-3">
+        Publisher: Kevin Allioli. Contact:{" "}
+        <a class="link" href={`mailto:${contact}`}>
+          {contact}
+        </a>
+        . Hosting: Cloudflare, Inc. (website and download front end) and Infomaniak Network SA,
+        Geneva, Switzerland (image storage). Distribution names and logos are trademarks of their
+        respective owners; Open Image Cloud is not affiliated with them.
+      </p>
+    </section>
+
+    <p class="text-ink-faint mt-12 text-sm">Last updated {updated}.</p>
+  </article>
+</Base>
