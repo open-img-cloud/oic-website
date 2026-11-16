@@ -426,6 +426,36 @@ const provenance = [
           {inOsismExport(image.os_name, image.os_distro) && (
             <CodeBlock code={osism} label="osism openstack-image-manager" />
           )}
+          <p class="text-ink-muted mt-3 text-sm leading-relaxed">
+            <a class="link" href="/oic-sync/">
+              oic-sync
+            </a>{" "}
+            reads the index, verifies the signatures and keeps this image current
+            {serviceFor || image.test_image ? (
+              <>
+                {" "}
+                in{" "}
+                <a class="link" href="/oic-sync/openstack/">
+                  OpenStack Glance
+                </a>
+                . It skips this image unless named:{" "}
+                <code class="font-mono">--image {image.os_name}</code>.
+              </>
+            ) : (
+              <>
+                {" "}
+                in{" "}
+                <a class="link" href="/oic-sync/openstack/">
+                  OpenStack Glance
+                </a>{" "}
+                or as a{" "}
+                <a class="link" href="/oic-sync/proxmox/">
+                  Proxmox VE template
+                </a>{" "}
+                (<code class="font-mono">--image {image.os_name}</code>).
+              </>
+            )}
+          </p>
         </section>
 
         <!-- About -->

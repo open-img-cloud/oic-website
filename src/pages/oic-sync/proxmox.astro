@@ -1,0 +1,358 @@
+---
+import Base from "~/layouts/Base.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import OptionsTable from "~/components/OptionsTable.astro";
+import { OIC_SYNC_REPO, breadcrumb, techArticle } from "~/lib/oic-sync";
+
+const title = "Proxmox VE cloud-init VM templates, updated automatically";
+const description =
+  "Keep Proxmox VE cloud-init VM templates (Debian 13, Ubuntu 24.04...) up to date with oic-sync: signed qcow2 images, ready for qm clone, old ones rotated.";
+const headline = "Proxmox VE cloud-init VM templates, kept up to date with oic-sync";
+const readme = `${OIC_SYNC_REPO}#proxmox-ve`;
+
+const install = `apt install pipx
+pipx install oic-sync`;
+
+const storage = `# List the content types the storage already has, plus import
+pvesm set local --content iso,vztmpl,backup,import`;
+
+const firstRun = `# Compare the node templates with the index (read only)
+oic-sync proxmox status
+# Show what a sync would do (read only, signatures verified)
+oic-sync proxmox sync --image debian-13 --image ubuntu-24.04 --dry-run
+# Do it: templates from VMID 9000, disks on local-lvm
+oic-sync proxmox sync --image debian-13 --image ubuntu-24.04 --vmid-base 9000 --disk-storage local-lvm
+# Remove versions beyond --keep that no linked clone uses
+oic-sync proxmox sync --image debian-13 --keep 2 --delete`;
+
+const clone = `qm clone 9000 120 --name web1 --full 0
+qm set 120 --sshkeys ~/.ssh/id_ed25519.pub
+qm resize 120 scsi0 +20G && qm start 120`;
+
+const service = `# /etc/systemd/system/oic-sync-proxmox.service
+[Service]
+Type=oneshot
+ExecStart=/root/.local/bin/oic-sync proxmox sync --image debian-13 --vmid-base 9000 --keep 2`;
+
+const timer = `# /etc/systemd/system/oic-sync-proxmox.timer
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target`;
+
+const options: [string, string][] = [
+  ["--node NAME", "Node to work on (default: the node named like this host)."],
+  [
+    "--import-storage",
+    "File storage with the `import` content type, for downloads (default `local`).",
+  ],
+  [
+    "--disk-storage",
+    "Storage of the template disks, EFI vars and cloud-init drive (default `local-lvm`).",
+  ],
+  ["--bridge", "Bridge of `net0` (default `vmbr0`)."],
+  [
+    "--vmid-base N",
+    "First VMID for templates, for example 9000 (default: the next free VMID of the cluster).",
+  ],
+  ["--memory MIB", "Template memory (default 2048 MiB)."],
+  ["--cores N", "Template CPU cores (default 2)."],
+  [
+    "--image ID",
+    "Image to handle, repeatable. Default: every image of the index except the service and test images.",
+  ],
+  ["--variant NAME", "Only this variant of multi-variant images (`--variant uefi` for Alpine)."],
+  ["--keep N", "Versions kept per image, the current one included (default 2)."],
+  ["--delete", "Destroy versions beyond `--keep`, only when no linked clone uses them."],
+  ["--dry-run", "Read the node and verify signatures, change nothing."],
+  ["--no-verify-signature", "Skip the cosign check (not recommended)."],
+  ["--index-url URL", "Another index (`$OIC_INDEX_URL`), for example a mirror."],
+  ["--timeout", "Seconds to wait for an import step to finish (default 3600)."],
+];
+
+const toc = [
+  { id: "what", label: "What it does" },
+  { id: "install", label: "Install" },
+  { id: "first-run", label: "First run" },
+  { id: "clone", label: "Use a template" },
+  { id: "options", label: "Options" },
+  { id: "template", label: "What a template looks like" },
+  { id: "how", label: "How it works" },
+  { id: "daily", label: "Run it daily" },
+  { id: "limits", label: "Limitations" },
+];
+---
+
+<Base
+  title={title}
+  brand={false}
+  description={description}
+  jsonLd={[
+    breadcrumb({ name: "Proxmox VE", path: "/oic-sync/proxmox/" }),
+    techArticle({
+      headline,
+      description,
+      path: "/oic-sync/proxmox/",
+      about: ["Proxmox VE", "cloud-init", "VM templates"],
+    }),
+  ]}
+>
+  <article class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <nav aria-label="Breadcrumb" class="text-ink-faint text-sm">
+      <a href="/oic-sync/" class="hover:text-ink">
+        oic-sync
+      </a>
+      <span class="mx-2" aria-hidden="true">
+        /
+      </span>
+      <span class="text-ink-muted" aria-current="page">
+        Proxmox VE
+      </span>
+    </nav>
+    <p class="eyebrow mt-6">Guide</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">{headline}</h1>
+    <p class="text-ink-muted mt-4 max-w-2xl text-lg leading-relaxed">
+      Get one cloud-init VM template per image on your Proxmox VE node, ready for{" "}
+      <code class="text-ink font-mono text-base">qm clone</code>. Each new image version becomes a
+      new template at the next run. Clones you already made are never touched.
+    </p>
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <nav aria-label="On this page" class="hidden lg:block">
+        <ul class="sticky top-24 space-y-2 text-sm">
+          {toc.map((t) => (
+            <li>
+              <a href={`#${t.id}`} class="text-ink-muted hover:text-ink">
+                {t.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="text-ink-muted min-w-0 max-w-3xl leading-relaxed">
+        <section id="what">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">What it does</h2>
+          <p class="mt-3">
+            <a class="link" href={OIC_SYNC_REPO}>
+              oic-sync
+            </a>{" "}
+            reads the{" "}
+            <a class="link" href="https://images.openimages.cloud/index.json">
+              catalog index
+            </a>
+            , verifies the cosign signature of each image, and turns each new version into a VM
+            template. The newest template is named after the image (
+            <code class="text-ink font-mono text-sm">debian-13</code>); older ones are renamed,
+            tagged as retired, then rotated out.
+          </p>
+          <ul class="mt-4 list-disc space-y-1.5 pl-5">
+            <li>
+              Runs on the node, as root (like <code class="text-ink font-mono text-sm">pveam</code>
+              ), through the local API with <code class="text-ink font-mono text-sm">pvesh</code>:
+              no API token, nothing to configure.
+            </li>
+            <li>
+              No local state, idempotent: when everything is up to date, a run changes nothing. A
+              daily timer is enough.
+            </li>
+            <li>Tested on Proxmox VE 9.2. VM templates only, no LXC.</li>
+          </ul>
+          <p class="mt-4">
+            Status: alpha. License: Apache-2.0. The same tool also keeps{" "}
+            <a class="link" href="/oic-sync/openstack/">
+              OpenStack Glance images
+            </a>{" "}
+            up to date.
+          </p>
+        </section>
+
+        <section id="install" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Install</h2>
+          <p class="mt-3">On the node, as root, from PyPI. No extra is needed for Proxmox VE.</p>
+          <CodeBlock code={install} label="Proxmox VE node" />
+          <p>
+            Downloads go to a file storage with the{" "}
+            <code class="text-ink font-mono text-sm">import</code> content type. Enable it once,
+            keeping the content types the storage already has:
+          </p>
+          <CodeBlock code={storage} />
+          <p>
+            Both storages are checked before anything is created: a missing or inactive storage, or
+            a missing content type, stops the run before any VM exists.
+          </p>
+        </section>
+
+        <section id="first-run" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">First run</h2>
+          <p class="mt-3">
+            Start read only with <code class="text-ink font-mono text-sm">status</code> and{" "}
+            <code class="text-ink font-mono text-sm">--dry-run</code>, then sync.
+          </p>
+          <CodeBlock code={firstRun} />
+          <p>
+            <code class="text-ink font-mono text-sm">oic-sync list</code> shows the image IDs of the
+            index. <code class="text-ink font-mono text-sm">proxmox status --check</code> exits with
+            1 when an image is not up to date, for monitoring, and{" "}
+            <code class="text-ink font-mono text-sm">--json</code> gives machine-readable output.
+          </p>
+        </section>
+
+        <section id="clone" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Use a template</h2>
+          <p class="mt-3">
+            Cloud images are small: grow the disk before the first boot. A linked clone, made with{" "}
+            <code class="text-ink font-mono text-sm">--full 0</code>, protects its template from
+            deletion by the rotation.
+          </p>
+          <CodeBlock code={clone} />
+        </section>
+
+        <section id="options" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Options</h2>
+          <p class="mt-3">
+            Options of <code class="text-ink font-mono text-sm">oic-sync proxmox sync</code>. The
+            full list is in{" "}
+            <code class="text-ink font-mono text-sm">oic-sync proxmox sync --help</code>.
+          </p>
+          <OptionsTable rows={options} />
+          <p class="mt-4">
+            Skipped unless named with <code class="text-ink font-mono text-sm">--image</code>: the
+            OpenStack service images <code class="text-ink font-mono text-sm">octavia-amphora</code>
+            , <code class="text-ink font-mono text-sm">manila-service-image</code> and{" "}
+            <code class="text-ink font-mono text-sm">trove-guest-image</code>, and the test image{" "}
+            <code class="text-ink font-mono text-sm">cirros</code>.
+          </p>
+        </section>
+
+        <section id="template" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">What a template looks like</h2>
+          <p class="mt-3">
+            The same settings as the <code class="text-ink font-mono text-sm">qm</code> commands on
+            each image page of this site:
+          </p>
+          <ul class="mt-3 list-disc space-y-1.5 pl-5">
+            <li>
+              <code class="text-ink font-mono text-sm">virtio-scsi-single</code> controller,{" "}
+              <code class="text-ink font-mono text-sm">scsi0</code> imported from the qcow2 with{" "}
+              <code class="text-ink font-mono text-sm">discard=on</code>, virtio network on the
+              bridge, serial console.
+            </li>
+            <li>
+              Cloud-init drive on <code class="text-ink font-mono text-sm">ide2</code>,{" "}
+              <code class="text-ink font-mono text-sm">ciuser</code> set to the image login user,
+              DHCP on <code class="text-ink font-mono text-sm">net0</code>.
+            </li>
+            <li>
+              QEMU guest agent enabled (except for images that do not ship it, such as CirrOS).
+            </li>
+            <li>
+              UEFI images: <code class="text-ink font-mono text-sm">bios: ovmf</code>,{" "}
+              <code class="text-ink font-mono text-sm">machine: q35</code> and an EFI disk without
+              pre-enrolled keys.
+            </li>
+            <li>
+              Tags <code class="text-ink font-mono text-sm">oic</code> and{" "}
+              <code class="text-ink font-mono text-sm">oic-&lt;image id&gt;</code>, and a
+              machine-readable block in the description that oic-sync reads back.
+            </li>
+          </ul>
+          <p class="mt-4">
+            Only VMs with these tags and this block are touched. Your own tags are kept. A clone
+            copies the tags and the description, but its block names another VMID, so clones are
+            never touched.
+          </p>
+        </section>
+
+        <section id="how" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">How it works</h2>
+          <ol class="mt-3 list-decimal space-y-2 pl-5">
+            <li>
+              <strong class="text-ink">Verify</strong> the cosign bundle against the sha256 of the
+              index. A failed verification means no import.
+            </li>
+            <li>
+              <strong class="text-ink">Create</strong> the VM shell with a free VMID.
+            </li>
+            <li>
+              <strong class="text-ink">Download</strong> the qcow2 with Proxmox's own{" "}
+              <code class="text-ink font-mono text-sm">download-url</code>, given the signed sha256:
+              Proxmox checks the digest itself.
+            </li>
+            <li>
+              <strong class="text-ink">Import</strong> the disk and add the cloud-init drive.
+            </li>
+            <li>
+              <strong class="text-ink">Convert</strong> to a template, then delete the downloaded
+              file.
+            </li>
+          </ol>
+          <p class="mt-4">
+            On any failure, the VM and the downloaded file are removed. The current version is named
+            after the image ID (<code class="text-ink font-mono text-sm">debian-13</code>), older
+            versions{" "}
+            <code class="text-ink font-mono text-sm">&lt;image id&gt;-&lt;version&gt;</code> with
+            the tag <code class="text-ink font-mono text-sm">oic-retired</code>. The name moves to
+            the newest template at each sync, so automation should look templates up by tag and name
+            at clone time.
+          </p>
+          <p class="mt-4">
+            With <code class="text-ink font-mono text-sm">--delete</code>, a version beyond{" "}
+            <code class="text-ink font-mono text-sm">--keep</code> is destroyed only when no VM of
+            the cluster is a linked clone of it. An import that never became a template (crashed
+            run) is removed after 6 hours, with its downloaded file.
+          </p>
+        </section>
+
+        <section id="daily" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Run it daily</h2>
+          <p class="mt-3">
+            The index is rebuilt once a day, so a daily run is enough. On the node, as root:
+          </p>
+          <CodeBlock code={service} label="systemd service" />
+          <CodeBlock code={timer} label="systemd timer" />
+          <CodeBlock code="systemctl enable --now oic-sync-proxmox.timer" />
+          <p>Run it from one timer only (see below).</p>
+        </section>
+
+        <section id="limits" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Limitations</h2>
+          <ul class="mt-3 list-disc space-y-1.5 pl-5">
+            <li>Alpha, and no release yet: install from GitHub as above.</li>
+            <li>
+              One node per run, through the local API as root. Run it on each node that needs
+              templates on local storage, or once for a shared storage. No remote mode, no API
+              token.
+            </li>
+            <li>VMs only (no LXC templates). qcow2 images only.</li>
+            <li>
+              Tested on Proxmox VE 9.2 with directory storages: BIOS and UEFI templates, linked
+              clones, rotation, interrupted runs. LVM-thin, ZFS and Ceph disk storages should work
+              but have not been tried yet: start with{" "}
+              <code class="text-ink font-mono text-sm">--dry-run</code> and a single{" "}
+              <code class="text-ink font-mono text-sm">--image</code>.
+            </li>
+            <li>
+              Two runs at the same time on one node may import the same version twice: run it from
+              one timer only.
+            </li>
+          </ul>
+          <p class="mt-6">
+            Full reference: the{" "}
+            <a class="link" href={readme}>
+              Proxmox VE section of the oic-sync README
+            </a>
+            . Problems go to{" "}
+            <a class="link" href={`${OIC_SYNC_REPO}/issues`}>
+              its issue tracker
+            </a>
+            .
+          </p>
+        </section>
+      </div>
+    </div>
+  </article>
+</Base>

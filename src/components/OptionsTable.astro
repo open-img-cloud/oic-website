@@ -1,0 +1,37 @@
+---
+interface Props {
+  /** Rows of [option, meaning]; text between backticks renders as code. */
+  rows: [string, string][];
+}
+const { rows } = Astro.props;
+const parts = (text: string) => text.split(/(`[^`]+`)/g).filter(Boolean);
+---
+
+<div class="border-line mt-5 overflow-x-auto rounded-xl border">
+  <table class="w-full text-left text-sm">
+    <thead class="surface-sunken">
+      <tr>
+        <th class="eyebrow px-4 py-2.5">Option</th>
+        <th class="eyebrow px-4 py-2.5">Meaning</th>
+      </tr>
+    </thead>
+    <tbody class="divide-line divide-y">
+      {rows.map(([option, meaning]) => (
+        <tr>
+          <td class="text-ink px-4 py-3 align-top font-mono text-[13px] whitespace-nowrap">
+            {option}
+          </td>
+          <td class="text-ink-muted px-4 py-3">
+            {parts(meaning).map((p) =>
+              p.startsWith("`") ? (
+                <code class="text-ink font-mono text-[13px]">{p.slice(1, -1)}</code>
+              ) : (
+                p
+              ),
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

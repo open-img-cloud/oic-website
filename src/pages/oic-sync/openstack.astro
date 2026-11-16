@@ -1,0 +1,370 @@
+---
+import Base from "~/layouts/Base.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import OptionsTable from "~/components/OptionsTable.astro";
+import { OIC_SYNC_README, OIC_SYNC_REPO, breadcrumb, techArticle } from "~/lib/oic-sync";
+
+const title = "Import qcow2 images into OpenStack Glance, kept up to date";
+const description =
+  "Import signed qcow2 cloud images into OpenStack Glance with oic-sync: cosign check, stable names like Debian 13, old versions retired and rotated daily.";
+const headline = "Keep OpenStack Glance images up to date with oic-sync";
+
+const install = `pipx install 'oic-sync[openstack]'
+# or the signed container image (OpenStack backend included)
+docker run --rm -v ~/.config/openstack:/etc/openstack:ro \\
+  ghcr.io/open-img-cloud/oic-sync openstack status --cloud mycloud`;
+
+const firstRun = `# What the index offers (no cloud needed)
+oic-sync list
+# Verify the cosign signatures of the index (no cloud needed)
+oic-sync verify --image debian-13
+
+# Compare a cloud with the index (read only)
+oic-sync openstack status --cloud mycloud
+# Show what a sync would do (read only, signatures verified)
+oic-sync openstack sync --cloud mycloud --image debian-13 --image ubuntu-24.04 --dry-run
+# Do it
+oic-sync openstack sync --cloud mycloud --image debian-13 --image ubuntu-24.04 --keep 2`;
+
+const operator = `oic-sync openstack sync --cloud admin --visibility public --keep 3 --delete`;
+
+const terraform = `data "openstack_images_image_v2" "debian" {
+  properties  = { oic_id = "debian-13" }
+  most_recent = true
+}`;
+
+const service = `# /etc/systemd/system/oic-sync.service
+[Unit]
+Description=Sync openimages.cloud images into OpenStack Glance
+Documentation=https://github.com/open-img-cloud/oic-sync
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+DynamicUser=yes
+# Sigstore trust root cache (~/.cache/sigstore).
+CacheDirectory=oic-sync
+Environment=HOME=/var/cache/oic-sync
+Environment=OS_CLOUD=mycloud
+ExecStart=/usr/local/bin/oic-sync openstack sync --image debian-13 --image ubuntu-24.04 --keep 2
+# Hardening: oic-sync only needs outbound HTTPS.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native`;
+
+const timer = `# /etc/systemd/system/oic-sync.timer
+[Unit]
+Description=Daily sync of openimages.cloud images
+
+[Timer]
+# The catalog index is rebuilt once a day; any time after 08:00 UTC is fine.
+OnCalendar=*-*-* 09:00:00 UTC
+RandomizedDelaySec=1h
+Persistent=yes
+
+[Install]
+WantedBy=timers.target`;
+
+const options: [string, string][] = [
+  [
+    "--image ID",
+    "Image to handle, repeatable. Default: every image of the index except the service and test images (see below).",
+  ],
+  ["--include-service-images", "Also handle the service images when no `--image` is given."],
+  ["--variant NAME", "Only this variant of multi-variant images (`--variant uefi` for Alpine)."],
+  ["--keep N", "Versions kept per image, the current one included (default 2)."],
+  ["--delete", "Delete versions beyond `--keep`, only when no instance and no volume uses them."],
+  ["--visibility", "`private` (default), `shared`, `community` or `public` (operators)."],
+  ["--dry-run", "Read the cloud and verify signatures, change nothing."],
+  ["--import-method", "`auto` (default), `web-download`, `glance-direct` or `upload`."],
+  ["--property K=V", "Extra or overriding Glance property (the `oic_*` keys are reserved)."],
+  [
+    "--with-optional-properties",
+    "Add `hw_rng_model=virtio` (flavors must allow `hw_rng:allowed`).",
+  ],
+  ["--no-verify-signature", "Skip the cosign check (not recommended)."],
+  ["--index-url URL", "Another index (`$OIC_INDEX_URL`), for example a mirror."],
+  ["--cloud, --region", "clouds.yaml entry and region (`$OS_CLOUD`)."],
+  ["--timeout", "Seconds to wait for an import to finish (default 3600)."],
+];
+
+const toc = [
+  { id: "what", label: "What it does" },
+  { id: "install", label: "Install" },
+  { id: "first-run", label: "First run" },
+  { id: "options", label: "Options" },
+  { id: "how", label: "How it works" },
+  { id: "terraform", label: "Terraform and OpenTofu" },
+  { id: "daily", label: "Run it daily" },
+  { id: "limits", label: "Limitations" },
+];
+---
+
+<Base
+  title={title}
+  brand={false}
+  description={description}
+  jsonLd={[
+    breadcrumb({ name: "OpenStack", path: "/oic-sync/openstack/" }),
+    techArticle({
+      headline,
+      description,
+      path: "/oic-sync/openstack/",
+      about: ["OpenStack Glance", "qcow2", "Cloud images"],
+    }),
+  ]}
+>
+  <article class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <nav aria-label="Breadcrumb" class="text-ink-faint text-sm">
+      <a href="/oic-sync/" class="hover:text-ink">
+        oic-sync
+      </a>
+      <span class="mx-2" aria-hidden="true">
+        /
+      </span>
+      <span class="text-ink-muted" aria-current="page">
+        OpenStack
+      </span>
+    </nav>
+    <p class="eyebrow mt-6">Guide</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">{headline}</h1>
+    <p class="text-ink-muted mt-4 max-w-2xl text-lg leading-relaxed">
+      Import the signed qcow2 images of this catalog into Glance, under stable names, and keep them
+      current with one command run once a day. When everything is up to date, it changes nothing.
+    </p>
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <nav aria-label="On this page" class="hidden lg:block">
+        <ul class="sticky top-24 space-y-2 text-sm">
+          {toc.map((t) => (
+            <li>
+              <a href={`#${t.id}`} class="text-ink-muted hover:text-ink">
+                {t.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="text-ink-muted min-w-0 max-w-3xl leading-relaxed">
+        <section id="what">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">What it does</h2>
+          <p class="mt-3">
+            <a class="link" href={OIC_SYNC_REPO}>
+              oic-sync
+            </a>{" "}
+            reads the{" "}
+            <a class="link" href="https://images.openimages.cloud/index.json">
+              catalog index
+            </a>
+            , verifies the cosign signature of each image, and imports the versions your cloud does
+            not have yet. The newest version gets a stable name ("Debian 13"); older versions are
+            renamed and hidden, then rotated out.
+          </p>
+          <ul class="mt-4 list-disc space-y-1.5 pl-5">
+            <li>No local state: the images in Glance carry everything it needs to know.</li>
+            <li>
+              Idempotent: run it twice, the second run changes nothing. A daily run from a systemd
+              timer, a Kubernetes CronJob or a CI job is enough.
+            </li>
+            <li>Works for a project (private images) or for an operator (public images).</li>
+          </ul>
+          <p class="mt-4">
+            Status: alpha. License: Apache-2.0. The same tool also keeps{" "}
+            <a class="link" href="/oic-sync/proxmox/">
+              Proxmox VE templates
+            </a>{" "}
+            up to date.
+          </p>
+        </section>
+
+        <section id="install" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Install</h2>
+          <p class="mt-3">
+            oic-sync is on PyPI. The OpenStack backend needs openstacksdk, pulled in by the{" "}
+            <code class="text-ink font-mono text-sm">openstack</code> extra. Python 3.10 or newer.
+          </p>
+          <CodeBlock code={install} label="pipx" />
+          <p>
+            Credentials come from the standard{" "}
+            <a
+              class="link"
+              href="https://docs.openstack.org/openstacksdk/latest/user/config/configuration.html"
+            >
+              clouds.yaml
+            </a>{" "}
+            (<code class="text-ink font-mono text-sm">--cloud</code>), or from{" "}
+            <code class="text-ink font-mono text-sm">OS_*</code> environment variables when no cloud
+            is named. An application credential restricted to the image service is enough, plus read
+            access to servers and volumes for{" "}
+            <code class="text-ink font-mono text-sm">--delete</code>.
+          </p>
+        </section>
+
+        <section id="first-run" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">First run</h2>
+          <p class="mt-3">
+            Start read only: <code class="text-ink font-mono text-sm">status</code> compares the
+            cloud with the index, <code class="text-ink font-mono text-sm">--dry-run</code> shows
+            what a sync would do. Then run the sync for real.
+          </p>
+          <CodeBlock code={firstRun} />
+          <p>Cloud operators publish public images and delete old versions that nothing uses:</p>
+          <CodeBlock code={operator} label="operator" />
+          <p>
+            <code class="text-ink font-mono text-sm">openstack status --check</code> exits with 1
+            when an image is not up to date, for monitoring. Exit codes: 0 success, 1 at least one
+            image failed, 2 invalid arguments or index.
+          </p>
+        </section>
+
+        <section id="options" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Options</h2>
+          <p class="mt-3">
+            Options of <code class="text-ink font-mono text-sm">oic-sync openstack sync</code>. The
+            full list is in{" "}
+            <code class="text-ink font-mono text-sm">oic-sync openstack sync --help</code>.
+          </p>
+          <OptionsTable rows={options} />
+          <p class="mt-4">
+            Skipped unless named with <code class="text-ink font-mono text-sm">--image</code>: the
+            service images <code class="text-ink font-mono text-sm">octavia-amphora</code>,{" "}
+            <code class="text-ink font-mono text-sm">manila-service-image</code> and{" "}
+            <code class="text-ink font-mono text-sm">trove-guest-image</code>, and the test image{" "}
+            <code class="text-ink font-mono text-sm">cirros</code>.
+          </p>
+        </section>
+
+        <section id="how" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">How it works</h2>
+          <p class="mt-3">For each selected image (in one variant):</p>
+          <ol class="mt-3 list-decimal space-y-2 pl-5">
+            <li>
+              <strong class="text-ink">Find.</strong> Our images are found in Glance by their
+              properties (<code class="text-ink font-mono text-sm">oic_id</code>, plus{" "}
+              <code class="text-ink font-mono text-sm">oic_variant</code> for multi-variant images),
+              owned by the current project. Nothing else is touched.
+            </li>
+            <li>
+              <strong class="text-ink">Verify.</strong> The cosign bundle is checked against the
+              sha256 of the index: the image must have been signed by an open-img-cloud build
+              workflow on GitHub Actions. A failed verification means no import.
+            </li>
+            <li>
+              <strong class="text-ink">Import.</strong> The image is created hidden under a
+              versioned name, with the Glance properties of the index (
+              <code class="text-ink font-mono text-sm">os_distro</code>,{" "}
+              <code class="text-ink font-mono text-sm">hw_disk_bus</code>,{" "}
+              <code class="text-ink font-mono text-sm">hw_firmware_type</code>...) and{" "}
+              <code class="text-ink font-mono text-sm">min_disk</code> from the virtual size. With
+              the Glance <code class="text-ink font-mono text-sm">web-download</code> import method,
+              Glance downloads it and its sha512 must match the index. Otherwise the image is
+              streamed from the CDN to Glance, with sha256, sha512 and size checked on the fly;
+              nothing is written to disk. On any mismatch, the new image is deleted.
+            </li>
+            <li>
+              <strong class="text-ink">Promote.</strong> The verified image takes the stable name
+              ("Debian 13") and is unhidden.
+            </li>
+            <li>
+              <strong class="text-ink">Retire.</strong> Older versions are renamed "Debian 13
+              (13-20261026-2643)" and hidden. They leave image lists but stay usable by ID, so
+              existing servers, rebuilds and Terraform states keep working.
+            </li>
+            <li>
+              <strong class="text-ink">Rotate.</strong> The{" "}
+              <code class="text-ink font-mono text-sm">--keep</code> newest versions are kept. With{" "}
+              <code class="text-ink font-mono text-sm">--delete</code>, older ones are deleted when
+              no server and no volume uses them.
+            </li>
+          </ol>
+          <p class="mt-4">
+            Failed or abandoned imports of a previous run are removed. The signature covers the
+            sha256; with <code class="text-ink font-mono text-sm">web-download</code>, Glance only
+            checks the sha512, which comes from the build manifest over HTTPS but is not itself
+            signed. Use <code class="text-ink font-mono text-sm">--import-method upload</code> to
+            check the signed digest on every byte. More on signatures in the{" "}
+            <a class="link" href="/verify/">
+              verification guide
+            </a>
+            .
+          </p>
+        </section>
+
+        <section id="terraform" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Terraform and OpenTofu</h2>
+          <p class="mt-3">
+            The stable name moves to each new version. A data source that looks an image up by name
+            will pick the new image after a sync, which can plan the replacement of existing
+            servers. Look images up by property instead, and ignore image changes on long-lived
+            servers:
+          </p>
+          <CodeBlock code={terraform} label="hcl" />
+        </section>
+
+        <section id="daily" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Run it daily</h2>
+          <p class="mt-3">
+            The index is rebuilt once a day, so a daily run is enough. A systemd service and timer,
+            from the{" "}
+            <a class="link" href={`${OIC_SYNC_REPO}/tree/main/examples/systemd`}>
+              repository examples
+            </a>
+            . Put clouds.yaml in{" "}
+            <code class="text-ink font-mono text-sm">/etc/openstack/clouds.yaml</code>, readable by
+            the service, and set <code class="text-ink font-mono text-sm">ExecStart</code> to where{" "}
+            <code class="text-ink font-mono text-sm">oic-sync</code> is installed.
+          </p>
+          <CodeBlock code={service} label="systemd service" />
+          <CodeBlock code={timer} label="systemd timer" />
+          <CodeBlock code="systemctl enable --now oic-sync.timer" />
+          <p>
+            For Kubernetes, see the{" "}
+            <a class="link" href={`${OIC_SYNC_REPO}/blob/main/examples/kubernetes/cronjob.yaml`}>
+              CronJob example
+            </a>
+            .
+          </p>
+        </section>
+
+        <section id="limits" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Limitations</h2>
+          <ul class="mt-3 list-disc space-y-1.5 pl-5">
+            <li>
+              Alpha: start with <code class="text-ink font-mono text-sm">--dry-run</code>.
+            </li>
+            <li>
+              Only images of the current project are handled. With{" "}
+              <code class="text-ink font-mono text-sm">--delete</code>, a version is kept when its
+              use cannot be determined (no admin view of other projects for a public image).
+            </li>
+            <li>
+              The stable name moves at each sync: automation should look images up by property.
+            </li>
+          </ul>
+          <p class="mt-6">
+            Full reference, including every option and edge case: the{" "}
+            <a class="link" href={OIC_SYNC_README}>
+              oic-sync README on GitHub
+            </a>
+            . Problems go to{" "}
+            <a class="link" href={`${OIC_SYNC_REPO}/issues`}>
+              its issue tracker
+            </a>
+            .
+          </p>
+        </section>
+      </div>
+    </div>
+  </article>
+</Base>
