@@ -41,19 +41,23 @@ const ogImage = existsSync(`public/img/og/${image.os_name}.png`)
   ? `/img/og/${image.os_name}.png`
   : undefined;
 const imageWord = /image$/i.test(image.title) ? image.title : `${image.title} image`;
-const seoTitle = serviceFor
-  ? `${imageWord} for OpenStack`
-  : image.test_image
-    ? `${image.title} test image for OpenStack`
-    : // "qcow2" is how people search for these files; no brand suffix, so it stays under 60
-      // characters (the site name still shows in og:site_name and in the search result).
-      `${image.title} qcow2 cloud image for OpenStack & Proxmox`;
+const seoTitle = image.seo_title
+  ? image.seo_title
+  : serviceFor
+    ? `${imageWord} for OpenStack`
+    : image.test_image
+      ? `${image.title} test image for OpenStack`
+      : // "qcow2" is how people search for these files; no brand suffix, so it stays under 60
+        // characters (the site name still shows in og:site_name and in the search result).
+        `${image.title} qcow2 cloud image for OpenStack & Proxmox`;
 const brandInTitle = Boolean(serviceFor || image.test_image);
-const seoDescription = serviceFor
-  ? `Signed ${imageWord} for ${serviceFor}, version ${image.latest_version}: qcow2 built per OpenStack series with diskimage-builder, cosign-verifiable.`
-  : image.test_image
-    ? `Signed ${image.title} ${image.latest_version} test image for OpenStack (Tempest, smoke tests), republished unchanged from upstream, boot-tested, cosign-verifiable. Not for production.`
-    : `Signed ${image.title} qcow2 cloud image for OpenStack & Proxmox, version ${image.latest_version}: cloud-init ready${image.login_user ? `, user ${image.login_user}` : ""}, boot-tested, cosign-verifiable.`;
+const seoDescription = image.seo_description
+  ? image.seo_description
+  : serviceFor
+    ? `Signed ${imageWord} for ${serviceFor}, version ${image.latest_version}: qcow2 built per OpenStack series with diskimage-builder, cosign-verifiable.`
+    : image.test_image
+      ? `Signed ${image.title} ${image.latest_version} test image for OpenStack (Tempest, smoke tests), republished unchanged from upstream, boot-tested, cosign-verifiable. Not for production.`
+      : `Signed ${image.title} qcow2 cloud image for OpenStack & Proxmox, version ${image.latest_version}: cloud-init ready${image.login_user ? `, user ${image.login_user}` : ""}, boot-tested, cosign-verifiable.`;
 // Download counts, null when the statistics endpoint was unavailable at build time.
 const stats = await loadDownloadStats();
 const downloadsLabel = stats ? downloadsWindowLabel(stats) : "";

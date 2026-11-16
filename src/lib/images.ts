@@ -48,6 +48,9 @@ export interface ImageEntry {
    * No Proxmox template commands, left out of the osism export.
    */
   test_image?: boolean;
+  /** Search title and description, for images the generic wording does not fit (rescue). */
+  seo_title?: string;
+  seo_description?: string;
 }
 
 export type Firmware = "uefi" | "bios";
