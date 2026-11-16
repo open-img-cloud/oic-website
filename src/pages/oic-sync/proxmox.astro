@@ -11,7 +11,7 @@ const headline = "Proxmox VE cloud-init VM templates, kept up to date with oic-s
 const readme = `${OIC_SYNC_REPO}#proxmox-ve`;
 
 const install = `apt install pipx
-pipx install git+https://github.com/open-img-cloud/oic-sync.git`;
+pipx install oic-sync`;
 
 const storage = `# List the content types the storage already has, plus import
 pvesm set local --content iso,vztmpl,backup,import`;
@@ -172,10 +172,7 @@ const toc = [
 
         <section id="install" class="mt-14">
           <h2 class="text-ink text-xl font-semibold tracking-tight">Install</h2>
-          <p class="mt-3">
-            On the node, as root. oic-sync is not on PyPI yet: install it from GitHub. No extra is
-            needed for Proxmox VE.
-          </p>
+          <p class="mt-3">On the node, as root, from PyPI. No extra is needed for Proxmox VE.</p>
           <CodeBlock code={install} label="Proxmox VE node" />
           <p>
             Downloads go to a file storage with the{" "}

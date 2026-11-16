@@ -94,13 +94,17 @@ const guides = [
     <section class="text-ink-muted mt-14 leading-relaxed">
       <h2 class="text-ink text-xl font-semibold tracking-tight">Install</h2>
       <p class="mt-3">
-        Not on PyPI yet, and no container image yet: install from GitHub with pipx.
+        From PyPI with pipx, or as a signed container image (OpenStack backend included). Python
+        3.10 or newer.
       </p>
       <CodeBlock
         code={`# OpenStack: the backend needs openstacksdk, an optional extra
-pipx install 'oic-sync[openstack] @ git+https://github.com/open-img-cloud/oic-sync.git'
+pipx install 'oic-sync[openstack]'
 # Proxmox VE, on the node itself: no extra needed
-pipx install git+https://github.com/open-img-cloud/oic-sync.git`}
+pipx install oic-sync
+# or the container image
+docker run --rm -v ~/.config/openstack:/etc/openstack:ro \\
+  ghcr.io/open-img-cloud/oic-sync openstack status --cloud mycloud`}
         label="pipx"
       />
       <p>Two commands work without any cloud:</p>
