@@ -1,0 +1,117 @@
+---
+import Base from "~/layouts/Base.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import { OIC_SYNC_README, OIC_SYNC_REPO, breadcrumb, techArticle } from "~/lib/oic-sync";
+
+const title = "oic-sync: keep cloud images in sync";
+const description =
+  "oic-sync imports signed openimages.cloud qcow2 images into OpenStack Glance or as Proxmox VE templates, and keeps them current. Guides for both backends.";
+const headline = "oic-sync: keep cloud images up to date in OpenStack and Proxmox VE";
+
+const commands = `# What the index offers (no cloud needed)
+oic-sync list
+# Verify the cosign signatures of the index (no cloud needed)
+oic-sync verify --image debian-13`;
+
+const guides = [
+  {
+    href: "/oic-sync/openstack/",
+    title: "OpenStack Glance",
+    text: 'Import signed qcow2 images into Glance under stable names ("Debian 13"), retire old versions, delete the ones nothing uses.',
+  },
+  {
+    href: "/oic-sync/proxmox/",
+    title: "Proxmox VE",
+    text: "Keep one cloud-init VM template per image on a node, ready for qm clone, rotated when a new version is published.",
+  },
+];
+---
+
+<Base
+  title={title}
+  description={description}
+  jsonLd={[
+    breadcrumb(),
+    techArticle({
+      headline,
+      description,
+      path: "/oic-sync/",
+      about: ["OpenStack Glance", "Proxmox VE", "Cloud images"],
+    }),
+  ]}
+>
+  <article class="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
+    <p class="eyebrow">Tool</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">{headline}</h1>
+    <p class="text-ink-muted mt-4 text-lg leading-relaxed">
+      <a class="link" href={OIC_SYNC_REPO}>
+        oic-sync
+      </a>{" "}
+      keeps the images of this catalog in sync with your cloud. It reads the{" "}
+      <a class="link" href="https://images.openimages.cloud/index.json">
+        catalog index
+      </a>
+      , verifies the cosign signature of each image, imports the versions you do not have yet, gives
+      the newest one a stable name and retires the older ones.
+    </p>
+
+    <section class="mt-12 grid gap-6 sm:grid-cols-2" aria-label="Guides">
+      {guides.map((g) => (
+        <a href={g.href} class="border-line hover:border-line-strong group rounded-xl border p-5">
+          <p class="text-ink font-medium">
+            {g.title}{" "}
+            <span aria-hidden="true" class="text-ink-faint group-hover:text-ink">
+              →
+            </span>
+          </p>
+          <p class="text-ink-muted mt-2 text-sm leading-relaxed">{g.text}</p>
+        </a>
+      ))}
+    </section>
+
+    <section class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">In short</h2>
+      <ul class="mt-3 list-disc space-y-1.5 pl-5">
+        <li>No local state, idempotent: when everything is up to date, a run changes nothing.</li>
+        <li>
+          A daily run from a systemd timer, a Kubernetes CronJob or a CI job is enough: the index is
+          rebuilt once a day.
+        </li>
+        <li>
+          A failed signature check means no import. Imports are checked against the published
+          digests.
+        </li>
+        <li>
+          Service and test images (<code class="text-ink font-mono text-sm">octavia-amphora</code>,{" "}
+          <code class="text-ink font-mono text-sm">manila-service-image</code>,{" "}
+          <code class="text-ink font-mono text-sm">trove-guest-image</code>,{" "}
+          <code class="text-ink font-mono text-sm">cirros</code>) are skipped unless named.
+        </li>
+        <li>Status: alpha. License: Apache-2.0. Python 3.10 or newer.</li>
+      </ul>
+    </section>
+
+    <section class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Install</h2>
+      <p class="mt-3">
+        Not on PyPI yet, and no container image yet: install from GitHub with pipx.
+      </p>
+      <CodeBlock
+        code={`# OpenStack: the backend needs openstacksdk, an optional extra
+pipx install 'oic-sync[openstack] @ git+https://github.com/open-img-cloud/oic-sync.git'
+# Proxmox VE, on the node itself: no extra needed
+pipx install git+https://github.com/open-img-cloud/oic-sync.git`}
+        label="pipx"
+      />
+      <p>Two commands work without any cloud:</p>
+      <CodeBlock code={commands} />
+      <p>
+        Then follow the guide for your platform. The full reference is the{" "}
+        <a class="link" href={OIC_SYNC_README}>
+          README on GitHub
+        </a>
+        .
+      </p>
+    </section>
+  </article>
+</Base>
