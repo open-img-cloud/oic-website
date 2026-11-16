@@ -38,8 +38,16 @@ jobs:
       - name: Build site
         run: pnpm build
 
+      - name: List pages that changed (IndexNow)
+        continue-on-error: true
+        run: node scripts/indexnow.mjs changed > "$RUNNER_TEMP/changed.txt"; wc -l < "$RUNNER_TEMP/changed.txt"
+
       - name: Deploy to Cloudflare Workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler deploy
+
+      - name: Notify search engines (IndexNow)
+        continue-on-error: true
+        run: node scripts/indexnow.mjs submit "$RUNNER_TEMP/changed.txt"
