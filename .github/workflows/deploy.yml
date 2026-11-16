@@ -36,6 +36,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build site
+        env:
+          # Read-only use: the GitHub star count shown in the header (higher API rate limit).
+          GITHUB_TOKEN: ${{ github.token }}
         run: pnpm build
 
       - name: List pages that changed (IndexNow)
