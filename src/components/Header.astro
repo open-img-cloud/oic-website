@@ -1,7 +1,7 @@
 ---
 import Logo from "~/components/Logo.astro";
 import ThemeToggle from "~/components/ThemeToggle.astro";
-import { formatStars, loadOrgStars } from "~/lib/github";
+import { PROJECT_REPO, formatStars, loadOrgStars } from "~/lib/github";
 
 const stars = await loadOrgStars();
 
@@ -48,7 +48,7 @@ const currentPath = Astro.url.pathname;
         );
       })}
       <a
-        href="https://github.com/open-img-cloud"
+        href={PROJECT_REPO}
         class:list={[
           "text-ink-muted hover:text-ink inline-flex h-9 items-center justify-center gap-1.5 rounded-md transition-colors",
           stars ? "px-2.5" : "w-9",

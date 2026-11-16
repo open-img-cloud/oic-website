@@ -4,6 +4,8 @@
  * used. null (API down, rate limited) hides the count.
  */
 export const GITHUB_ORG = "open-img-cloud";
+/** The project home, the one repository visitors are asked to star. */
+export const PROJECT_REPO = `https://github.com/${GITHUB_ORG}/.github`;
 const TIMEOUT_MS = 10_000;
 
 async function fetchOrgStars(): Promise<number | null> {

@@ -1,4 +1,5 @@
 ---
+import StarCta from "~/components/StarCta.astro";
 import { existsSync } from "node:fs";
 import Base from "~/layouts/Base.astro";
 import { glanceProperties, inOsismExport, minDiskGiB } from "~/lib/catalog-index";
@@ -459,6 +460,8 @@ const provenance = [
         </section>
 
         <!-- About -->
+        <StarCta />
+
         <section class="mt-14" aria-labelledby="about-title">
           <h2 id="about-title" class="text-ink text-xl font-semibold tracking-tight">
             About
