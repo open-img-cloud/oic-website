@@ -10,9 +10,10 @@ const stars = await loadOrgStars();
 const links = [
   { href: "/images/", label: "Catalog" },
   { href: "/#how-it-works", label: "How it works", from: "lg" },
-  { href: "/quality/", label: "Quality" },
+  { href: "/quality/", label: "Quality", from: "md" },
   { href: "/verify/", label: "Verify" },
-  { href: "/docs/", label: "Docs", from: "md" },
+  // Always shown, phones included: Quality moves to the footer there instead.
+  { href: "/docs/", label: "Docs" },
   { href: "/about/", label: "About", from: "md" },
 ];
 const currentPath = Astro.url.pathname;
