@@ -2,7 +2,9 @@
 import StarCta from "~/components/StarCta.astro";
 import { existsSync } from "node:fs";
 import Base from "~/layouts/Base.astro";
-import { glanceProperties, inOsismExport, minDiskGiB } from "~/lib/catalog-index";
+import { inOsismExport } from "~/lib/catalog-index";
+import { cmdArtifact, cmdImage } from "~/lib/command-data";
+import { openstackCli, proxmoxQm } from "~/lib/commands";
 import CodeBlock from "~/components/CodeBlock.astro";
 import StatusBadge from "~/components/StatusBadge.astro";
 import {
@@ -69,49 +71,22 @@ const artifacts = image.latest.artifacts;
 const primary: Artifact | undefined = artifacts.find((a) => a.fileUrl) ?? artifacts[0];
 const p = image.provenance;
 const loginUser = image.login_user;
-const isUefi = primary?.firmware === "uefi";
-const glanceName = `${image.os_name}-${image.latest_version}${primary?.label ? `-${primary.label.toLowerCase()}` : ""}`;
 
-// Quick-start snippets, built from the primary (first published) artifact. They use the
-// versioned URL, never latest/, so the checksum below always matches the downloaded file.
-const file = primary?.filename ?? `${image.os_name}.qcow2`;
-const fileUrl =
-  primary?.fileUrl ?? `https://images.openimages.cloud/${image.os_name}/${image.latest_version}/`;
-const sha256 = primary?.manifest?.sha256;
-const minDisk = minDiskGiB(primary?.virtualSize);
-const glanceProps = glanceProperties(image, {
-  arch: primary?.arch ?? "x86_64",
-  firmware: primary?.firmware ?? "bios",
-  version: primary?.manifest?.version ?? image.latest_version,
-  sha256,
-});
-
-const openstack = `curl -fLO ${fileUrl}${sha256 ? `\necho "${sha256}  ${file}" | sha256sum -c -` : ""}
-
-openstack image create \\
-  --disk-format qcow2 --container-format bare \\
-  --file ${file} \\${minDisk ? `\n  --min-disk ${minDisk} \\` : ""}
-${Object.entries(glanceProps)
-  .map(([k, v]) => `  --property ${k}=${v} \\`)
-  .join("\n")}
-  ${glanceName}`;
-
-const proxmoxUefi = isUefi
-  ? " \\\n  --bios ovmf --machine q35 --efidisk0 local-lvm:0,efitype=4m"
-  : "";
-const proxmox = `# Download into the "import" content of a file storage; PVE checks the sha256.
-pvesh create /nodes/$(hostname)/storage/local/download-url \\
-  --content import --filename ${file} \\
-  --url ${fileUrl}${sha256 ? ` \\\n  --checksum ${sha256} --checksum-algorithm sha256` : ""}
-
-qm create 9000 --name ${image.os_name} --memory 2048 --cores 2 \\
-  --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-single \\
-  --serial0 socket --vga serial0 --agent enabled=1${proxmoxUefi}
-qm set 9000 --scsi0 local-lvm:0,import-from=local:import/${file},discard=on
-qm set 9000 --ide2 local-lvm:cloudinit --boot order=scsi0${
-  loginUser ? ` \\\n  --ciuser ${loginUser}` : ""
-} --sshkeys ~/.ssh/id_ed25519.pub --ipconfig0 ip=dhcp
-qm template 9000`;
+// Quick-start snippets, built from the primary (first published) artifact by the builders the
+// command generator (/get/) uses too. They use the versioned URL, never latest/, so the
+// checksum always matches the downloaded file.
+const cmdImg = cmdImage(image);
+const cmd = cmdArtifact(image, primary);
+const file = cmd.file;
+const fileUrl = cmd.url;
+const openstack = openstackCli(cmdImg, cmd);
+const proxmox = proxmoxQm(cmdImg, cmd);
+const getUrl = (target: string) =>
+  `/get/?image=${encodeURIComponent(image.os_name)}${
+    primary?.variantId && artifacts.length > 1
+      ? `&variant=${encodeURIComponent(primary.variantId)}`
+      : ""
+  }&target=${target}`;
 
 const osism = `curl -fsSo oic-images.yml ${IMAGES_BASE_URL}/osism/images.yml
 openstack-image-manager --cloud admin --images oic-images.yml --latest`;
@@ -354,6 +329,13 @@ const provenance = [
               Commands below use the {primary?.label} variant; swap the file name for another one.
             </p>
           )}
+          <p class="text-ink-muted mt-2 text-sm">
+            More targets and options (oic-sync, Terraform, cloud-init, names, storages):{" "}
+            <a class="link" href={getUrl("openstack")}>
+              command generator
+            </a>
+            .
+          </p>
           <h3 class="text-ink mt-6 text-sm font-semibold">OpenStack</h3>
           <CodeBlock code={openstack} label="OpenStack Glance" />
           {image.test_image ? (

@@ -1,0 +1,253 @@
+---
+import Base from "~/layouts/Base.astro";
+import StatusBadge from "~/components/StatusBadge.astro";
+import { formatDate, loadEnrichedImages } from "~/lib/images";
+import { loadBuildStatus, UNKNOWN_RUN, type RunInfo } from "~/lib/status";
+
+const title = "Image freshness and build status";
+const description =
+  "Latest version, build date and age of every Open Image Cloud image, with the result of its last release and upstream watch runs. Rebuilt daily.";
+
+/** Older than this, a row is highlighted (fine as long as upstream has not released). */
+const STALE_DAYS = 45;
+const RECENT_DAYS = 7;
+const DAY_MS = 86_400_000;
+
+const now = new Date();
+const images = await loadEnrichedImages();
+const status = await loadBuildStatus(images.map((i) => i.repo));
+
+const rows = images.map((image) => {
+  const repo = status.repos.get(image.repo);
+  const release = repo?.release ?? UNKNOWN_RUN;
+  const watch = repo?.watch ?? UNKNOWN_RUN;
+  const built = image.builtAt ? new Date(image.builtAt) : null;
+  const age =
+    built && !Number.isNaN(built.getTime())
+      ? Math.max(0, Math.floor((now.getTime() - built.getTime()) / DAY_MS))
+      : null;
+  const bump = status.bumps?.get(image.repo) ?? null;
+  return {
+    image,
+    age,
+    stale: age != null && age > STALE_DAYS,
+    release,
+    watch,
+    bump,
+    failed: release.state === "failure" || watch.state === "failure",
+  };
+});
+
+const recent = rows.filter((r) => r.age != null && r.age <= RECENT_DAYS).length;
+const failed = rows.filter((r) => r.failed).length;
+const stale = rows.filter((r) => r.stale).length;
+const asOf = now.toISOString().replace(/\.\d{3}Z$/, "Z");
+const asOfLabel = `${now.toISOString().slice(0, 10)} ${now.toISOString().slice(11, 16)} UTC`;
+
+const RUN_LABELS: Record<RunInfo["state"], { label: string; cls: string }> = {
+  success: { label: "Passed", cls: "text-ok" },
+  failure: { label: "Failed", cls: "text-bad font-medium" },
+  cancelled: { label: "Cancelled", cls: "text-ink-muted" },
+  running: { label: "Running", cls: "text-accent" },
+  none: { label: "None", cls: "text-ink-faint" },
+  unknown: { label: "Unknown", cls: "text-ink-faint" },
+};
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+---
+
+<Base
+  title={title}
+  description={description}
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: "https://openimages.cloud/status/",
+    dateModified: asOf,
+    isPartOf: { "@type": "WebSite", name: "Open Image Cloud", url: "https://openimages.cloud/" },
+  }}
+>
+  <section class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <p class="eyebrow">Status</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">{title}</h1>
+    <p class="text-ink-muted mt-4 max-w-3xl leading-relaxed text-pretty">
+      When each image was last built, and how the last runs of its repository went: the release
+      workflow (build, boot test, signature, publication) and the daily upstream watch, which opens
+      a pull request when upstream publishes a new version. As of{" "}
+      <time datetime={asOf} class="text-ink font-medium">
+        {asOfLabel}
+      </time>
+      ; this page is rebuilt once a day.
+    </p>
+
+    <p class="border-line surface-sunken text-ink mt-8 rounded-xl border px-5 py-4 text-sm">
+      <strong class="font-semibold">{plural(rows.length, "image")}</strong>
+      <span class="text-ink-faint mx-2" aria-hidden="true">
+        ·
+      </span>
+      {recent} built in the last {RECENT_DAYS} days
+      <span class="text-ink-faint mx-2" aria-hidden="true">
+        ·
+      </span>
+      <span class:list={[failed > 0 && "text-bad font-medium"]}>
+        {failed} with a failed last run
+      </span>
+      {stale > 0 && (
+        <>
+          <span class="text-ink-faint mx-2" aria-hidden="true">
+            ·
+          </span>
+          <span class="text-warn">
+            {stale} built more than {STALE_DAYS} days ago
+          </span>
+        </>
+      )}
+    </p>
+
+    <p class="text-ink-muted mt-4 max-w-3xl text-sm leading-relaxed">
+      An old build is not a problem in itself: an image is rebuilt when upstream releases, and some
+      distributions publish a few times a year. Age is highlighted after {STALE_DAYS} days so it can
+      be checked against the upstream column; a failed run is what needs attention.
+      {status.bumps == null && (
+        <> The upstream column is unknown in this build: GitHub did not answer.</>
+      )}
+    </p>
+
+    <div class="border-line mt-8 overflow-x-auto rounded-xl border">
+      <table class="w-full min-w-[52rem] text-left text-sm">
+        <caption class="sr-only">
+          Build freshness and last workflow runs of each image, as of{asOfLabel}
+        </caption>
+        <thead class="surface-sunken border-line border-b">
+          <tr>
+            <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
+              Image
+            </th>
+            <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
+              Latest
+            </th>
+            <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
+              Built
+            </th>
+            <th scope="col" class="eyebrow px-4 py-2.5 text-right font-normal">
+              Age
+            </th>
+            <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
+              Upstream
+            </th>
+            <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
+              Last release
+            </th>
+            <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
+              Last watch
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-line divide-y">
+          {rows.map((r) => (
+            <tr
+              class:list={[
+                r.failed && "bg-[color-mix(in_oklch,var(--bad)_7%,transparent)]",
+                !r.failed && r.stale && "bg-[color-mix(in_oklch,var(--warn)_7%,transparent)]",
+              ]}
+            >
+              <th scope="row" class="px-4 py-3 font-normal">
+                <a
+                  class="text-ink hover:text-accent font-medium"
+                  href={`/images/${r.image.os_name}/`}
+                >
+                  {r.image.title}
+                </a>
+                {r.image.status !== "stable" && (
+                  <span class="ml-2 align-middle">
+                    <StatusBadge status={r.image.status} />
+                  </span>
+                )}
+              </th>
+              <td class="text-ink-muted px-4 py-3 font-mono text-xs">{r.image.latest_version}</td>
+              <td class="text-ink-muted px-4 py-3 whitespace-nowrap">
+                {r.image.builtAt ? (
+                  <time datetime={r.image.builtAt}>{formatDate(r.image.builtAt)}</time>
+                ) : (
+                  "unknown"
+                )}
+              </td>
+              <td
+                class:list={[
+                  "px-4 py-3 text-right font-mono text-xs whitespace-nowrap",
+                  r.stale ? "text-warn font-medium" : "text-ink-muted",
+                ]}
+              >
+                {r.age == null ? "?" : `${r.age} d`}
+              </td>
+              <td class="px-4 py-3">
+                {r.bump ? (
+                  <a class="link" href={r.bump.url} title={r.bump.title}>
+                    New version pending
+                  </a>
+                ) : status.bumps == null ? (
+                  <span class="text-ink-faint">Unknown</span>
+                ) : r.watch.state === "success" ? (
+                  <span class="text-ink-muted">No newer release</span>
+                ) : r.watch.state === "none" ? (
+                  <span class="text-ink-faint">Not watched</span>
+                ) : (
+                  <span class="text-ink-faint">Unknown</span>
+                )}
+              </td>
+              {[r.release, r.watch].map((run) => (
+                <td class="px-4 py-3 whitespace-nowrap">
+                  {run.url ? (
+                    <a
+                      class:list={["hover:underline", RUN_LABELS[run.state].cls]}
+                      href={run.url}
+                      title={run.at ? `Started ${run.at}` : undefined}
+                    >
+                      {RUN_LABELS[run.state].label}
+                    </a>
+                  ) : (
+                    <span class={RUN_LABELS[run.state].cls}>{RUN_LABELS[run.state].label}</span>
+                  )}
+                  {run.at && (
+                    <span class="text-ink-faint ml-1.5 text-xs">{formatDate(run.at)}</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="text-ink-muted mt-6 max-w-3xl list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+      <li>
+        <strong class="text-ink">Built</strong> comes from the signed manifest of the latest
+        version; age is counted from it.
+      </li>
+      <li>
+        <strong class="text-ink">Upstream</strong>: "New version pending" links to the pull request
+        the watcher opened; merging it publishes the release. Images built per OpenStack series
+        (Octavia amphora) have no watcher.
+      </li>
+      <li>
+        <strong class="text-ink">Last release</strong> is the last run of the release workflow on a
+        version tag or on main (runs on test branches are left out);{" "}
+        <strong class="text-ink">Last watch</strong> the last daily upstream check. FreeBSD 14 and
+        15 share one repository. "Unknown" means the GitHub API did not answer at build time.
+      </li>
+      <li>
+        How each image is tested before it is published:{" "}
+        <a class="link" href="/quality/">
+          quality
+        </a>
+        . Release history of each image: its{" "}
+        <a class="link" href="/feed.xml">
+          Atom feed
+        </a>
+        .
+      </li>
+    </ul>
+  </section>
+</Base>

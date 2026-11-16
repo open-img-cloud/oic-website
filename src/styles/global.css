@@ -43,6 +43,7 @@
     --accent-ink: var(--color-brand-700);
     --ok: oklch(0.55 0.13 155);
     --warn: oklch(0.6 0.13 70);
+    --bad: oklch(0.55 0.19 27);
     color-scheme: light;
   }
 
@@ -59,6 +60,7 @@
     --accent-ink: var(--color-brand-300);
     --ok: oklch(0.78 0.13 155);
     --warn: oklch(0.82 0.12 75);
+    --bad: oklch(0.74 0.15 25);
     color-scheme: dark;
   }
 
@@ -142,6 +144,9 @@
 }
 @utility text-warn {
   color: var(--warn);
+}
+@utility text-bad {
+  color: var(--bad);
 }
 
 /* Faint engineering grid behind the hero, fading out downwards. */

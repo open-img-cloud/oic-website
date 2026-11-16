@@ -1,0 +1,433 @@
+---
+import Base from "~/layouts/Base.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import { cmdImage, loadOicSyncVersion } from "~/lib/command-data";
+import {
+  DEFAULT_OPTIONS,
+  PVE_INSTALLS,
+  TARGETS,
+  VISIBILITIES,
+  generate,
+  type CmdImage,
+  type TargetId,
+} from "~/lib/commands";
+import { loadEnrichedImages } from "~/lib/images";
+
+const title = "Image commands for OpenStack and Proxmox";
+const description =
+  "Pick an image and a target: ready-to-copy commands for the OpenStack CLI, Proxmox VE, oic-sync, Terraform or OpenTofu, and a cloud-init user-data starter.";
+
+const enriched = await loadEnrichedImages();
+const images: CmdImage[] = enriched.map(cmdImage);
+const oicSyncVersion = await loadOicSyncVersion();
+const groups = [
+  { label: "Images", ids: enriched.filter((i) => i.status !== "archive").map((i) => i.os_name) },
+  { label: "Archive", ids: enriched.filter((i) => i.status === "archive").map((i) => i.os_name) },
+].filter((g) => g.ids.length);
+
+// Rendered without JavaScript: every target for this image, default options.
+const DEFAULT_IMAGE = "debian-13";
+const image = images.find((i) => i.id === DEFAULT_IMAGE) ?? images[0];
+const artifact = image.artifacts[0];
+
+const intro: Record<TargetId, { text: string; link?: { href: string; label: string } }> = {
+  openstack: {
+    text: "Downloads the file, checks its SHA-256 and imports it into Glance with the properties of the catalog index.",
+    link: { href: "/verify/", label: "Verify the signature first" },
+  },
+  "oic-sync-openstack": {
+    text: "oic-sync verifies the cosign signature, imports the latest version under a stable name and retires older ones on later runs.",
+    link: { href: "/oic-sync/openstack/", label: "oic-sync for OpenStack guide" },
+  },
+  proxmox: {
+    text: "Creates a cloud-init VM template. The local storage needs the Import content type (default on new Proxmox VE 9.1 installs); adjust the bridge and SSH key path.",
+  },
+  "oic-sync-proxmox": {
+    text: "On the node, as root: oic-sync verifies the signature and turns each new version into a VM template, ready for qm clone.",
+    link: { href: "/oic-sync/proxmox/", label: "oic-sync for Proxmox VE guide" },
+  },
+  terraform: {
+    text: "An openstack_images_image_v2 resource with the catalog properties, and a data source that finds the image by property for other configurations.",
+    link: { href: "/oic-sync/openstack/#terraform", label: "Images kept by oic-sync" },
+  },
+  "cloud-init": {
+    text: "A starter user-data that adds a user with your SSH key, and how to pass it on OpenStack and on Proxmox VE.",
+  },
+};
+
+const panels = TARGETS.map((t) => ({
+  ...t,
+  ...intro[t.id],
+  result: generate(t.id, image, artifact, DEFAULT_OPTIONS, oicSyncVersion),
+  // Most blocks a target can show: cloud-init has the user-data and its usage.
+  slots: t.id === "cloud-init" ? 2 : 1,
+}));
+
+const data = JSON.stringify({ images, oicSyncVersion, defaultImage: image.id }).replace(
+  /</g,
+  "\\u003c",
+);
+
+const field =
+  "border-line-strong surface text-ink w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus-visible:border-[var(--accent)]";
+---
+
+<Base
+  title={title}
+  description={description}
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: "https://openimages.cloud/get/",
+    isPartOf: { "@type": "WebSite", name: "Open Image Cloud", url: "https://openimages.cloud/" },
+  }}
+>
+  <section class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <p class="eyebrow">Get an image</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">Command generator</h1>
+    <p class="text-ink-muted mt-4 max-w-3xl leading-relaxed text-pretty">
+      Pick an image, where it goes and a few options: the commands below use the versioned URL, the
+      SHA-256 and the Glance properties of the{" "}
+      <a class="link" href="https://images.openimages.cloud/index.json">
+        catalog index
+      </a>
+      , the same data the image pages and oic-sync use.
+    </p>
+    <noscript>
+      <p class="text-ink-muted mt-4 text-sm">
+        Without JavaScript, the commands below are those of {image.title}; each{" "}
+        <a class="link" href="/images/">
+          image page
+        </a>{" "}
+        has its own quick start.
+      </p>
+    </noscript>
+
+    <div class="mt-10 grid gap-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12">
+      <form
+        class="space-y-6 lg:sticky lg:top-24 lg:self-start"
+        data-get-form
+        aria-label="Image, target and options"
+      >
+        <div>
+          <label for="get-image" class="text-ink block text-sm font-medium">
+            Image
+          </label>
+          <select id="get-image" name="image" class:list={[field, "mt-1.5"]}>
+            {groups.map((g) => (
+              <optgroup label={g.label}>
+                {g.ids.map((id) => (
+                  <option value={id} selected={id === image.id}>
+                    {images.find((i) => i.id === id)?.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+
+        <div data-variant-field hidden={image.artifacts.length < 2}>
+          <label for="get-variant" class="text-ink block text-sm font-medium">
+            Variant
+          </label>
+          <select id="get-variant" name="variant" class:list={[field, "mt-1.5"]}>
+            {image.artifacts.map((a) => (
+              <option value={a.variant ?? ""}>{a.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <fieldset>
+          <legend class="text-ink text-sm font-medium">Target</legend>
+          <div class="mt-1.5 space-y-1">
+            {TARGETS.map((t, i) => (
+              <label class="text-ink-muted hover:text-ink has-[:checked]:text-ink has-[:checked]:border-line-strong has-[:checked]:surface-sunken flex cursor-pointer items-center gap-2.5 rounded-lg border border-transparent px-3 py-2 text-sm">
+                <input
+                  type="radio"
+                  name="target"
+                  value={t.id}
+                  checked={i === 0}
+                  class="accent-[var(--accent)]"
+                />
+                {t.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset class="space-y-4">
+          <legend class="text-ink text-sm font-medium">Options</legend>
+          <div data-for="openstack proxmox terraform cloud-init">
+            <label for="get-name" class="text-ink-muted block text-xs">
+              Image name (VM name for qm)
+            </label>
+            <input
+              id="get-name"
+              name="name"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="default: versioned name"
+              class:list={[field, "mt-1 font-mono"]}
+            />
+          </div>
+          <div data-for="openstack oic-sync-openstack">
+            <label for="get-cloud" class="text-ink-muted block text-xs">
+              Cloud name in clouds.yaml
+            </label>
+            <input
+              id="get-cloud"
+              name="cloud"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              value={DEFAULT_OPTIONS.cloud}
+              class:list={[field, "mt-1 font-mono"]}
+            />
+          </div>
+          <div data-for="openstack oic-sync-openstack terraform">
+            <label for="get-visibility" class="text-ink-muted block text-xs">
+              Visibility
+            </label>
+            <select id="get-visibility" name="visibility" class:list={[field, "mt-1"]}>
+              <option value="">Tool default</option>
+              {VISIBILITIES.map((v) => (
+                <option value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <div data-for="proxmox oic-sync-proxmox cloud-init">
+            <label for="get-vmid" class="text-ink-muted block text-xs">
+              VMID (base for oic-sync)
+            </label>
+            <input
+              id="get-vmid"
+              name="vmid"
+              type="number"
+              inputmode="numeric"
+              min="100"
+              max="999999999"
+              value={DEFAULT_OPTIONS.vmid}
+              class:list={[field, "mt-1 font-mono"]}
+            />
+          </div>
+          <div data-for="proxmox oic-sync-proxmox">
+            <label for="get-storage" class="text-ink-muted block text-xs">
+              Disk storage
+            </label>
+            <input
+              id="get-storage"
+              name="storage"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              value={DEFAULT_OPTIONS.storage}
+              class:list={[field, "mt-1 font-mono"]}
+            />
+          </div>
+          <div data-for="oic-sync-proxmox">
+            <label for="get-install" class="text-ink-muted block text-xs">
+              Install oic-sync with
+            </label>
+            <select id="get-install" name="pveInstall" class:list={[field, "mt-1"]}>
+              {PVE_INSTALLS.map((p) => (
+                <option value={p.id}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+          <div data-for="cloud-init">
+            <label for="get-user" class="text-ink-muted block text-xs">
+              User to create
+            </label>
+            <input
+              id="get-user"
+              name="user"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              value={DEFAULT_OPTIONS.user}
+              class:list={[field, "mt-1 font-mono"]}
+            />
+          </div>
+          <div data-for="cloud-init">
+            <label for="get-key" class="text-ink-muted block text-xs">
+              SSH public key
+            </label>
+            <textarea
+              id="get-key"
+              name="sshKey"
+              rows="3"
+              spellcheck="false"
+              placeholder={DEFAULT_OPTIONS.sshKey}
+              class:list={[field, "mt-1 font-mono text-xs break-all"]}
+            ></textarea>
+            <p class="text-ink-faint mt-1 text-xs">Stays in your browser: nothing is sent.</p>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="min-w-0" aria-live="polite">
+        {panels.map((p) => (
+          <section class="mb-12 last:mb-0" data-panel={p.id} aria-labelledby={`panel-${p.id}`}>
+            <h2 id={`panel-${p.id}`} class="text-ink text-xl font-semibold tracking-tight">
+              {p.label}
+              <span class="text-ink-faint ml-2 text-base font-normal" data-image-title>
+                {image.title}
+              </span>
+            </h2>
+            <p class="text-ink-muted mt-2 text-sm leading-relaxed">
+              {p.text}
+              {p.link && (
+                <>
+                  {" "}
+                  <a class="link" href={p.link.href}>
+                    {p.link.label}
+                  </a>
+                  .
+                </>
+              )}
+            </p>
+            <p
+              class="text-warn mt-4 text-sm"
+              data-unavailable
+              hidden={!p.result.unavailable}
+              role="note"
+            >
+              {p.result.unavailable}
+            </p>
+            {Array.from({ length: p.slots }, (_, i) => (
+              <div data-block={i} hidden={!p.result.blocks[i]}>
+                <CodeBlock
+                  code={p.result.blocks[i]?.code ?? ""}
+                  label={p.result.blocks[i]?.label ?? "bash"}
+                />
+              </div>
+            ))}
+          </section>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <script is:inline type="application/json" id="get-data" set:html={data} />
+  <script>
+    import {
+      DEFAULT_OPTIONS,
+      TARGETS,
+      generate,
+      type CmdImage,
+      type CmdOptions,
+      type PveInstall,
+      type TargetId,
+      type Visibility,
+    } from "~/lib/commands";
+
+    const raw = document.getElementById("get-data")?.textContent ?? "{}";
+    const { images, oicSyncVersion } = JSON.parse(raw) as {
+      images: CmdImage[];
+      oicSyncVersion: string;
+    };
+    const form = document.querySelector<HTMLFormElement>("[data-get-form]");
+    const imageSelect = document.querySelector<HTMLSelectElement>("#get-image");
+    const variantSelect = document.querySelector<HTMLSelectElement>("#get-variant");
+    const variantField = document.querySelector<HTMLElement>("[data-variant-field]");
+    const targetIds = TARGETS.map((t) => t.id) as string[];
+
+    const value = (name: string) =>
+      (form?.elements.namedItem(name) as HTMLInputElement | null)?.value ?? "";
+
+    function fillVariants(image: CmdImage, wanted: string | null) {
+      if (!variantSelect || !variantField) return;
+      variantSelect.replaceChildren(
+        ...image.artifacts.map((a) => new Option(a.label ?? a.variant ?? "", a.variant ?? "")),
+      );
+      if (wanted && image.artifacts.some((a) => a.variant === wanted)) variantSelect.value = wanted;
+      variantField.hidden = image.artifacts.length < 2;
+    }
+
+    function options(): CmdOptions {
+      const vmid = Number.parseInt(value("vmid"), 10);
+      return {
+        name: value("name"),
+        cloud: value("cloud"),
+        visibility: value("visibility") as Visibility | "",
+        vmid: Number.isFinite(vmid) && vmid >= 100 ? vmid : DEFAULT_OPTIONS.vmid,
+        storage: value("storage"),
+        pveInstall: (value("pveInstall") || DEFAULT_OPTIONS.pveInstall) as PveInstall,
+        user: value("user"),
+        sshKey: value("sshKey"),
+      };
+    }
+
+    function render() {
+      const image = images.find((i) => i.id === imageSelect?.value) ?? images[0];
+      const artifact =
+        image.artifacts.find((a) => (a.variant ?? "") === variantSelect?.value) ??
+        image.artifacts[0];
+      const target = (value("target") || "openstack") as TargetId;
+      const opts = options();
+
+      for (const field of document.querySelectorAll<HTMLElement>("[data-for]")) {
+        field.hidden = !field.dataset.for?.split(" ").includes(target);
+      }
+      for (const panel of document.querySelectorAll<HTMLElement>("[data-panel]")) {
+        const active = panel.dataset.panel === target;
+        panel.hidden = !active;
+        if (!active) continue;
+        const result = generate(target, image, artifact, opts, oicSyncVersion);
+        const title = panel.querySelector("[data-image-title]");
+        if (title) {
+          title.textContent =
+            image.artifacts.length > 1 && artifact.label
+              ? `${image.title}, ${artifact.label}`
+              : image.title;
+        }
+        const note = panel.querySelector<HTMLElement>("[data-unavailable]");
+        if (note) {
+          note.hidden = !result.unavailable;
+          note.textContent = result.unavailable ?? "";
+        }
+        for (const slot of panel.querySelectorAll<HTMLElement>("[data-block]")) {
+          const block = result.blocks[Number(slot.dataset.block)];
+          slot.hidden = !block;
+          if (!block) continue;
+          const code = slot.querySelector("code");
+          const label = slot.querySelector("figcaption > span");
+          if (code) code.textContent = block.code;
+          if (label) label.textContent = block.label;
+        }
+      }
+
+      // Shareable URL: image, variant and target (options stay out of it: the SSH key).
+      const params = new URLSearchParams({ image: image.id });
+      if (image.artifacts.length > 1 && artifact.variant) params.set("variant", artifact.variant);
+      params.set("target", target);
+      history.replaceState(null, "", `${location.pathname}?${params}`);
+    }
+
+    // ?image=<id>&variant=<v>&target=<t> preselects (links from the image pages).
+    const query = new URLSearchParams(location.search);
+    const wantedImage = images.find((i) => i.id === query.get("image"));
+    if (wantedImage && imageSelect) imageSelect.value = wantedImage.id;
+    const current = images.find((i) => i.id === imageSelect?.value) ?? images[0];
+    fillVariants(current, query.get("variant"));
+    const wantedTarget = query.get("target");
+    if (wantedTarget && targetIds.includes(wantedTarget)) {
+      const radio = form?.querySelector<HTMLInputElement>(
+        `input[name="target"][value="${wantedTarget}"]`,
+      );
+      if (radio) radio.checked = true;
+    }
+
+    imageSelect?.addEventListener("change", () => {
+      const image = images.find((i) => i.id === imageSelect.value) ?? images[0];
+      fillVariants(image, variantSelect?.value ?? null);
+    });
+    form?.addEventListener("input", render);
+    form?.addEventListener("change", render);
+    form?.addEventListener("submit", (event) => event.preventDefault());
+    render();
+  </script>
+</Base>
