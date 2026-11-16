@@ -5,7 +5,7 @@
 //   node scripts/indexnow.mjs submit changed.txt      # after deploy: submit them
 //
 // The key is the 32-hex file in public/ (served at /<key>.txt), as the protocol requires.
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 const SITE = "https://openimages.cloud";
 const UA = "openimages-ci";
@@ -16,9 +16,18 @@ function key() {
   return file.slice(0, -4);
 }
 
+// The Astro sitemap, plus the documentation sitemap (Zensical, under /docs/)
+// when scripts/build-docs.sh has run.
+const SITEMAPS = ["dist/sitemap-0.xml", "dist/docs/sitemap.xml"];
+
 function builtUrls() {
-  const xml = readFileSync("dist/sitemap-0.xml", "utf8");
-  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  const urls = [];
+  for (const file of SITEMAPS) {
+    if (file !== SITEMAPS[0] && !existsSync(file)) continue;
+    const xml = readFileSync(file, "utf8");
+    urls.push(...[...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim()));
+  }
+  return urls;
 }
 
 function distFile(url) {

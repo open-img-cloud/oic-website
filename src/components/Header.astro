@@ -5,12 +5,15 @@ import { formatStars, loadOrgStars } from "~/lib/github";
 
 const stars = await loadOrgStars();
 
+// Below md only the short links fit; "How it works" waits for lg so that six
+// links do not overflow the header at md.
 const links = [
   { href: "/images/", label: "Catalog" },
-  { href: "/#how-it-works", label: "How it works", wide: true },
+  { href: "/#how-it-works", label: "How it works", from: "lg" },
   { href: "/quality/", label: "Quality" },
   { href: "/verify/", label: "Verify" },
-  { href: "/about/", label: "About", wide: true },
+  { href: "/docs/", label: "Docs", from: "md" },
+  { href: "/about/", label: "About", from: "md" },
 ];
 const currentPath = Astro.url.pathname;
 ---
@@ -34,7 +37,8 @@ const currentPath = Astro.url.pathname;
             aria-current={active ? "page" : undefined}
             class:list={[
               "rounded-md px-3 py-2 transition-colors",
-              link.wide && "hidden md:inline-block",
+              link.from === "md" && "hidden md:inline-block",
+              link.from === "lg" && "hidden lg:inline-block",
               active ? "text-ink font-medium" : "text-ink-muted hover:text-ink",
             ]}
           >
