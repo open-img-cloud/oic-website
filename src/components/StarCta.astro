@@ -1,0 +1,20 @@
+---
+/** Asks for a GitHub star on the project home repository (open-img-cloud/.github). */
+import { PROJECT_REPO } from "~/lib/github";
+---
+
+<aside class="border-line surface-raised mt-14 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5">
+  <p class="text-ink-muted text-sm leading-relaxed">
+    <span class="text-ink font-medium">Did this image save you time?</span> A star on GitHub is the
+    easiest way to help other operators find the project.
+  </p>
+  <a
+    href={PROJECT_REPO}
+    class="inline-flex shrink-0 items-center gap-2 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+  >
+    <svg viewBox="0 0 16 16" class="h-4 w-4" fill="currentColor" aria-hidden="true">
+      <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path>
+    </svg>
+    Star on GitHub
+  </a>
+</aside>
