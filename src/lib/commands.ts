@@ -232,9 +232,13 @@ export function terraform(image: CmdImage, a: CmdArtifact, opts: CmdOptions): st
   const id = tfName(image, a);
   const name = opts.name.trim() || defaultGlanceName(image, a);
   const multi = image.artifacts.length > 1 && a.variant;
-  const variantTag = multi ? `oic-variant-${a.variant}` : null;
-  const width = Math.max(...Object.keys(a.glance).map((k) => k.length));
-  const props = Object.entries(a.glance)
+  // oic_variant: the property oic-sync sets on multi-variant images, so one lookup finds the
+  // image whether Terraform or oic-sync imported it.
+  const glance: Record<string, string> = multi
+    ? { ...a.glance, oic_variant: String(a.variant) }
+    : a.glance;
+  const width = Math.max(...Object.keys(glance).map((k) => k.length));
+  const props = Object.entries(glance)
     .map(([k, v]) => `    ${k.padEnd(width)} = ${hcl(v)}`)
     .join("\n");
   const rows: [string, string][] = [
@@ -244,7 +248,6 @@ export function terraform(image: CmdImage, a: CmdArtifact, opts: CmdOptions): st
     ["disk_format", hcl("qcow2")],
     ...(a.minDisk ? [["min_disk_gb", String(a.minDisk)] as [string, string]] : []),
     ...(opts.visibility ? [["visibility", hcl(opts.visibility)] as [string, string]] : []),
-    ...(variantTag ? [["tags", `[${hcl(variantTag)}]`] as [string, string]] : []),
   ];
   const rowWidth = Math.max(...rows.map(([k]) => k.length));
   return `# Provider: terraform-provider-openstack/openstack. Terraform downloads the file and
@@ -261,7 +264,7 @@ ${props}
 # Consumers in other configurations: look the image up by property, not by name, and
 # ignore image changes on long-lived servers (lifecycle ignore_changes).
 data "openstack_images_image_v2" "${id}" {
-  properties  = { oic_id = ${hcl(image.id)} }${variantTag ? `\n  tag         = ${hcl(variantTag)} # set above: both variants share oic_id` : ""}
+  properties  = { oic_id = ${hcl(image.id)}${multi ? `, oic_variant = ${hcl(String(a.variant))}` : ""} }
   most_recent = true
 }`;
 }
