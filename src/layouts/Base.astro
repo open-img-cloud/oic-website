@@ -9,10 +9,12 @@ interface Props {
   ogImage?: string;
   /** schema.org structured data, rendered as JSON-LD. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Append " · Open Image Cloud" to the title (off where it would push it past 60 characters). */
+  brand?: boolean;
 }
 
-const { title, description, ogImage = "/img/og.png", jsonLd } = Astro.props;
-const fullTitle = title === "Open Image Cloud" ? title : `${title} · Open Image Cloud`;
+const { title, description, ogImage = "/img/og.png", jsonLd, brand = true } = Astro.props;
+const fullTitle = title === "Open Image Cloud" || !brand ? title : `${title} · Open Image Cloud`;
 const desc =
   description ??
   "Signed, reproducible, cloud-init-ready qcow2 images for OpenStack and Proxmox. Built in the open, verifiable by anyone.";
