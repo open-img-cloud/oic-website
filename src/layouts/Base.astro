@@ -9,11 +9,13 @@ interface Props {
   ogImage?: string;
   /** schema.org structured data, rendered as JSON-LD. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Atom feed of this page (e.g. one image), listed next to the catalog-wide one. */
+  feed?: { href: string; title: string };
   /** Append " · Open Image Cloud" to the title (off where it would push it past 60 characters). */
   brand?: boolean;
 }
 
-const { title, description, ogImage = "/img/og.png", jsonLd, brand = true } = Astro.props;
+const { title, description, ogImage = "/img/og.png", jsonLd, brand = true, feed } = Astro.props;
 const fullTitle = title === "Open Image Cloud" || !brand ? title : `${title} · Open Image Cloud`;
 const desc =
   description ??
@@ -35,6 +37,15 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
     <link rel="apple-touch-icon" href="/img/icon-180.png" />
     <link rel="canonical" href={canonical} />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="Open Image Cloud: new image versions"
+      href="/feed.xml"
+    />
+    {feed && (
+      <link rel="alternate" type="application/atom+xml" title={feed.title} href={feed.href} />
+    )}
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
     <meta property="og:site_name" content="Open Image Cloud" />

@@ -172,6 +172,7 @@ const provenance = [
 <Base
   title={seoTitle}
   brand={brandInTitle}
+  feed={{ href: `/images/${image.os_name}/feed.xml`, title: `${image.title}: new versions` }}
   description={seoDescription}
   ogImage={ogImage}
   jsonLd={[
@@ -416,7 +417,15 @@ const provenance = [
                 of this image lists every published release
               </>
             )}
-            .
+            . To hear about new versions, follow the{" "}
+            <a class="link" href={`/images/${image.os_name}/feed.xml`}>
+              Atom feed of this image
+            </a>{" "}
+            (or the{" "}
+            <a class="link" href="/feed.xml">
+              feed of the whole catalog
+            </a>
+            ).
             {inOsismExport(image.os_name, image.os_distro) && (
               <>
                 {" "}
