@@ -16,7 +16,7 @@
   <a href="https://openimages.cloud"><b>Website</b></a> ·
   <a href="https://openimages.cloud/images/">Catalog</a> ·
   <a href="https://images.openimages.cloud/index.json">index.json</a> ·
-  <a href="https://github.com/open-img-cloud/docs">Documentation</a> ·
+  <a href="https://openimages.cloud/docs/">Documentation</a> ·
   <a href="https://github.com/open-img-cloud/oic-website/issues">Report an issue</a>
 </p>
 
@@ -55,6 +55,13 @@ pnpm build           # production build into ./dist
 ## Deploy
 
 The site is deployed to [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) (Static Assets, `wrangler.toml`) by the `deploy.yml` workflow: on push to `main`, daily (to refresh the catalog from published `MANIFEST.json` files), and on demand. It needs the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. Pull requests are built by `ci.yml` without deploying.
+
+Documentation: both workflows check out the `main` branch of [open-img-cloud/docs](https://github.com/open-img-cloud/docs) into `_docs/` and build it with [Zensical](https://zensical.org/) (pinned, `zensical==0.1.1`) into `dist/docs/`, served at <https://openimages.cloud/docs/>. A docs change is published at the next website deploy (push to `main`, daily run or manual run). Locally, after `pnpm build`:
+
+```bash
+git clone https://github.com/open-img-cloud/docs _docs
+scripts/build-docs.sh _docs   # uses zensical on PATH, or uvx
+```
 
 DNS: apex `openimages.cloud` (and `www` → apex) on the same Cloudflare zone as `images.openimages.cloud`.
 

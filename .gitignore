@@ -34,3 +34,6 @@ Thumbs.db
 coverage/
 .cache/
 .eslintcache
+
+# documentation checkout (scripts/build-docs.sh)
+_docs/
