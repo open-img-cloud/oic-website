@@ -260,6 +260,8 @@ const OSISM_EXCLUDED = new Set([
   "trove-guest-image",
   // CirrOS: test image, osism ships its own definition (os_purpose minimal, min_ram 64).
   "cirros",
+  // Cloud Rescue: used with `openstack server rescue`, not booted as a workload.
+  "cloud-rescue",
 ]);
 
 /** Whether an image is part of the osism export. */

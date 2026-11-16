@@ -13,6 +13,7 @@ const SERVICE = {
   "octavia-amphora": "Image for OpenStack Octavia load balancers",
   "manila-service-image": "Image for the OpenStack Manila generic driver",
   "trove-guest-image": "Guest image for OpenStack Trove databases",
+  "cloud-rescue": "Rescue image for OpenStack & Proxmox VMs",
 };
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -58,7 +59,7 @@ ${logo}
 <text x="390" y="262" font-family="JetBrains Mono" font-weight="500" font-size="20" letter-spacing="2.6" fill="#7f93b5">OPEN IMAGE CLOUD</text>
 <text x="388" y="${262 + 22 + titleSize}" font-family="Inter" font-weight="600" font-size="${titleSize}" letter-spacing="-1.6" fill="#f2f5fb">${esc(image.title)}</text>
 <text x="390" y="${262 + 22 + titleSize + 56}" font-family="Inter" font-weight="400" font-size="32" fill="#aab8d0">${esc(subtitle)}</text>
-<text x="390" y="${262 + 22 + titleSize + 106}" font-family="JetBrains Mono" font-weight="500" font-size="20" fill="#7f93b5">${SERVICE[image.os_name] ? "qcow2 · signed with Sigstore cosign · per OpenStack series" : "qcow2 · signed with Sigstore cosign · boot-tested"}</text>
+<text x="390" y="${262 + 22 + titleSize + 106}" font-family="JetBrains Mono" font-weight="500" font-size="20" fill="#7f93b5">${SERVICE[image.os_name] && image.os_name !== "cloud-rescue" ? "qcow2 · signed with Sigstore cosign · per OpenStack series" : "qcow2 · signed with Sigstore cosign · boot-tested"}</text>
 ${mark}
 </svg>`;
 }

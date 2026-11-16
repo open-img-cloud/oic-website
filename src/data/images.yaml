@@ -669,3 +669,32 @@ images:
     arch: x86_64
     tags: [openstack, trove, dib, signed]
     logo: openstack.svg
+
+  - os_name: cloud-rescue
+    title: Cloud Rescue
+    os_distro: rocky
+    os_version: "9"
+    seo_title: "Cloud Rescue: rescue image for OpenStack & Proxmox VMs"
+    seo_description: "Signed qcow2 rescue image for OpenStack server rescue and Proxmox VMs: repair menu, rescue-mount, fsck, password reset, boot repair. Rocky Linux 9."
+    tagline: Repair a VM that no longer boots, on OpenStack or Proxmox.
+    description: |
+      Rocky Linux 9 with the repair tools preinstalled: boot it with
+      `openstack server rescue` (or lend it a Proxmox disk), and a menu mounts the
+      broken system, checks filesystems, resets passwords, adds SSH keys, edits
+      fstab and rebuilds the boot loader. Optional SSH password from the instance
+      metadata (`rescue_pass`), root on the console for VMs without network.
+    repo: open-img-cloud/cloud-rescue
+    upstream_homepage: https://rockylinux.org/
+    latest_version: 9.8-20260525.0-r1
+    login_user: rescue
+    format: qcow2
+    arch: x86_64
+    tags:
+      - openstack
+      - proxmox
+      - rescue
+      - signed
+    logo: cloud-rescue.svg
+    glance_properties:
+      hw_rescue_device: disk
+      hw_rescue_bus: virtio
