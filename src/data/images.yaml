@@ -685,7 +685,7 @@ images:
       metadata (`rescue_pass`), root on the console for VMs without network.
     repo: open-img-cloud/cloud-rescue
     upstream_homepage: https://rockylinux.org/
-    latest_version: 9.8-20260525.0
+    latest_version: 9.8-20260525.0-r1
     login_user: rescue
     format: qcow2
     arch: x86_64
