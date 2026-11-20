@@ -44,6 +44,12 @@ export function osType(osDistro: string | null | undefined): string | null {
   return "linux";
 }
 
+/** { os_type } to spread into a property set, or nothing for the BSDs. */
+export function glanceOsType(osDistro: string | null | undefined): Record<string, string> {
+  const type = osType(osDistro);
+  return type ? { os_type: type } : {};
+}
+
 /**
  * Supported by every image but left to the operator: on some clouds the flavor must allow it
  * (hw_rng:allowed=True) or Nova refuses to boot.
@@ -89,9 +95,8 @@ export function glanceProperties(
   img: GlanceImageInput,
   a: GlanceArtifactInput,
 ): Record<string, string> {
-  const type = osType(img.os_distro);
   return {
-    ...(type && { os_type: type }),
+    ...glanceOsType(img.os_distro),
     ...(img.os_distro && { os_distro: img.os_distro }),
     ...(img.os_version && { os_version: img.os_version }),
     ...(img.login_user && { os_admin_user: img.login_user }),
@@ -211,7 +216,7 @@ function indexImage(image: EnrichedImage): IndexImage | null {
     versions_url: image.versionsUrl,
     tags: image.tags,
     glance_properties: {
-      ...(osType(image.os_distro) && { os_type: osType(image.os_distro) }),
+      ...glanceOsType(image.os_distro),
       ...(image.login_user && { os_admin_user: image.login_user }),
       ...DEFAULT_GLANCE_PROPERTIES,
       ...image.glance_properties,
