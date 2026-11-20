@@ -1,6 +1,6 @@
 ---
 import Base from "~/layouts/Base.astro";
-import Terminal from "~/components/Terminal.astro";
+import LogoOrbit from "~/components/LogoOrbit.astro";
 import ImageRow from "~/components/ImageRow.astro";
 import CodeBlock from "~/components/CodeBlock.astro";
 import { CERT_IDENTITY_REGEXP, formatDate, loadEnrichedImages } from "~/lib/images";
@@ -43,11 +43,31 @@ const lastBuild = images
   .sort()
   .at(-1);
 
-// Hero terminal: a real, published artifact (first featured image with a manifest).
+// Verify snippet: a real, published artifact (first featured image with a manifest).
 const demoImage = featured.find((i) => i.latest.artifacts.some((a) => a.fileUrl)) ?? images[0];
 const demo = demoImage?.latest.artifacts.find((a) => a.fileUrl) ?? null;
 const demoFile = demo?.filename ?? "image.qcow2";
-const demoPath = demo?.fileUrl?.replace("https://", "") ?? "images.openimages.cloud/…";
+
+// Hero orbit: one tile per distribution logo, featured images first, then by name.
+const orbit = [
+  ...[
+    ...featured,
+    ...active
+      .filter((i) => !featuredNames.has(i.os_name))
+      .sort((a, b) => a.title.localeCompare(b.title)),
+  ]
+    .filter((i) => i.logo && i.os_name !== "cirros")
+    .reduce((acc, i) => {
+      if (!acc.has(i.logo!))
+        acc.set(i.logo!, {
+          logo: i.logo!,
+          title: familyOf(i.title),
+          href: `/images/${i.os_name}/`,
+        });
+      return acc;
+    }, new Map<string, { logo: string; title: string; href: string }>())
+    .values(),
+];
 
 const stats = [
   { value: String(active.length), label: "maintained images" },
@@ -151,43 +171,7 @@ const verifySnippet = `cosign verify-blob ${demoFile} \\
         </div>
       </div>
 
-      <Terminal title={`verify · ${demoImage?.title ?? "image"}`} class="min-w-0">
-        <span class="t-line">
-          <span class="t-prompt">$</span>
-          <span class="t-cmd">curl</span>
-          <span class="t-flag">-fLO</span> <span class="t-str">{demoPath}</span>
-        </span>
-        <span class="t-line">
-          <span class="t-prompt">$</span>
-          <span class="t-cmd">curl</span>
-          <span class="t-flag">-fLO</span> <span class="t-str">{demoPath}.bundle</span>
-        </span>
-        <span class="t-line"> </span>
-        <span class="t-line">
-          <span class="t-prompt">$</span>
-          <span class="t-cmd">cosign verify-blob</span>
-          {demoFile}
-        </span>
-        <span class="t-cont t-flag">--bundle {demoFile}.bundle --new-bundle-format</span>
-        <span class="t-cont t-flag">
-          --certificate-identity-regexp '…/open-img-cloud/.github/…'
-        </span>
-        <span class="t-cont t-flag">
-          --certificate-oidc-issuer https://token.actions.githubusercontent.com
-        </span>
-        <span class="t-line t-ok">Verified OK</span>
-        <span class="t-line"> </span>
-        <span class="t-line">
-          <span class="t-prompt">$</span>
-          <span class="t-cmd">jq</span>
-          <span class="t-str">'.built_at, .build_url'</span> MANIFEST
-          {demo?.label ? `-${demo.manifest?.variant}` : ""}.json
-        </span>
-        <span class="t-line t-out">"{demo?.manifest?.built_at ?? "2026-01-01T00:00:00Z"}"</span>
-        <span class="t-line t-out">
-          "{demo?.manifest?.build_url?.replace("https://", "") ?? "github.com/…"}"
-        </span>
-      </Terminal>
+      <LogoOrbit items={orbit} class="min-w-0" />
     </div>
 
     <!-- Stats -->
