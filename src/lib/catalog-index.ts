@@ -26,13 +26,23 @@ export const INDEX_SCHEMA = "oic-index/v1";
  * before a snapshot.
  */
 export const DEFAULT_GLANCE_PROPERTIES: Record<string, string> = {
-  os_type: "linux",
   hw_qemu_guest_agent: "yes",
   hw_disk_bus: "scsi",
   hw_scsi_model: "virtio-scsi",
   hw_vif_multiqueue_enabled: "true",
   os_require_quiesce: "yes",
 };
+
+/**
+ * Glance os_type (Nova knows "linux" and "windows" only): set for Linux and Windows images,
+ * left out for the BSDs rather than calling them Linux.
+ */
+const NON_LINUX_DISTROS = new Set(["freebsd", "openbsd", "netbsd", "dragonfly"]);
+export function osType(osDistro: string | null | undefined): string | null {
+  if (osDistro === "windows") return "windows";
+  if (osDistro && NON_LINUX_DISTROS.has(osDistro)) return null;
+  return "linux";
+}
 
 /**
  * Supported by every image but left to the operator: on some clouds the flavor must allow it
@@ -79,7 +89,9 @@ export function glanceProperties(
   img: GlanceImageInput,
   a: GlanceArtifactInput,
 ): Record<string, string> {
+  const type = osType(img.os_distro);
   return {
+    ...(type && { os_type: type }),
     ...(img.os_distro && { os_distro: img.os_distro }),
     ...(img.os_version && { os_version: img.os_version }),
     ...(img.login_user && { os_admin_user: img.login_user }),
@@ -199,7 +211,7 @@ function indexImage(image: EnrichedImage): IndexImage | null {
     versions_url: image.versionsUrl,
     tags: image.tags,
     glance_properties: {
-      os_type: DEFAULT_GLANCE_PROPERTIES.os_type,
+      ...(osType(image.os_distro) && { os_type: osType(image.os_distro) }),
       ...(image.login_user && { os_admin_user: image.login_user }),
       ...DEFAULT_GLANCE_PROPERTIES,
       ...image.glance_properties,
