@@ -1,0 +1,159 @@
+---
+// Hero illustration: the distributions of the catalog orbiting the Open Image Cloud mark.
+// Pure CSS (no script): two rings turning slowly in opposite directions, each tile turned back so
+// the logos stay upright. Stops under prefers-reduced-motion (global.css), and pauses on hover so
+// a logo can be clicked.
+import Logo from "~/components/Logo.astro";
+
+interface Item {
+  logo: string;
+  title: string;
+  href: string;
+}
+interface Props {
+  items: Item[];
+  class?: string;
+}
+const { items, class: className } = Astro.props;
+
+// Inner ring: the first six (featured first); outer ring: the rest.
+const inner = items.slice(0, 6);
+const outer = items.slice(6, 18);
+const place = (list: Item[]) =>
+  list.map((item, i) => ({ ...item, angle: (360 / list.length) * i }));
+const rings = [
+  { cls: "ring-inner", radius: 27, items: place(inner) },
+  { cls: "ring-outer", radius: 44, items: place(outer) },
+].filter((r) => r.items.length);
+---
+
+<div class:list={["orbit relative mx-auto aspect-square w-full max-w-[460px]", className]}>
+  <div aria-hidden="true" class="orbit-track" style="--r: 27"></div>
+  <div aria-hidden="true" class="orbit-track" style="--r: 44"></div>
+  <div class="orbit-core">
+    <Logo
+      class="h-full w-full drop-shadow-[0_10px_30px_rgba(36,89,196,0.45)]"
+      title="Open Image Cloud"
+    />
+  </div>
+  {rings.map((ring) => (
+    <ul
+      class:list={["orbit-ring", ring.cls]}
+      style={`--r: ${ring.radius}`}
+      aria-label="Distributions in the catalog"
+    >
+      {ring.items.map((item) => (
+        <li class="orbit-slot" style={`--a: ${item.angle}deg`}>
+          <a href={item.href} class="orbit-tile" title={item.title}>
+            <img
+              src={`/img/logos/${item.logo}`}
+              alt={item.title}
+              width="40"
+              height="40"
+              decoding="async"
+            />
+          </a>
+        </li>
+      ))}
+    </ul>
+  ))}
+</div>
+
+<style>
+  .orbit {
+    container-type: inline-size;
+  }
+  .orbit-track {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--r) * 2cqw);
+    height: calc(var(--r) * 2cqw);
+    translate: -50% -50%;
+    border-radius: 9999px;
+    border: 1px dashed var(--color-line-strong, rgb(148 163 184 / 0.35));
+    opacity: 0.7;
+  }
+  .orbit-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 24cqw;
+    height: 24cqw;
+    translate: -50% -50%;
+  }
+  .orbit-ring {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    animation: orbit-spin var(--d) linear infinite;
+  }
+  .ring-inner {
+    --d: 60s;
+  }
+  .ring-outer {
+    --d: 90s;
+    animation-direction: reverse;
+  }
+  .orbit-slot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    transform: rotate(var(--a)) translateY(calc(var(--r) * -1cqw)) rotate(calc(var(--a) * -1));
+  }
+  .orbit-tile {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 13cqw;
+    height: 13cqw;
+    translate: -50% -50%;
+    border-radius: 22%;
+    background: #fff;
+    border: 1px solid rgb(15 23 42 / 0.08);
+    box-shadow: 0 10px 24px -14px rgb(8 15 35 / 0.45);
+    /* Turn the other way so the logo stays upright. */
+    animation: orbit-spin var(--d) linear infinite reverse;
+    transition:
+      scale 0.2s,
+      box-shadow 0.2s;
+  }
+  .ring-outer .orbit-tile {
+    width: 11cqw;
+    height: 11cqw;
+    animation-direction: normal;
+  }
+  .orbit-tile img {
+    width: 62%;
+    height: 62%;
+    object-fit: contain;
+  }
+  .orbit-tile:hover,
+  .orbit-tile:focus-visible {
+    scale: 1.12;
+    box-shadow: 0 14px 30px -12px rgb(36 89 196 / 0.55);
+  }
+  .orbit:hover .orbit-ring,
+  .orbit:hover .orbit-tile,
+  .orbit:focus-within .orbit-ring,
+  .orbit:focus-within .orbit-tile {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .orbit-ring,
+    .orbit-tile {
+      animation: none;
+    }
+  }
+  @keyframes orbit-spin {
+    to {
+      rotate: 360deg;
+    }
+  }
+</style>
