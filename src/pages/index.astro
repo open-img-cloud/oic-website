@@ -28,6 +28,10 @@ const families = [
     .values(),
 ];
 const others = images.length - featured.length;
+const archived = images.length - active.length;
+const seeAll = archived
+  ? `See all ${images.length} images (${archived} archived)`
+  : `See all ${images.length} images`;
 
 const artifacts = images.flatMap((i) => [
   ...i.latest.artifacts,
@@ -203,7 +207,7 @@ const verifySnippet = `cosign verify-blob ${demoFile} \\
         </p>
       </div>
       <a href="/images/" class="link text-sm">
-        See all {images.length} images
+        {seeAll}
       </a>
     </div>
     <div class="border-line mt-8 overflow-hidden rounded-xl border">
@@ -244,7 +248,7 @@ const verifySnippet = `cosign verify-blob ${demoFile} \\
           href="/images/"
           class="mt-6 inline-flex items-center rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white"
         >
-          See all {images.length} images
+          {seeAll}
         </a>
       </div>
     )}
