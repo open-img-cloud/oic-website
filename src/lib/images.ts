@@ -1,6 +1,7 @@
 import { parse as parseYaml } from "yaml";
 import imagesYamlRaw from "~/data/images.yaml?raw";
 import upstreamSnapshot from "~/data/upstream-snapshot.json";
+import { loadPackages, type PackageInfo } from "~/lib/packages";
 
 /** Lifecycle of a catalog entry (IMAGE_STANDARDS.md, section I). */
 export type ImageStatus = "stable" | "archive" | "preview";
@@ -162,6 +163,8 @@ export interface EnrichedImage extends ImageEntry {
   os_version: string | null;
   /** null when the image has no eol mapping or endoflife.date could not be reached. */
   support: Support | null;
+  /** Installed packages of the latest version (packages.json), null when not published yet. */
+  packages: PackageInfo | null;
 }
 
 /** https://images.openimages.cloud/_stats.json, served by the images-router Worker. */
@@ -413,6 +416,16 @@ export async function enrichImage(
       .filter((d): d is string => !!d)
       .sort()
       .at(-1) ?? null;
+  const first = latest.artifacts[0];
+  const packages = await loadPackages({
+    // OIC_PACKAGES_BASE_URL: local preview of manifests not uploaded yet.
+    base: (process.env.OIC_PACKAGES_BASE_URL ?? IMAGES_BASE_URL).replace(/\/$/, ""),
+    osName: image.os_name,
+    version: image.latest_version,
+    variant: first?.variantId ?? null,
+    sha256: first?.manifest?.sha256 ?? null,
+    versionsUrl: hasVersions ? versionsUrl : null,
+  });
   const maintained = image.openstack_series ? await loadMaintainedSeries() : [];
   const seriesOf = (v: string) => maintained.find((m) => m.series === v);
   const seriesName = (v: string) => seriesOf(v)?.name ?? null;
@@ -450,6 +463,7 @@ export async function enrichImage(
     os_version: deriveOsVersion(image),
     // The image moves to new releases: its current release ending soon is not a warning.
     support: support && support.followsReleases ? { ...support, eolSoon: false } : support,
+    packages,
   };
 }
 
