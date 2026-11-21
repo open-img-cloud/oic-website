@@ -164,6 +164,8 @@ export interface IndexImage {
   os_version: string | null;
   latest_version: string;
   versions_url: string | null;
+  /** Installed packages of the latest version (oic-packages/v1), null when not published yet. */
+  packages_url: string | null;
   tags: string[];
   glance_properties: Record<string, string>;
   optional_glance_properties: Record<string, string>;
@@ -237,6 +239,7 @@ function indexImage(image: EnrichedImage): IndexImage | null {
     os_version: image.os_version,
     latest_version: image.latest_version,
     versions_url: image.versionsUrl,
+    packages_url: image.packages?.url ?? null,
     tags: image.tags,
     glance_properties: {
       ...glanceOsType(image.os_distro),

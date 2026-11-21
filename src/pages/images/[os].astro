@@ -34,6 +34,14 @@ interface Props {
 }
 
 const { image } = Astro.props;
+const pkgs = image.packages;
+const DIFF_ROWS = 60;
+const diffCount = pkgs?.diff
+  ? pkgs.diff.updated.length + pkgs.diff.added.length + pkgs.diff.removed.length
+  : 0;
+const diffTruncated =
+  !!pkgs?.diff &&
+  [pkgs.diff.updated, pkgs.diff.added, pkgs.diff.removed].some((l) => l.length > DIFF_ROWS);
 // Per-series OpenStack images: name each previous series and say whether upstream still maintains it.
 const maintainedSeries = image.openstack_series ? await loadMaintainedSeries() : [];
 const seriesNote = (v: string) => {
@@ -518,6 +526,100 @@ const provenance = [
             ))}
           </ul>
         </section>
+
+        <!-- Packages -->
+        {pkgs && (
+          <section class="mt-14" id="packages" aria-labelledby="pkg-title">
+            <h2 id="pkg-title" class="text-ink text-xl font-semibold tracking-tight">
+              Packages
+            </h2>
+            <p class="text-ink-muted mt-2 text-sm leading-relaxed">
+              {pkgs.packages.length.toLocaleString("en-US")} {pkgs.format ?? ""} packages in{" "}
+              <span class="text-ink font-mono">{pkgs.version}</span>. Listed from the published
+              image after its release (
+              <a class="link" href={pkgs.url}>
+                packages.json
+              </a>
+              ). The list is not signed itself: it records the sha256 of the image it was read from,
+              which matches the signed manifest.
+            </p>
+            {pkgs.diff && (
+              <div class="mt-5">
+                <h3 class="text-ink text-base font-semibold">
+                  Changes since <span class="font-mono">{pkgs.diff.previousVersion}</span>
+                </h3>
+                {diffCount === 0 ? (
+                  <p class="text-ink-muted mt-2 text-sm">No package changed.</p>
+                ) : (
+                  <>
+                    <p class="text-ink-muted mt-2 text-sm">
+                      {pkgs.diff.updated.length} updated, {pkgs.diff.added.length} added,{" "}
+                      {pkgs.diff.removed.length} removed.
+                    </p>
+                    <div class="border-line mt-3 overflow-x-auto rounded-xl border">
+                      <table class="w-full text-left text-sm">
+                        <thead class="surface-sunken border-line border-b">
+                          <tr>
+                            <th class="eyebrow px-4 py-2.5 font-normal">Package</th>
+                            <th class="eyebrow px-4 py-2.5 font-normal">Before</th>
+                            <th class="eyebrow px-4 py-2.5 font-normal">Now</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-line divide-y font-mono text-xs">
+                          {pkgs.diff.updated.slice(0, DIFF_ROWS).map((u) => (
+                            <tr>
+                              <td class="text-ink px-4 py-2">{u.name}</td>
+                              <td class="text-ink-muted px-4 py-2">{u.from}</td>
+                              <td class="text-ink px-4 py-2">{u.to}</td>
+                            </tr>
+                          ))}
+                          {pkgs.diff.added.slice(0, DIFF_ROWS).map((p) => (
+                            <tr>
+                              <td class="text-ink px-4 py-2">{p.name}</td>
+                              <td class="text-ink-faint px-4 py-2 font-sans">added</td>
+                              <td class="text-ink px-4 py-2">{p.version}</td>
+                            </tr>
+                          ))}
+                          {pkgs.diff.removed.slice(0, DIFF_ROWS).map((p) => (
+                            <tr>
+                              <td class="text-ink-muted px-4 py-2 line-through">{p.name}</td>
+                              <td class="text-ink-muted px-4 py-2">{p.version}</td>
+                              <td class="text-ink-faint px-4 py-2 font-sans">removed</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {diffTruncated && (
+                      <p class="text-ink-faint mt-2 text-xs">
+                        Showing the first {DIFF_ROWS} of each kind: compare the two packages.json
+                        files for the rest.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+            <details class="border-line mt-5 rounded-xl border">
+              <summary class="text-ink cursor-pointer px-4 py-3 text-sm font-medium">
+                All {pkgs.packages.length.toLocaleString("en-US")} packages
+              </summary>
+              <div class="border-line max-h-[28rem] overflow-auto border-t">
+                <table class="w-full text-left font-mono text-xs">
+                  <tbody class="divide-line divide-y">
+                    {pkgs.packages.map((p) => (
+                      <tr>
+                        <td class="text-ink px-4 py-1.5">{p.name}</td>
+                        <td class="text-ink-muted px-4 py-1.5">{p.version}</td>
+                        <td class="text-ink-faint px-4 py-1.5">{p.arch}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          </section>
+        )}
 
         <!-- Previous releases -->
         {image.previous.length > 0 && (
