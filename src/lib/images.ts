@@ -48,6 +48,8 @@ export interface ImageEntry {
    * No Proxmox template commands, left out of the osism export.
    */
   test_image?: boolean;
+  /** Built per OpenStack series: the quick panel offers every maintained series published. */
+  openstack_series?: boolean;
   /** Search title and description, for images the generic wording does not fit (rescue). */
   seo_title?: string;
   seo_description?: string;
@@ -105,10 +107,21 @@ export interface Release {
   artifacts: Artifact[];
 }
 
+/** An OpenStack series still maintained upstream (openstack_maintained_series in images.yaml). */
+export interface MaintainedSeries {
+  series: string;
+  name: string;
+}
+
 export interface EnrichedImage extends ImageEntry {
   status: ImageStatus;
   latest: Release;
   previous: Release[];
+  /**
+   * Releases offered in the catalog quick panel, newest first: latest only, or for images built
+   * per OpenStack series every published series still maintained upstream.
+   */
+  quick: (Release & { seriesName: string | null })[];
   /** Most recent build time among the latest artifacts, if known. */
   builtAt: string | null;
   /** Manifest used for the provenance panel (first available latest artifact). */
@@ -149,10 +162,16 @@ export const CERT_OIDC_ISSUER = "https://token.actions.githubusercontent.com";
 
 const FETCH_TIMEOUT_MS = 8000;
 
+type CatalogDoc = { images: ImageEntry[]; openstack_maintained_series?: MaintainedSeries[] };
+
 export function loadImages(): ImageEntry[] {
-  const doc = parseYaml(imagesYamlRaw) as { images: ImageEntry[] };
+  const doc = parseYaml(imagesYamlRaw) as CatalogDoc;
   const images = doc.images ?? [];
   return [...images].sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }));
+}
+
+export function loadMaintainedSeries(): MaintainedSeries[] {
+  return (parseYaml(imagesYamlRaw) as CatalogDoc).openstack_maintained_series ?? [];
 }
 
 function url(osName: string, version: string, file: string): string {
@@ -314,11 +333,30 @@ export async function enrichImage(
       .filter((d): d is string => !!d)
       .sort()
       .at(-1) ?? null;
+  const maintained = loadMaintainedSeries();
+  const seriesName = (v: string) => maintained.find((m) => m.series === v)?.name ?? null;
+  // Maintained series published but not (yet) listed in previous_versions: probe the bucket,
+  // a series that was never built has no manifest and is dropped below.
+  const listed = new Set([image.latest_version, ...(image.previous_versions ?? [])]);
+  const unlisted = image.openstack_series
+    ? await Promise.all(
+        maintained
+          .filter((m) => !listed.has(m.series))
+          .map((m) => release({ ...image, variants: [] }, m.series)),
+      )
+    : [];
+  const quick = image.openstack_series
+    ? [latest, ...previous.filter((r) => seriesName(r.version)), ...unlisted]
+        .filter((r, i) => i === 0 || r.artifacts.some((a) => a.fileUrl))
+        .sort((a, b) => b.version.localeCompare(a.version, "en", { numeric: true }))
+        .map((r) => ({ ...r, seriesName: seriesName(r.version) }))
+    : [{ ...latest, seriesName: null }];
   return {
     ...image,
     status: image.status ?? "stable",
     latest,
     previous,
+    quick,
     builtAt,
     provenance: manifests[0] ?? null,
     signed: manifests.length > 0 && manifests.every((m) => m.signed),
