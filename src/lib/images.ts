@@ -335,8 +335,18 @@ export async function enrichImage(
       .at(-1) ?? null;
   const maintained = loadMaintainedSeries();
   const seriesName = (v: string) => maintained.find((m) => m.series === v)?.name ?? null;
+  // Maintained series published but not (yet) listed in previous_versions: probe the bucket,
+  // a series that was never built has no manifest and is dropped below.
+  const listed = new Set([image.latest_version, ...(image.previous_versions ?? [])]);
+  const unlisted = image.openstack_series
+    ? await Promise.all(
+        maintained
+          .filter((m) => !listed.has(m.series))
+          .map((m) => release({ ...image, variants: [] }, m.series)),
+      )
+    : [];
   const quick = image.openstack_series
-    ? [latest, ...previous.filter((r) => seriesName(r.version))]
+    ? [latest, ...previous.filter((r) => seriesName(r.version)), ...unlisted]
         .filter((r, i) => i === 0 || r.artifacts.some((a) => a.fileUrl))
         .sort((a, b) => b.version.localeCompare(a.version, "en", { numeric: true }))
         .map((r) => ({ ...r, seriesName: seriesName(r.version) }))
