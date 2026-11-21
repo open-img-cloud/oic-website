@@ -1,5 +1,6 @@
 ---
 import Base from "~/layouts/Base.astro";
+import EolBadge from "~/components/EolBadge.astro";
 import StatusBadge from "~/components/StatusBadge.astro";
 import { formatDate, loadEnrichedImages } from "~/lib/images";
 import { loadBuildStatus, UNKNOWN_RUN, type RunInfo } from "~/lib/status";
@@ -41,6 +42,8 @@ const rows = images.map((image) => {
 const recent = rows.filter((r) => r.age != null && r.age <= RECENT_DAYS).length;
 const failed = rows.filter((r) => r.failed).length;
 const stale = rows.filter((r) => r.stale).length;
+const eolCount = rows.filter((r) => r.image.support?.isEol).length;
+const eolSoonCount = rows.filter((r) => r.image.support?.eolSoon).length;
 const asOf = now.toISOString().replace(/\.\d{3}Z$/, "Z");
 const asOfLabel = `${now.toISOString().slice(0, 10)} ${now.toISOString().slice(11, 16)} UTC`;
 
@@ -75,7 +78,8 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
     <p class="text-ink-muted mt-4 max-w-3xl leading-relaxed text-pretty">
       When each image was last built, and how the last runs of its repository went: the release
       workflow (build, boot test, signature, publication) and the daily upstream watch, which opens
-      a pull request when upstream publishes a new version. As of{" "}
+      a pull request when upstream publishes a new version. The support column is the end of
+      upstream security support of the release, from endoflife.date. As of{" "}
       <time datetime={asOf} class="text-ink font-medium">
         {asOfLabel}
       </time>
@@ -94,6 +98,18 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
       <span class:list={[failed > 0 && "text-bad font-medium"]}>
         {failed} with a failed last run
       </span>
+      {eolCount + eolSoonCount > 0 && (
+        <>
+          <span class="text-ink-faint mx-2" aria-hidden="true">
+            ·
+          </span>
+          <span class="text-warn">
+            {eolCount > 0 && `${eolCount} past upstream end of life`}
+            {eolCount > 0 && eolSoonCount > 0 && ", "}
+            {eolSoonCount > 0 && `${eolSoonCount} reaching it within 6 months`}
+          </span>
+        </>
+      )}
       {stale > 0 && (
         <>
           <span class="text-ink-faint mx-2" aria-hidden="true">
@@ -116,7 +132,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
     </p>
 
     <div class="border-line mt-8 overflow-x-auto rounded-xl border">
-      <table class="w-full min-w-[52rem] text-left text-sm">
+      <table class="w-full min-w-[60rem] text-left text-sm">
         <caption class="sr-only">
           Build freshness and last workflow runs of each image, as of{asOfLabel}
         </caption>
@@ -136,6 +152,9 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
             </th>
             <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
               Upstream
+            </th>
+            <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
+              Supported until
             </th>
             <th scope="col" class="eyebrow px-4 py-2.5 font-normal">
               Last release
@@ -195,6 +214,24 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
                   <span class="text-ink-faint">Not watched</span>
                 ) : (
                   <span class="text-ink-faint">Unknown</span>
+                )}
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                {r.image.support?.securityUntil ? (
+                  <span class="inline-flex items-center gap-2">
+                    <a
+                      class="text-ink-muted hover:underline"
+                      href={r.image.support.sourceUrl}
+                      title={`Release ${r.image.support.release}, from endoflife.date`}
+                    >
+                      {formatDate(r.image.support.securityUntil)}
+                    </a>
+                    <EolBadge support={r.image.support} />
+                  </span>
+                ) : r.image.support?.followsReleases ? (
+                  <span class="text-ink-muted">Follows releases</span>
+                ) : (
+                  <span class="text-ink-faint">n/a</span>
                 )}
               </td>
               {[r.release, r.watch].map((run) => (
