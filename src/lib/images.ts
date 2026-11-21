@@ -48,6 +48,11 @@ export interface ImageEntry {
    * No Proxmox template commands, left out of the osism export.
    */
   test_image?: boolean;
+  /**
+   * endoflife.date product and release giving the support dates. Without `release`, the
+   * image follows upstream releases: major.minor of the latest version, then major.
+   */
+  eol?: { product: string; release?: string };
   /** Built per OpenStack series: the quick panel offers every maintained series published. */
   openstack_series?: boolean;
   /** Search title and description, for images the generic wording does not fit (rescue). */
@@ -113,6 +118,26 @@ export interface MaintainedSeries {
   name: string;
 }
 
+/** Support dates of the image's release, from endoflife.date (API v1) at build time. */
+export interface Support {
+  product: string;
+  release: string;
+  /** End of active support (bug fixes); null when the product makes no such distinction. */
+  activeUntil: string | null;
+  /** End of security support: the end of life. */
+  securityUntil: string | null;
+  /** End of extended support, usually paid (Ubuntu Pro, Debian ELTS, Oracle Extended). */
+  extendedUntil: string | null;
+  isEol: boolean;
+  /** End of life within EOL_SOON_DAYS of the build. */
+  eolSoon: boolean;
+  /** The image moves to each new upstream release, so this release ending is not the image ending. */
+  followsReleases: boolean;
+  sourceUrl: string;
+}
+
+export const EOL_SOON_DAYS = 183;
+
 export interface EnrichedImage extends ImageEntry {
   status: ImageStatus;
   latest: Release;
@@ -132,6 +157,8 @@ export interface EnrichedImage extends ImageEntry {
   /** <os>/versions.json (oic-versions/v1), null when the bucket does not have one yet. */
   versionsUrl: string | null;
   os_version: string | null;
+  /** null when the image has no eol mapping or endoflife.date could not be reached. */
+  support: Support | null;
 }
 
 /** https://images.openimages.cloud/_stats.json, served by the images-router Worker. */
@@ -318,11 +345,12 @@ export async function enrichImage(
 ): Promise<EnrichedImage> {
   const image: ImageEntry = { ...entry, latest_version: await resolveLatestVersion(entry) };
   const versionsUrl = `${IMAGES_BASE_URL}/${image.os_name}/versions.json`;
-  const [latest, previous, hasVersions] = await Promise.all([
+  const [latest, previous, hasVersions, support] = await Promise.all([
     release(image, image.latest_version),
     // Previous releases are single-artifact (no variant matrix) in the catalog today.
     Promise.all((image.previous_versions ?? []).map((v) => release({ ...image, variants: [] }, v))),
     exists(versionsUrl),
+    loadSupport(image),
   ]);
   const imageStats = stats ? (stats.images[image.os_name] ?? { total: 0, files: {} }) : null;
   for (const rel of [latest, ...previous]) attachDownloads(rel.artifacts, imageStats?.files);
@@ -363,7 +391,104 @@ export async function enrichImage(
     downloads: imageStats ? imageStats.total : null,
     versionsUrl: hasVersions ? versionsUrl : null,
     os_version: deriveOsVersion(image),
+    // The image moves to new releases: its current release ending soon is not a warning.
+    support: support && support.followsReleases ? { ...support, eolSoon: false } : support,
   };
+}
+
+const EOL_API = "https://endoflife.date/api/v1/products";
+const eolCache = new Map<string, Promise<Record<string, unknown> | null>>();
+
+/** One release of endoflife.date, or null (404, network, bad JSON): the support line is then left out. */
+function fetchEolRelease(
+  product: string,
+  release: string,
+): Promise<Record<string, unknown> | null> {
+  const key = `${product}/${release}`;
+  if (!eolCache.has(key)) {
+    eolCache.set(
+      key,
+      (async () => {
+        const target = `${EOL_API}/${encodeURIComponent(product)}/releases/${encodeURIComponent(release)}`;
+        const res = await timedFetch(target, {
+          headers: { "user-agent": "openimages.cloud-site" },
+        });
+        if (!res?.ok) {
+          if (res) console.warn(`[eol] ${target} → HTTP ${res.status}`);
+          return null;
+        }
+        try {
+          return ((await res.json()) as { result?: Record<string, unknown> }).result ?? null;
+        } catch {
+          console.warn(`[eol] ${target} is not valid JSON`);
+          return null;
+        }
+      })(),
+    );
+  }
+  return eolCache.get(key)!;
+}
+
+const isoDate = (v: unknown): string | null =>
+  typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+
+export async function loadSupport(image: ImageEntry, now = new Date()): Promise<Support | null> {
+  if (!image.eol) return null;
+  const { product } = image.eol;
+  const parts = image.latest_version
+    .split(/[^0-9.]/)[0]
+    .split(".")
+    .filter(Boolean);
+  const candidates = image.eol.release
+    ? [image.eol.release]
+    : [parts.slice(0, 2).join("."), parts[0]].filter((c, i, a) => c && a.indexOf(c) === i);
+  for (const release of candidates) {
+    const r = await fetchEolRelease(product, release);
+    if (!r) continue;
+    const securityUntil = isoDate(r.eolFrom);
+    const activeUntil = isoDate(r.eoasFrom);
+    const days = securityUntil
+      ? (Date.parse(securityUntil) - now.getTime()) / 86_400_000
+      : Infinity;
+    return {
+      product,
+      release,
+      activeUntil: activeUntil && activeUntil !== securityUntil ? activeUntil : null,
+      securityUntil,
+      extendedUntil: isoDate(r.eoesFrom),
+      isEol: r.isEol === true,
+      eolSoon: r.isEol !== true && days <= EOL_SOON_DAYS,
+      followsReleases: !image.eol.release,
+      sourceUrl: `https://endoflife.date/${product}`,
+    };
+  }
+  console.warn(`[eol] ${image.os_name}: no ${product} release among ${candidates.join(", ")}`);
+  return null;
+}
+
+/** "Active support until 9 Aug 2028, security support until 30 Jun 2030." */
+export function supportText(s: Support, now = new Date()): string {
+  const past = (d: string) => Date.parse(d) <= now.getTime();
+  const out: string[] = [];
+  if (s.isEol && s.securityUntil) out.push(`End of life since ${formatDate(s.securityUntil)}`);
+  else {
+    if (s.activeUntil)
+      out.push(
+        past(s.activeUntil)
+          ? `Active support ended ${formatDate(s.activeUntil)}`
+          : `Active support until ${formatDate(s.activeUntil)}`,
+      );
+    if (s.securityUntil)
+      out.push(
+        `${s.activeUntil ? "security support" : "Supported"} until ${formatDate(s.securityUntil)}`,
+      );
+  }
+  if (s.extendedUntil && !past(s.extendedUntil))
+    out.push(`paid extended support until ${formatDate(s.extendedUntil)}`);
+  let text = out.join(", ");
+  if (s.followsReleases)
+    text = `Release ${s.release}: ${text[0].toLowerCase()}${text.slice(1)}; the image moves to each new release`;
+  return text ? `${text}.` : "";
 }
 
 let cache: Promise<EnrichedImage[]> | null = null;

@@ -6,6 +6,7 @@ import { inOsismExport } from "~/lib/catalog-index";
 import { cmdArtifact, cmdImage } from "~/lib/command-data";
 import { openstackCli, proxmoxQm } from "~/lib/commands";
 import CodeBlock from "~/components/CodeBlock.astro";
+import EolBadge from "~/components/EolBadge.astro";
 import StatusBadge from "~/components/StatusBadge.astro";
 import {
   CERT_IDENTITY_REGEXP,
@@ -18,6 +19,7 @@ import {
   loadEnrichedImages,
   loadMaintainedSeries,
   shortSha,
+  supportText,
   type Artifact,
   type EnrichedImage,
 } from "~/lib/images";
@@ -220,6 +222,7 @@ const provenance = [
         <div class="flex flex-wrap items-center gap-3">
           <h1 class="text-ink text-3xl font-semibold tracking-tight sm:text-4xl">{image.title}</h1>
           <StatusBadge status={image.status} />
+          <EolBadge support={image.support} />
         </div>
         <p class="text-ink-muted mt-2 text-lg">{image.tagline}</p>
         <p class="text-ink-faint mt-3 font-mono text-xs">
@@ -229,9 +232,37 @@ const provenance = [
       </div>
     </header>
 
+    {image.support && (
+      <p
+        class:list={[
+          "mt-6 rounded-lg border px-4 py-3 text-sm",
+          image.support.isEol || image.support.eolSoon
+            ? "border-[color-mix(in_oklch,var(--warn)_40%,transparent)] bg-[color-mix(in_oklch,var(--warn)_8%,transparent)]"
+            : "border-line surface-sunken",
+        ]}
+        role="note"
+      >
+        <span
+          class:list={[
+            "font-medium",
+            image.support.isEol || image.support.eolSoon ? "text-warn" : "text-ink",
+          ]}
+        >
+          Support:{" "}
+        </span>
+        <span class="text-ink-muted">{supportText(image.support)}</span>{" "}
+        <a class="link text-xs" href={image.support.sourceUrl}>
+          Source: endoflife.date
+        </a>
+      </p>
+    )}
+
     {image.status_note && (
       <p
-        class="mt-6 rounded-lg border border-[color-mix(in_oklch,var(--warn)_40%,transparent)] bg-[color-mix(in_oklch,var(--warn)_8%,transparent)] px-4 py-3 text-sm"
+        class:list={[
+          image.support ? "mt-3" : "mt-6",
+          "rounded-lg border border-[color-mix(in_oklch,var(--warn)_40%,transparent)] bg-[color-mix(in_oklch,var(--warn)_8%,transparent)] px-4 py-3 text-sm",
+        ]}
         role="note"
       >
         <span class="text-warn font-medium">Note: </span>

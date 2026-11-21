@@ -146,6 +146,18 @@ export interface IndexImage {
   title: string;
   status: string;
   status_note: string | null;
+  /** Support dates from endoflife.date at build time (ISO dates), null when unknown. */
+  support: {
+    product: string;
+    release: string;
+    active_until: string | null;
+    security_until: string | null;
+    extended_until: string | null;
+    is_eol: boolean;
+    eol_soon: boolean;
+    follows_releases: boolean;
+    source: string;
+  } | null;
   repo: string;
   login_user: string | null;
   os_distro: string | null;
@@ -208,6 +220,17 @@ function indexImage(image: EnrichedImage): IndexImage | null {
     title: image.title,
     status: image.status,
     status_note: image.status_note ?? null,
+    support: image.support && {
+      product: image.support.product,
+      release: image.support.release,
+      active_until: image.support.activeUntil,
+      security_until: image.support.securityUntil,
+      extended_until: image.support.extendedUntil,
+      is_eol: image.support.isEol,
+      eol_soon: image.support.eolSoon,
+      follows_releases: image.support.followsReleases,
+      source: image.support.sourceUrl,
+    },
     repo: `https://github.com/${image.repo}`,
     login_user: image.login_user ?? null,
     os_distro: image.os_distro ?? null,
