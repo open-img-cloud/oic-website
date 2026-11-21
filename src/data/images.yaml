@@ -11,7 +11,12 @@
 #
 # Optional presentation fields:
 #   status       stable (default) | archive | preview  (IMAGE_STANDARDS.md §I)
-#   status_note  one-line banner on the image page (EOL date, known issue…)
+#   status_note  one-line banner on the image page (known issue, advice); support
+#                dates come from `eol`, not from here
+#   eol          { product, release } on https://endoflife.date: support dates and the
+#                "EOL soon" / "EOL" badges, refreshed at every build. Without
+#                release, the image follows upstream releases (major.minor of
+#                latest_version, then major)
 #   login_user   default cloud-init user, shown in the quick start
 #   featured     1..6: shown on the home page, in this order (others are
 #                summarised as family logos linking to the catalog)
@@ -48,6 +53,7 @@ images:
     repo: open-img-cloud/alpine-linux
     upstream_homepage: https://www.alpinelinux.org/
     latest_version: "3.24.1"
+    eol: { product: alpine-linux }
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -77,13 +83,14 @@ images:
     repo: open-img-cloud/amazon-linux-2
     upstream_homepage: https://aws.amazon.com/amazon-linux-2/
     latest_version: "2.0.20261109.1"
+    eol: { product: amazon-linux, release: "2" }
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
     logo: amazon.svg
     login_user: ec2-user
     status: archive
-    status_note: Amazon Linux 2 reached end of life on 2025-06-30. Builds continue for existing workloads; use Amazon Linux 2023 for new deployments.
+    status_note: Builds continue for existing workloads; use Amazon Linux 2023 for new deployments.
 
   - os_name: amazon-linux-2023
     title: Amazon Linux 2023
@@ -102,6 +109,7 @@ images:
     upstream_homepage: https://aws.amazon.com/linux/amazon-linux-2023/
     login_user: ec2-user
     latest_version: "2023.12.20261109.0"
+    eol: { product: amazon-linux, release: "2023" }
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -146,8 +154,8 @@ images:
     repo: open-img-cloud/debian-13
     upstream_homepage: https://www.debian.org/
     latest_version: "13-20261103-2651"
+    eol: { product: debian, release: "13" }
     login_user: debian
-    status_note: "Current Debian stable: security support until 2028-08, then Debian LTS until 2030-06-30."
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -165,8 +173,9 @@ images:
     repo: open-img-cloud/debian-12
     upstream_homepage: https://www.debian.org/
     latest_version: "12-20261026-2643"
+    eol: { product: debian, release: "12" }
     login_user: debian
-    status_note: "Debian LTS until 2028-06-30. Prefer Debian 13 for new deployments."
+    status_note: Prefer Debian 13 for new deployments.
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -183,8 +192,8 @@ images:
     repo: open-img-cloud/ubuntu-26.04
     upstream_homepage: https://ubuntu.com/
     latest_version: "26.04-20261016"
+    eol: { product: ubuntu, release: "26.04" }
     login_user: ubuntu
-    status_note: "Standard support until April 2031."
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, lts]
@@ -202,8 +211,8 @@ images:
     repo: open-img-cloud/ubuntu-24.04
     upstream_homepage: https://ubuntu.com/
     latest_version: "24.04-20261017"
+    eol: { product: ubuntu, release: "24.04" }
     login_user: ubuntu
-    status_note: "Standard support until May 2029."
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, lts]
@@ -220,8 +229,9 @@ images:
     repo: open-img-cloud/ubuntu-22.04
     upstream_homepage: https://ubuntu.com/
     latest_version: "22.04-20261106"
+    eol: { product: ubuntu, release: "22.04" }
     login_user: ubuntu
-    status_note: "Standard support until April 2027 (then Ubuntu Pro / ESM). Prefer 24.04 or 26.04 for new deployments."
+    status_note: Prefer 24.04 or 26.04 for new deployments.
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, lts]
@@ -240,8 +250,9 @@ images:
     repo: open-img-cloud/centos-stream-10
     upstream_homepage: https://www.centos.org/
     latest_version: "10-20261106.0"
+    eol: { product: centos-stream, release: "10" }
     login_user: cloud-user
-    status_note: "Requires an x86-64-v3 CPU (Haswell or newer). Weekly upstream composes; maintained until the end of RHEL 10 full support (expected 2030)."
+    status_note: Requires an x86-64-v3 CPU (Haswell or newer). Weekly upstream composes.
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
@@ -260,8 +271,9 @@ images:
     repo: open-img-cloud/centos-stream-9
     upstream_homepage: https://www.centos.org/
     latest_version: "9-20261109.0"
+    eol: { product: centos-stream, release: "9" }
     login_user: cloud-user
-    status_note: "Maintained until the end of RHEL 9 full support (expected 2027-05-31). Weekly upstream composes."
+    status_note: Weekly upstream composes.
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
@@ -297,8 +309,8 @@ images:
     repo: open-img-cloud/fedora-45
     upstream_homepage: https://fedoraproject.org/cloud/
     latest_version: "45-1.4"
+    eol: { product: fedora, release: "45" }
     login_user: fedora
-    status_note: "Supported until about a month after the Fedora 47 release."
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, btrfs]
@@ -315,8 +327,9 @@ images:
     repo: open-img-cloud/fedora-44
     upstream_homepage: https://fedoraproject.org/cloud/
     latest_version: "44-1.7"
+    eol: { product: fedora, release: "44" }
     login_user: fedora
-    status_note: "Supported until about a month after the Fedora 46 release; prefer Fedora 45."
+    status_note: Prefer Fedora 45.
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, btrfs]
@@ -334,8 +347,9 @@ images:
     repo: open-img-cloud/rocky-linux-10
     upstream_homepage: https://rockylinux.org/
     latest_version: "10.2-20260525.0"
+    eol: { product: rocky-linux, release: "10" }
     login_user: rocky
-    status_note: "Requires an x86-64-v3 CPU (Haswell or newer). Supported until 2035-05-31."
+    status_note: Requires an x86-64-v3 CPU (Haswell or newer).
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
@@ -353,6 +367,7 @@ images:
     repo: open-img-cloud/rocky-linux-9
     upstream_homepage: https://rockylinux.org/
     latest_version: "9.8-20260525.0"
+    eol: { product: rocky-linux, release: "9" }
     login_user: rocky
     format: qcow2
     arch: x86_64
@@ -371,6 +386,7 @@ images:
     repo: open-img-cloud/almalinux-10
     upstream_homepage: https://almalinux.org/
     latest_version: "10.2-20261109.0"
+    eol: { product: almalinux, release: "10" }
     login_user: almalinux
     status_note: "Requires an x86-64-v3 CPU (Haswell or newer)."
     format: qcow2
@@ -390,6 +406,7 @@ images:
     repo: open-img-cloud/almalinux-9
     upstream_homepage: https://almalinux.org/
     latest_version: "9.8-20261102"
+    eol: { product: almalinux, release: "9" }
     login_user: almalinux
     format: qcow2
     arch: x86_64
@@ -407,8 +424,9 @@ images:
     repo: open-img-cloud/rocky-linux-8
     upstream_homepage: https://rockylinux.org/
     latest_version: "8.10-20240528.0"
+    eol: { product: rocky-linux, release: "8" }
     login_user: rocky
-    status_note: "Rocky Linux 8 is supported until 2029-05-31. The upstream 8.x cloud image is no longer refreshed (May 2024): run dnf update on first boot. Prefer Rocky Linux 9 or 10 for new deployments."
+    status_note: "The upstream 8.x cloud image is no longer refreshed (May 2024): run dnf update on first boot. Prefer Rocky Linux 9 or 10 for new deployments."
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
@@ -425,8 +443,9 @@ images:
     repo: open-img-cloud/almalinux-8
     upstream_homepage: https://almalinux.org/
     latest_version: "8.10-20261026"
+    eol: { product: almalinux, release: "8" }
     login_user: almalinux
-    status_note: "AlmaLinux 8 is supported until 2029-03-01. Prefer AlmaLinux 9 or 10 for new deployments."
+    status_note: Prefer AlmaLinux 9 or 10 for new deployments.
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed, rhel-compatible]
@@ -445,8 +464,9 @@ images:
     repo: open-img-cloud/oracle-linux-8
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "8.10-b287"
+    eol: { product: oracle-linux, release: "8" }
     login_user: cloud-user
-    status_note: Oracle Linux 8 is in Oracle premier support until July 2029 (extended support to July 2032). Prefer Oracle Linux 9 or 10 for new deployments.
+    status_note: Prefer Oracle Linux 9 or 10 for new deployments.
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -465,6 +485,7 @@ images:
     repo: open-img-cloud/oracle-linux-9
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "9.8-b293"
+    eol: { product: oracle-linux, release: "9" }
     login_user: cloud-user
     format: qcow2
     arch: x86_64
@@ -484,6 +505,7 @@ images:
     repo: open-img-cloud/oracle-linux-10
     upstream_homepage: https://www.oracle.com/linux/
     latest_version: "10.1-b291"
+    eol: { product: oracle-linux, release: "10" }
     login_user: cloud-user
     format: qcow2
     arch: x86_64
@@ -522,8 +544,8 @@ images:
     repo: open-img-cloud/opensuse-leap-16
     upstream_homepage: https://www.opensuse.org/
     latest_version: "16.0-18.92"
+    eol: { product: opensuse }
     login_user: sles
-    status_note: "Leap 16.0 is maintained until six months after the release of Leap 16.1."
     format: qcow2
     arch: x86_64
     tags: [openstack, proxmox, cloud-init, signed]
@@ -541,6 +563,7 @@ images:
     repo: open-img-cloud/nixos
     upstream_homepage: https://nixos.org/
     latest_version: "26.05"
+    eol: { product: nixos }
     login_user: nixos
     format: qcow2
     arch: x86_64
@@ -560,6 +583,7 @@ images:
     repo: open-img-cloud/freebsd
     upstream_homepage: https://www.freebsd.org/
     latest_version: "15.1"
+    eol: { product: freebsd, release: "15" }
     login_user: freebsd
     format: qcow2
     arch: x86_64
@@ -582,6 +606,7 @@ images:
     repo: open-img-cloud/freebsd
     upstream_homepage: https://www.freebsd.org/
     latest_version: "14.5"
+    eol: { product: freebsd, release: "14" }
     login_user: freebsd
     format: qcow2
     arch: x86_64
@@ -590,7 +615,7 @@ images:
     # qemu-guest-agent on FreeBSD can only freeze UFS, not ZFS: no quiesced snapshots.
     glance_properties:
       os_require_quiesce: "no"
-    status_note: "14.5 is the last FreeBSD 14 release; the 14 branch is supported until 2028-11-30. Prefer FreeBSD 15 for new deployments."
+    status_note: 14.5 is the last FreeBSD 14 release. Prefer FreeBSD 15 for new deployments.
 
   - os_name: cirros
     title: CirrOS

@@ -1,5 +1,12 @@
 ---
-import { formatBytes, formatCount, formatDate, type EnrichedImage } from "~/lib/images";
+import {
+  formatBytes,
+  formatCount,
+  formatDate,
+  supportText,
+  type EnrichedImage,
+} from "~/lib/images";
+import EolBadge from "~/components/EolBadge.astro";
 import StatusBadge from "~/components/StatusBadge.astro";
 
 interface Props {
@@ -51,6 +58,7 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
       <span class="flex flex-wrap items-center gap-2">
         <span class="text-ink font-semibold tracking-tight">{image.title}</span>
         {image.status !== "stable" && <StatusBadge status={image.status} />}
+        <EolBadge support={image.support} />
       </span>
       <span class="text-ink-muted mt-0.5 block truncate text-sm">{image.tagline}</span>
     </span>
@@ -140,6 +148,17 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
                 "unsigned"
               )}
             </dd>
+            {image.support && (
+              <>
+                <dt class="text-ink-faint">Support</dt>
+                <dd class="text-ink-muted">
+                  {supportText(image.support)}{" "}
+                  <a class="link text-xs" href={image.support.sourceUrl}>
+                    endoflife.date
+                  </a>
+                </dd>
+              </>
+            )}
             {image.status_note && (
               <>
                 <dt class="text-ink-faint">Note</dt>
