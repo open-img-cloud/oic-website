@@ -56,6 +56,8 @@ pnpm build           # production build into ./dist
 
 The site is deployed to [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) (Static Assets, `wrangler.toml`) by the `deploy.yml` workflow: on push to `main`, daily (to refresh the catalog from published `MANIFEST.json` files), and on demand. It needs the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. Pull requests are built by `ci.yml` without deploying.
 
+Upstream lifecycle data (support dates from [endoflife.date](https://endoflife.date), maintained OpenStack series from `openstack/releases`) is read live at build time. `src/data/upstream-snapshot.json` is the fallback when a source is unreachable; `upstream-snapshot.yml` refreshes it every Monday through a PR (`node scripts/refresh-upstream-snapshot.mjs` by hand).
+
 Documentation: both workflows check out the `main` branch of [open-img-cloud/docs](https://github.com/open-img-cloud/docs) into `_docs/` and build it with [Zensical](https://zensical.org/) (pinned, `zensical==0.1.1`) into `dist/docs/`, served at <https://openimages.cloud/docs/>. A docs change is published at the next website deploy (push to `main`, daily run or manual run). Locally, after `pnpm build`:
 
 ```bash

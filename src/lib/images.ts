@@ -1,5 +1,6 @@
 import { parse as parseYaml } from "yaml";
 import imagesYamlRaw from "~/data/images.yaml?raw";
+import upstreamSnapshot from "~/data/upstream-snapshot.json";
 
 /** Lifecycle of a catalog entry (IMAGE_STANDARDS.md, section I). */
 export type ImageStatus = "stable" | "archive" | "preview";
@@ -191,7 +192,7 @@ export const CERT_OIDC_ISSUER = "https://token.actions.githubusercontent.com";
 
 const FETCH_TIMEOUT_MS = 8000;
 
-type CatalogDoc = { images: ImageEntry[]; openstack_maintained_series?: MaintainedSeries[] };
+type CatalogDoc = { images: ImageEntry[] };
 
 export function loadImages(): ImageEntry[] {
   const doc = parseYaml(imagesYamlRaw) as CatalogDoc;
@@ -235,14 +236,19 @@ async function fetchMaintainedSeries(): Promise<MaintainedSeries[] | null> {
 let seriesCache: Promise<MaintainedSeries[]> | null = null;
 
 /**
- * OpenStack series maintained upstream, from the release team's data at build time; the list in
- * images.yaml (openstack_maintained_series) is the fallback when it cannot be read.
+ * OpenStack series maintained upstream, from the release team's data at build time. When it
+ * cannot be read, the snapshot (scripts/refresh-upstream-snapshot.mjs) stands in, minus the
+ * series whose maintained phase has ended since.
  */
-export function loadMaintainedSeries(): Promise<MaintainedSeries[]> {
+export function loadMaintainedSeries(now = new Date()): Promise<MaintainedSeries[]> {
   seriesCache ??= fetchMaintainedSeries().then((live) => {
     if (live) return live;
-    console.warn("[openstack] using openstack_maintained_series from images.yaml");
-    return (parseYaml(imagesYamlRaw) as CatalogDoc).openstack_maintained_series ?? [];
+    console.warn(
+      `[openstack] using the upstream snapshot of ${upstreamSnapshot.fetched_at} for the maintained series`,
+    );
+    return upstreamSnapshot.openstack_series.filter(
+      (s) => !s.until || Date.parse(s.until) > now.getTime(),
+    );
   });
   return seriesCache;
 }
@@ -464,20 +470,41 @@ function fetchEolRelease(
         const res = await timedFetch(target, {
           headers: { "user-agent": "openimages.cloud-site" },
         });
+        // A missing release is a real answer (the next candidate is tried); anything else falls
+        // back to the snapshot so an outage does not silently drop the support data.
+        if (res?.status === 404) return null;
         if (!res?.ok) {
           if (res) console.warn(`[eol] ${target} → HTTP ${res.status}`);
-          return null;
+          return snapshotRelease(product, release);
         }
         try {
           return ((await res.json()) as { result?: Record<string, unknown> }).result ?? null;
         } catch {
           console.warn(`[eol] ${target} is not valid JSON`);
-          return null;
+          return snapshotRelease(product, release);
         }
       })(),
     );
   }
   return eolCache.get(key)!;
+}
+
+type SnapshotRelease = {
+  eoasFrom: string | null;
+  eolFrom: string | null;
+  eoesFrom: string | null;
+  isEol: boolean;
+};
+
+/** The release as last seen by scripts/refresh-upstream-snapshot.mjs, or null. */
+function snapshotRelease(product: string, release: string): Record<string, unknown> | null {
+  const products = upstreamSnapshot.eol as Record<string, Record<string, SnapshotRelease>>;
+  const r = products[product]?.[release];
+  if (!r) return null;
+  console.warn(`[eol] ${product}/${release}: using the snapshot of ${upstreamSnapshot.fetched_at}`);
+  // The end date is known: a release that has ended since the snapshot is reported as ended.
+  const ended = r.eolFrom != null && Date.parse(r.eolFrom) <= Date.now();
+  return { ...r, isEol: r.isEol || ended };
 }
 
 const isoDate = (v: unknown): string | null =>
