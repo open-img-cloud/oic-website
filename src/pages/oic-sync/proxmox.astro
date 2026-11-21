@@ -69,7 +69,10 @@ const options: [string, string][] = [
   ["--delete", "Destroy versions beyond `--keep`, only when no linked clone uses them."],
   ["--dry-run", "Read the node and verify signatures, change nothing."],
   ["--no-verify-signature", "Skip the cosign check (not recommended)."],
-  ["--index-url URL", "Another index (`$OIC_INDEX_URL`), for example a mirror."],
+  [
+    "--index-url URL",
+    "Another index (`$OIC_INDEX_URL`), for example a mirror made with `oic-sync mirror`.",
+  ],
   ["--timeout", "Seconds to wait for an import step to finish (default 3600)."],
 ];
 

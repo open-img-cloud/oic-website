@@ -1,0 +1,318 @@
+---
+import Base from "~/layouts/Base.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import OptionsTable from "~/components/OptionsTable.astro";
+import { OIC_SYNC_REPO, breadcrumb, techArticle } from "~/lib/oic-sync";
+
+const title = "Run your own mirror of signed cloud images";
+const description =
+  "Mirror the openimages.cloud catalog to a directory or an S3 bucket with oic-sync: every qcow2 verified (sha256, sha512, cosign) before it lands, for internal and air-gapped clouds.";
+const headline = "Run your own mirror of the catalog with oic-sync";
+const readme = `${OIC_SYNC_REPO}#mirror`;
+
+const install = `pipx install oic-sync
+# S3 bucket destination: add the s3 extra (boto3)
+pipx install 'oic-sync[s3]'`;
+
+const firstRun = `# What would be downloaded (signatures verified, nothing written)
+oic-sync mirror --dest /srv/oic-mirror --base-url https://mirror.example.net/oic \\
+  --image debian-13 --image ubuntu-24.04 --dry-run
+# Do it
+oic-sync mirror --dest /srv/oic-mirror --base-url https://mirror.example.net/oic \\
+  --image debian-13 --image ubuntu-24.04
+# Every image except the service ones, two versions each, delete what falls out of --keep
+oic-sync mirror --dest /srv/oic-mirror --base-url https://mirror.example.net/oic \\
+  --keep 2 --prune`;
+
+const clients = `export OIC_INDEX_URL=https://mirror.example.net/oic/index.json
+oic-sync verify --image debian-13
+oic-sync openstack sync --cloud mycloud --image debian-13
+oic-sync proxmox sync --image debian-13 --vmid-base 9000`;
+
+const layout = `/srv/oic-mirror/
+  index.json                 URLs rewritten to --base-url, mirrored images only
+  debian-13/
+    latest.json
+    versions.json            the mirrored versions only
+    13-20261111-2659/
+      debian-13-20261111-2659-x86_64.qcow2
+      debian-13-20261111-2659-x86_64.qcow2.bundle   cosign bundle, untouched
+      debian-13-20261111-2659-x86_64.qcow2.sha256
+      MANIFEST.json  SHA256SUMS  index.html`;
+
+const nginx = `server {
+    listen 443 ssl;
+    server_name mirror.example.net;
+    # ssl_certificate ...;
+    location ~ /\\. { deny all; }   # .part files and the lock
+    location /oic/ {
+        alias /srv/oic-mirror/;
+    }
+}`;
+
+const s3 = `export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...   # or a profile in ~/.aws
+oic-sync mirror --dest s3://images/oic --s3-endpoint-url https://s3.example.net \\
+  --base-url https://s3.example.net/images/oic --keep 2 --prune`;
+
+const service = `# /etc/systemd/system/oic-sync-mirror.service
+[Service]
+Type=oneshot
+User=oic-mirror
+ExecStart=/usr/local/bin/oic-sync mirror --dest /srv/oic-mirror \\
+  --base-url https://mirror.example.net/oic --keep 2 --prune`;
+
+const timer = `# /etc/systemd/system/oic-sync-mirror.timer
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target`;
+
+const options: [string, string][] = [
+  ["--dest DEST", "Mirror directory (created if needed), or `s3://bucket/prefix`."],
+  ["--base-url URL", "URL the mirror is served at; written into the mirror `index.json`."],
+  ["--keep N", "Versions per image, the latest included (default 1)."],
+  ["--prune", "Delete versions beyond `--keep`, only when the kept ones are complete."],
+  ["--dry-run", "Verify signatures and existing files, show what would change, write nothing."],
+  [
+    "--image ID",
+    "Image to mirror, repeatable. Default: every image except the service and test images.",
+  ],
+  ["--variant NAME", "Only this variant of multi-variant images."],
+  ["--s3-endpoint-url URL", "S3 only: endpoint of a non-AWS object storage."],
+  ["--staging-dir DIR", "S3 only: where each qcow2 is downloaded and verified before upload."],
+  ["--eol warn|skip|fail", "What to do with images whose release reached its end of life."],
+  ["--index-url URL", "Another index (`$OIC_INDEX_URL`): a mirror can itself be mirrored."],
+];
+
+const toc = [
+  { id: "what", label: "What it does" },
+  { id: "install", label: "Install" },
+  { id: "first-run", label: "First run" },
+  { id: "serve", label: "Serve it" },
+  { id: "s3", label: "In an S3 bucket" },
+  { id: "options", label: "Options" },
+  { id: "safety", label: "How the copy stays safe" },
+  { id: "daily", label: "Run it daily" },
+  { id: "limits", label: "Limitations" },
+];
+---
+
+<Base
+  title={title}
+  brand={false}
+  description={description}
+  jsonLd={[
+    breadcrumb({ name: "Mirror", path: "/oic-sync/mirror/" }),
+    techArticle({
+      headline,
+      description,
+      path: "/oic-sync/mirror/",
+      about: ["Mirror", "Air-gapped cloud", "Cloud images", "S3"],
+    }),
+  ]}
+>
+  <article class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+    <nav aria-label="Breadcrumb" class="text-ink-faint text-sm">
+      <a href="/oic-sync/" class="hover:text-ink">
+        oic-sync
+      </a>
+      <span class="mx-2" aria-hidden="true">
+        /
+      </span>
+      <span class="text-ink-muted" aria-current="page">
+        Mirror
+      </span>
+    </nav>
+    <p class="eyebrow mt-6">Guide</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">{headline}</h1>
+    <p class="text-ink-muted mt-4 max-w-2xl text-lg leading-relaxed">
+      Keep a copy of the signed images on your own server or object storage, for clouds that should
+      not, or cannot, download from{" "}
+      <code class="text-ink font-mono text-base">images.openimages.cloud</code>. Point oic-sync,
+      Glance, Proxmox VE and people at it instead of the CDN.
+    </p>
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <nav aria-label="On this page" class="hidden lg:block">
+        <ul class="sticky top-24 space-y-2 text-sm">
+          {toc.map((t) => (
+            <li>
+              <a href={`#${t.id}`} class="text-ink-muted hover:text-ink">
+                {t.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="text-ink-muted max-w-3xl min-w-0 leading-relaxed">
+        <section id="what">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">What it does</h2>
+          <p class="mt-3">
+            <code class="text-ink font-mono text-sm">oic-sync mirror</code> copies the images you
+            pick (qcow2, cosign bundles, checksums, manifests) in the layout of the CDN, with an{" "}
+            <code class="text-ink font-mono text-sm">index.json</code> whose URLs point to your
+            mirror. The mirror is a drop-in replacement for{" "}
+            <code class="text-ink font-mono text-sm">https://images.openimages.cloud</code>.
+          </p>
+          <ul class="mt-4 list-disc space-y-1.5 pl-5">
+            <li>
+              Every file is verified before it lands: size, sha256, sha512 and the cosign signature.
+            </li>
+            <li>
+              Run it again at any time: it only downloads what changed, and resumes interrupted
+              downloads.
+            </li>
+            <li>
+              Signatures are copied untouched, so clients verify the mirror exactly as they verify
+              the CDN.
+            </li>
+            <li>A directory served by any web server, or an S3 bucket that serves itself.</li>
+          </ul>
+        </section>
+
+        <section id="install" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Install</h2>
+          <p class="mt-3">
+            From PyPI, or the Debian and RPM packages and the container image of each{" "}
+            <a class="link" href={`${OIC_SYNC_REPO}/releases`}>
+              release
+            </a>{" "}
+            (both extras included). Python 3.10 or newer.
+          </p>
+          <CodeBlock code={install} label="pipx" />
+        </section>
+
+        <section id="first-run" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">First run</h2>
+          <p class="mt-3">
+            <code class="text-ink font-mono text-sm">--base-url</code> is the URL the directory will
+            be served at. Start with <code class="text-ink font-mono text-sm">--dry-run</code>.
+          </p>
+          <CodeBlock code={firstRun} />
+          <p>The result, for one image:</p>
+          <CodeBlock code={layout} label="layout" />
+          <p>Then, anywhere that reaches the mirror:</p>
+          <CodeBlock code={clients} />
+        </section>
+
+        <section id="serve" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Serve it</h2>
+          <p class="mt-3">
+            Any web server will do. With nginx, hiding the temporary and lock files:
+          </p>
+          <CodeBlock code={nginx} label="nginx" />
+          <p>
+            The full reference, with a Caddy example, is in the{" "}
+            <a class="link" href={readme}>
+              README
+            </a>
+            .
+          </p>
+        </section>
+
+        <section id="s3" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">In an S3 bucket</h2>
+          <p class="mt-3">
+            With <code class="text-ink font-mono text-sm">--dest s3://bucket/prefix</code>, the
+            mirror lives in AWS S3 or any S3-compatible object storage (Ceph RGW, MinIO, Swift with
+            s3api, Infomaniak, OVHcloud...), and the bucket serves it: no web server to run.
+          </p>
+          <CodeBlock code={s3} label="S3" />
+          <ul class="mt-3 list-disc space-y-1.5 pl-5">
+            <li>
+              Credentials, region and endpoint come from the usual AWS settings (environment,{" "}
+              <code class="text-ink font-mono text-sm">~/.aws/config</code>, instance role).
+            </li>
+            <li>
+              Each qcow2 is downloaded and verified in a local staging directory, then uploaded: the
+              bucket never holds an unverified image. Plan local space for the largest image (2
+              GiB).
+            </li>
+            <li>
+              Objects get the cache headers of the CDN and carry their digests as metadata, so later
+              runs do not download images back to check them.
+            </li>
+            <li>
+              The bucket needs public read on the prefix (or read for your clients): oic-sync does
+              not change bucket policies.
+            </li>
+          </ul>
+        </section>
+
+        <section id="options" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Options</h2>
+          <p class="mt-3">
+            Options of <code class="text-ink font-mono text-sm">oic-sync mirror</code>. The full
+            list is in <code class="text-ink font-mono text-sm">oic-sync mirror --help</code>.
+          </p>
+          <OptionsTable rows={options} />
+        </section>
+
+        <section id="safety" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">How the copy stays safe</h2>
+          <ol class="mt-3 list-decimal space-y-2 pl-5">
+            <li>
+              <strong class="text-ink">Verify</strong> the cosign bundle of each qcow2 against the
+              sha256 of the index, with the signer identity built into oic-sync, before anything is
+              downloaded.
+            </li>
+            <li>
+              <strong class="text-ink">Download</strong> to a hidden temporary file, then check its
+              size, sha256 and sha512. A mismatch deletes it and fails the image.
+            </li>
+            <li>
+              <strong class="text-ink">Move</strong> it into place (or upload it to the bucket).
+            </li>
+            <li>
+              <strong class="text-ink">Publish</strong>{" "}
+              <code class="text-ink font-mono text-sm">index.json</code>,{" "}
+              <code class="text-ink font-mono text-sm">versions.json</code> and{" "}
+              <code class="text-ink font-mono text-sm">latest.json</code> last: an image whose new
+              version fails keeps its previous entry, so the mirror never announces an incomplete
+              version.
+            </li>
+          </ol>
+          <p class="mt-4">
+            A lock stops two runs on the same mirror. Clients check signatures against the signer
+            built into oic-sync, not against the one the mirror index announces: a tampered mirror
+            cannot vouch for foreign images.
+          </p>
+        </section>
+
+        <section id="daily" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Run it daily</h2>
+          <p class="mt-3">The catalog is rebuilt once a day. As a user that owns the directory:</p>
+          <CodeBlock code={service} label="systemd service" />
+          <CodeBlock code={timer} label="systemd timer" />
+          <CodeBlock code="systemctl enable --now oic-sync-mirror.timer" />
+        </section>
+
+        <section id="limits" class="mt-14">
+          <h2 class="text-ink text-xl font-semibold tracking-tight">Limitations</h2>
+          <ul class="mt-3 list-disc space-y-1.5 pl-5">
+            <li>
+              The mirror host needs the CDN and the Sigstore trust root (
+              <code class="text-ink font-mono text-sm">tuf-repo-cdn.sigstore.dev</code>). Clients
+              that verify signatures need the trust root too, or{" "}
+              <code class="text-ink font-mono text-sm">--no-verify-signature</code>; they still
+              check the sha256 of every import.
+            </li>
+            <li>
+              Plain <code class="text-ink font-mono text-sm">http://</code> base URLs are accepted
+              for internal mirrors: integrity rests on the signed digests. HTTPS is still better, as
+              someone on the path could serve an older signed version.
+            </li>
+            <li>
+              To drop an image, delete its directory (or its prefix in the bucket): the next run
+              removes it from <code class="text-ink font-mono text-sm">index.json</code>.
+            </li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </article>
+</Base>
