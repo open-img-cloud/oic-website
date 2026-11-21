@@ -32,8 +32,9 @@
 #                     (hw_qemu_guest_agent=yes, hw_disk_bus=scsi, hw_scsi_model=virtio-scsi)
 #
 # Images built per OpenStack series (openstack_series: true) offer every published
-# series listed below in the catalog quick panel, not only latest/. Keep the list in step
-# with https://releases.openstack.org (maintained and SLURP series), newest first.
+# maintained series in the catalog quick panel, not only latest/. The maintained series
+# are read at build time from openstack/releases (data/series_status.yaml); the list
+# below is only the fallback when it cannot be fetched.
 
 openstack_maintained_series:
   - { series: "2026.2", name: Hibiscus }
