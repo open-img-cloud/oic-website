@@ -178,6 +178,11 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
                           {rel.version === image.latest_version && (
                             <span class="text-ink-faint font-normal"> (latest)</span>
                           )}
+                          {rel.seriesUntil && (
+                            <span class="text-ink-faint block text-xs font-normal">
+                              maintained upstream until {formatDate(rel.seriesUntil)}
+                            </span>
+                          )}
                         </>
                       ) : (
                         (a.label ?? "qcow2")

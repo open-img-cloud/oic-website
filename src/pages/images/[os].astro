@@ -35,11 +35,13 @@ interface Props {
 
 const { image } = Astro.props;
 // Per-series OpenStack images: name each previous series and say whether upstream still maintains it.
-const maintainedSeries = image.openstack_series ? loadMaintainedSeries() : [];
-const seriesNote = (v: string) =>
-  image.openstack_series
-    ? (maintainedSeries.find((m) => m.series === v)?.name ?? "unmaintained upstream")
-    : null;
+const maintainedSeries = image.openstack_series ? await loadMaintainedSeries() : [];
+const seriesNote = (v: string) => {
+  if (!image.openstack_series) return null;
+  const s = maintainedSeries.find((m) => m.series === v);
+  if (!s) return "unmaintained upstream";
+  return s.until ? `${s.name}, maintained until ${formatDate(s.until)}` : s.name;
+};
 
 // Search titles and descriptions: say what the page offers, in the words people search for.
 const SERVICE_IMAGES: Record<string, string> = {

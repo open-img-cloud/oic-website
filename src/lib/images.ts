@@ -112,10 +112,12 @@ export interface Release {
   artifacts: Artifact[];
 }
 
-/** An OpenStack series still maintained upstream (openstack_maintained_series in images.yaml). */
+/** An OpenStack series still maintained upstream. */
 export interface MaintainedSeries {
   series: string;
   name: string;
+  /** End of the maintained phase (then unmaintained or end of life), when known. */
+  until?: string | null;
 }
 
 /** Support dates of the image's release, from endoflife.date (API v1) at build time. */
@@ -146,7 +148,7 @@ export interface EnrichedImage extends ImageEntry {
    * Releases offered in the catalog quick panel, newest first: latest only, or for images built
    * per OpenStack series every published series still maintained upstream.
    */
-  quick: (Release & { seriesName: string | null })[];
+  quick: (Release & { seriesName: string | null; seriesUntil: string | null })[];
   /** Most recent build time among the latest artifacts, if known. */
   builtAt: string | null;
   /** Manifest used for the provenance panel (first available latest artifact). */
@@ -197,8 +199,52 @@ export function loadImages(): ImageEntry[] {
   return [...images].sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }));
 }
 
-export function loadMaintainedSeries(): MaintainedSeries[] {
-  return (parseYaml(imagesYamlRaw) as CatalogDoc).openstack_maintained_series ?? [];
+/** Series status published by the OpenStack release team (releases.openstack.org). */
+export const OPENSTACK_SERIES_URL =
+  "https://opendev.org/openstack/releases/raw/branch/master/data/series_status.yaml";
+
+async function fetchMaintainedSeries(): Promise<MaintainedSeries[] | null> {
+  const res = await timedFetch(OPENSTACK_SERIES_URL, {
+    headers: { "user-agent": "openimages.cloud-site" },
+  });
+  if (!res?.ok) {
+    if (res) console.warn(`[openstack] ${OPENSTACK_SERIES_URL} → HTTP ${res.status}`);
+    return null;
+  }
+  try {
+    // failsafe: every scalar stays a string ("2026.10" must not become 2026.1).
+    const doc = parseYaml(await res.text(), { schema: "failsafe" }) as unknown;
+    if (!Array.isArray(doc)) return null;
+    const series = doc
+      .filter((s) => s?.status === "maintained" && /^\d{4}\.\d+$/.test(s["release-id"] ?? ""))
+      .map((s) => ({
+        series: s["release-id"] as string,
+        name: String(s.name).replace(/^./, (c) => c.toUpperCase()),
+        until: /^\d{4}-\d{2}-\d{2}$/.test(s["next-phase"]?.date ?? "")
+          ? s["next-phase"].date
+          : null,
+      }))
+      .sort((a, b) => b.series.localeCompare(a.series, "en", { numeric: true }));
+    return series.length ? series : null;
+  } catch (err) {
+    console.warn(`[openstack] ${OPENSTACK_SERIES_URL} unreadable:`, (err as Error).message);
+    return null;
+  }
+}
+
+let seriesCache: Promise<MaintainedSeries[]> | null = null;
+
+/**
+ * OpenStack series maintained upstream, from the release team's data at build time; the list in
+ * images.yaml (openstack_maintained_series) is the fallback when it cannot be read.
+ */
+export function loadMaintainedSeries(): Promise<MaintainedSeries[]> {
+  seriesCache ??= fetchMaintainedSeries().then((live) => {
+    if (live) return live;
+    console.warn("[openstack] using openstack_maintained_series from images.yaml");
+    return (parseYaml(imagesYamlRaw) as CatalogDoc).openstack_maintained_series ?? [];
+  });
+  return seriesCache;
 }
 
 function url(osName: string, version: string, file: string): string {
@@ -361,8 +407,9 @@ export async function enrichImage(
       .filter((d): d is string => !!d)
       .sort()
       .at(-1) ?? null;
-  const maintained = loadMaintainedSeries();
-  const seriesName = (v: string) => maintained.find((m) => m.series === v)?.name ?? null;
+  const maintained = image.openstack_series ? await loadMaintainedSeries() : [];
+  const seriesOf = (v: string) => maintained.find((m) => m.series === v);
+  const seriesName = (v: string) => seriesOf(v)?.name ?? null;
   // Maintained series published but not (yet) listed in previous_versions: probe the bucket,
   // a series that was never built has no manifest and is dropped below.
   const listed = new Set([image.latest_version, ...(image.previous_versions ?? [])]);
@@ -377,8 +424,12 @@ export async function enrichImage(
     ? [latest, ...previous.filter((r) => seriesName(r.version)), ...unlisted]
         .filter((r, i) => i === 0 || r.artifacts.some((a) => a.fileUrl))
         .sort((a, b) => b.version.localeCompare(a.version, "en", { numeric: true }))
-        .map((r) => ({ ...r, seriesName: seriesName(r.version) }))
-    : [{ ...latest, seriesName: null }];
+        .map((r) => ({
+          ...r,
+          seriesName: seriesName(r.version),
+          seriesUntil: seriesOf(r.version)?.until ?? null,
+        }))
+    : [{ ...latest, seriesName: null, seriesUntil: null }];
   return {
     ...image,
     status: image.status ?? "stable",
