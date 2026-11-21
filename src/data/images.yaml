@@ -576,9 +576,9 @@ images:
       official release distribution sets, verified against the release
       MANIFEST, on a ZFS root that grows to the flavor disk. dhcpcd
       configures IPv4 and the IPv6 address of the Neutron port.
-    repo: open-img-cloud/freebsd
+    repo: open-img-cloud/freebsd-15
     upstream_homepage: https://www.freebsd.org/
-    latest_version: "15.1"
+    latest_version: "15.1-p7"
     eol: { product: freebsd, release: "15" }
     login_user: freebsd
     format: qcow2
@@ -599,9 +599,9 @@ images:
       official release distribution sets, verified against the release
       MANIFEST, on a ZFS root that grows to the flavor disk. dhcpcd
       configures IPv4 and the IPv6 address of the Neutron port.
-    repo: open-img-cloud/freebsd
+    repo: open-img-cloud/freebsd-14
     upstream_homepage: https://www.freebsd.org/
-    latest_version: "14.5"
+    latest_version: "14.5-p4"
     eol: { product: freebsd, release: "14" }
     login_user: freebsd
     format: qcow2
