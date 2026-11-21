@@ -93,7 +93,10 @@ const options: [string, string][] = [
     "Add `hw_rng_model=virtio` (flavors must allow `hw_rng:allowed`).",
   ],
   ["--no-verify-signature", "Skip the cosign check (not recommended)."],
-  ["--index-url URL", "Another index (`$OIC_INDEX_URL`), for example a mirror."],
+  [
+    "--index-url URL",
+    "Another index (`$OIC_INDEX_URL`), for example a mirror made with `oic-sync mirror`.",
+  ],
   ["--cloud, --region", "clouds.yaml entry and region (`$OS_CLOUD`)."],
   ["--timeout", "Seconds to wait for an import to finish (default 3600)."],
 ];
