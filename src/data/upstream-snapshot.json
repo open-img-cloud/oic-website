@@ -1,0 +1,412 @@
+{
+  "fetched_at": "2026-11-21",
+  "eol": {
+    "almalinux": {
+      "8": {
+        "eoasFrom": "2024-05-31",
+        "eolFrom": "2029-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "9": {
+        "eoasFrom": "2027-05-31",
+        "eolFrom": "2032-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "10": {
+        "eoasFrom": "2030-05-31",
+        "eolFrom": "2035-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      }
+    },
+    "alpine-linux": {
+      "3.24": {
+        "eoasFrom": null,
+        "eolFrom": "2028-06-01",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "3.23": {
+        "eoasFrom": null,
+        "eolFrom": "2027-11-01",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "3.22": {
+        "eoasFrom": null,
+        "eolFrom": "2027-05-01",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "3.21": {
+        "eoasFrom": null,
+        "eolFrom": "2026-11-01",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "3.20": {
+        "eoasFrom": null,
+        "eolFrom": "2026-04-01",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "3.19": {
+        "eoasFrom": null,
+        "eolFrom": "2025-11-01",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "3.18": {
+        "eoasFrom": null,
+        "eolFrom": "2025-05-09",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "3.17": {
+        "eoasFrom": null,
+        "eolFrom": "2024-11-22",
+        "eoesFrom": null,
+        "isEol": true
+      }
+    },
+    "amazon-linux": {
+      "2": {
+        "eoasFrom": "2026-06-30",
+        "eolFrom": "2026-06-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "2023": {
+        "eoasFrom": "2027-06-30",
+        "eolFrom": "2029-06-30",
+        "eoesFrom": null,
+        "isEol": false
+      }
+    },
+    "centos-stream": {
+      "9": {
+        "eoasFrom": "2027-05-31",
+        "eolFrom": "2027-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "10": {
+        "eoasFrom": "2030-05-31",
+        "eolFrom": "2030-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      }
+    },
+    "debian": {
+      "11": {
+        "eoasFrom": "2024-08-14",
+        "eolFrom": "2026-08-31",
+        "eoesFrom": "2031-06-30",
+        "isEol": true
+      },
+      "12": {
+        "eoasFrom": "2026-07-11",
+        "eolFrom": "2028-06-30",
+        "eoesFrom": "2033-06-30",
+        "isEol": false
+      },
+      "13": {
+        "eoasFrom": "2028-08-09",
+        "eolFrom": "2030-06-30",
+        "eoesFrom": "2035-06-30",
+        "isEol": false
+      }
+    },
+    "fedora": {
+      "39": {
+        "eoasFrom": null,
+        "eolFrom": "2024-11-26",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "40": {
+        "eoasFrom": null,
+        "eolFrom": "2025-05-13",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "41": {
+        "eoasFrom": null,
+        "eolFrom": "2025-12-15",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "42": {
+        "eoasFrom": null,
+        "eolFrom": "2026-05-27",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "43": {
+        "eoasFrom": null,
+        "eolFrom": "2026-12-01",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "44": {
+        "eoasFrom": null,
+        "eolFrom": "2027-06-02",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "45": {
+        "eoasFrom": null,
+        "eolFrom": "2027-12-08",
+        "eoesFrom": null,
+        "isEol": false
+      }
+    },
+    "freebsd": {
+      "13": {
+        "eoasFrom": null,
+        "eolFrom": "2026-04-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "14": {
+        "eoasFrom": null,
+        "eolFrom": "2028-11-30",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "15": {
+        "eoasFrom": null,
+        "eolFrom": "2029-12-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "14.5": {
+        "eoasFrom": null,
+        "eolFrom": "2027-06-30",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "15.1": {
+        "eoasFrom": null,
+        "eolFrom": "2027-03-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "14.4": {
+        "eoasFrom": null,
+        "eolFrom": "2026-12-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "15.0": {
+        "eoasFrom": null,
+        "eolFrom": "2026-09-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "14.3": {
+        "eoasFrom": null,
+        "eolFrom": "2026-06-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "13.5": {
+        "eoasFrom": null,
+        "eolFrom": "2026-04-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "14.2": {
+        "eoasFrom": null,
+        "eolFrom": "2025-09-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "13.4": {
+        "eoasFrom": null,
+        "eolFrom": "2025-06-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "14.1": {
+        "eoasFrom": null,
+        "eolFrom": "2025-03-31",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "13.3": {
+        "eoasFrom": null,
+        "eolFrom": "2024-12-31",
+        "eoesFrom": null,
+        "isEol": true
+      }
+    },
+    "nixos": {
+      "26.05": {
+        "eoasFrom": null,
+        "eolFrom": "2026-12-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "25.11": {
+        "eoasFrom": null,
+        "eolFrom": "2026-06-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "25.05": {
+        "eoasFrom": null,
+        "eolFrom": "2025-12-31",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "24.11": {
+        "eoasFrom": null,
+        "eolFrom": "2025-06-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "24.05": {
+        "eoasFrom": null,
+        "eolFrom": "2024-12-31",
+        "eoesFrom": null,
+        "isEol": true
+      }
+    },
+    "opensuse": {
+      "16.0": {
+        "eoasFrom": null,
+        "eolFrom": "2027-10-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "15.6": {
+        "eoasFrom": null,
+        "eolFrom": "2026-04-30",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "15.5": {
+        "eoasFrom": null,
+        "eolFrom": "2024-12-31",
+        "eoesFrom": null,
+        "isEol": true
+      }
+    },
+    "oracle-linux": {
+      "7": {
+        "eoasFrom": null,
+        "eolFrom": "2024-12-31",
+        "eoesFrom": "2029-07-31",
+        "isEol": true
+      },
+      "8": {
+        "eoasFrom": null,
+        "eolFrom": "2029-07-31",
+        "eoesFrom": "2032-07-31",
+        "isEol": false
+      },
+      "9": {
+        "eoasFrom": null,
+        "eolFrom": "2032-06-30",
+        "eoesFrom": "2035-06-30",
+        "isEol": false
+      },
+      "10": {
+        "eoasFrom": null,
+        "eolFrom": "2035-06-30",
+        "eoesFrom": "2038-06-30",
+        "isEol": false
+      }
+    },
+    "rocky-linux": {
+      "8": {
+        "eoasFrom": "2024-05-31",
+        "eolFrom": "2029-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "9": {
+        "eoasFrom": "2027-05-31",
+        "eolFrom": "2032-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "10": {
+        "eoasFrom": "2030-05-31",
+        "eolFrom": "2035-05-31",
+        "eoesFrom": null,
+        "isEol": false
+      }
+    },
+    "ubuntu": {
+      "26.10": {
+        "eoasFrom": "2027-07-01",
+        "eolFrom": "2027-07-01",
+        "eoesFrom": null,
+        "isEol": false
+      },
+      "26.04": {
+        "eoasFrom": "2031-05-29",
+        "eolFrom": "2031-05-29",
+        "eoesFrom": "2036-04-23",
+        "isEol": false
+      },
+      "25.10": {
+        "eoasFrom": "2026-07-01",
+        "eolFrom": "2026-07-01",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "25.04": {
+        "eoasFrom": "2026-01-17",
+        "eolFrom": "2026-01-17",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "24.10": {
+        "eoasFrom": "2025-07-10",
+        "eolFrom": "2025-07-10",
+        "eoesFrom": null,
+        "isEol": true
+      },
+      "24.04": {
+        "eoasFrom": "2029-05-31",
+        "eolFrom": "2029-05-31",
+        "eoesFrom": "2034-04-25",
+        "isEol": false
+      },
+      "22.04": {
+        "eoasFrom": "2024-09-30",
+        "eolFrom": "2027-06-01",
+        "eoesFrom": "2032-04-21",
+        "isEol": false
+      },
+      "20.04": {
+        "eoasFrom": "2022-10-01",
+        "eolFrom": "2025-05-31",
+        "eoesFrom": "2030-04-23",
+        "isEol": true
+      }
+    }
+  },
+  "openstack_series": [
+    {
+      "series": "2026.2",
+      "name": "Hibiscus",
+      "until": "2028-04-26"
+    },
+    {
+      "series": "2026.1",
+      "name": "Gazpacho",
+      "until": "2027-10-27"
+    },
+    {
+      "series": "2025.2",
+      "name": "Flamingo",
+      "until": "2027-04-28"
+    }
+  ]
+}

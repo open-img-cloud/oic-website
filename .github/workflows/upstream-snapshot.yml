@@ -1,0 +1,55 @@
+name: upstream-snapshot
+
+# Refreshes src/data/upstream-snapshot.json (endoflife.date releases and OpenStack series
+# status), the fallback the build uses when one of these sources is unreachable. Opens or
+# updates a PR when the data changed; nothing happens on an unchanged week.
+
+on:
+  schedule:
+    - cron: "15 6 * * 1" # Mondays 06:15 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-snapshot
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Refresh the snapshot
+        run: node scripts/refresh-upstream-snapshot.mjs
+
+      - name: Open or update the PR
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3 (Node 24)
+        with:
+          branch: chore/upstream-snapshot
+          delete-branch: true
+          add-paths: src/data/upstream-snapshot.json
+          commit-message: "chore(data): refresh the upstream lifecycle snapshot"
+          title: "chore(data): refresh the upstream lifecycle snapshot"
+          body: |
+            Automated refresh of `src/data/upstream-snapshot.json`: endoflife.date releases of the products in `images.yaml`, and the maintained OpenStack series.
+
+            The build reads both sources live; this snapshot is only its fallback when one is unreachable. Merging redeploys the site, nothing else.
+
+            - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          labels: |
+            automated
