@@ -16,6 +16,7 @@ import {
   formatDate,
   loadDownloadStats,
   loadEnrichedImages,
+  loadMaintainedSeries,
   shortSha,
   type Artifact,
   type EnrichedImage,
@@ -31,6 +32,12 @@ interface Props {
 }
 
 const { image } = Astro.props;
+// Per-series OpenStack images: name each previous series and say whether upstream still maintains it.
+const maintainedSeries = image.openstack_series ? loadMaintainedSeries() : [];
+const seriesNote = (v: string) =>
+  image.openstack_series
+    ? (maintainedSeries.find((m) => m.series === v)?.name ?? "unmaintained upstream")
+    : null;
 
 // Search titles and descriptions: say what the page offers, in the words people search for.
 const SERVICE_IMAGES: Record<string, string> = {
@@ -508,7 +515,14 @@ const provenance = [
                   {image.previous.map((rel) =>
                     rel.artifacts.map((a) => (
                       <tr>
-                        <td class="text-ink px-4 py-3 font-mono">{rel.version}</td>
+                        <td class="text-ink px-4 py-3 font-mono">
+                          {rel.version}
+                          {seriesNote(rel.version) && (
+                            <span class="text-ink-faint block font-sans text-xs">
+                              {seriesNote(rel.version)}
+                            </span>
+                          )}
+                        </td>
                         <td class="px-4 py-3">
                           {a.fileUrl ? (
                             <a class="link font-mono text-xs" href={a.fileUrl}>

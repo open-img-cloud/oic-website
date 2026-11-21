@@ -25,6 +25,15 @@
 #                     ("9.8-20260525.0" gives "9.8"), null to leave it out
 #   glance_properties extra Glance properties, merged over the defaults
 #                     (hw_qemu_guest_agent=yes, hw_disk_bus=scsi, hw_scsi_model=virtio-scsi)
+#
+# Images built per OpenStack series (openstack_series: true) offer every published
+# series listed below in the catalog quick panel, not only latest/. Keep the list in step
+# with https://releases.openstack.org (maintained and SLURP series), newest first.
+
+openstack_maintained_series:
+  - { series: "2026.2", name: Hibiscus }
+  - { series: "2026.1", name: Gazpacho }
+  - { series: "2025.2", name: Flamingo }
 
 images:
   - os_name: alpine-linux
@@ -620,6 +629,7 @@ images:
     repo: open-img-cloud/octavia-amphora
     upstream_homepage: https://docs.openstack.org/octavia/latest/
     latest_version: "2026.2"
+    openstack_series: true
     previous_versions:
       - "2026.1"
       - "2025.2"
@@ -644,6 +654,7 @@ images:
     upstream_homepage: https://docs.openstack.org/manila/latest/admin/generic_driver.html
     login_user: manila
     latest_version: "2026.2"
+    openstack_series: true
     format: qcow2
     arch: x86_64
     tags: [openstack, manila, dib, signed]
@@ -665,6 +676,7 @@ images:
     upstream_homepage: https://docs.openstack.org/trove/latest/
     login_user: ubuntu
     latest_version: "2026.2"
+    openstack_series: true
     format: qcow2
     arch: x86_64
     tags: [openstack, trove, dib, signed]

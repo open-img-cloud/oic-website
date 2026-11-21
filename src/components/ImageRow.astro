@@ -13,7 +13,12 @@ const sizes = image.latest.artifacts.map((a) => a.sizeBytes).filter((n): n is nu
 const size = sizes.length ? Math.min(...sizes) : null;
 const variants = image.latest.artifacts.map((a) => a.label).filter(Boolean) as string[];
 const panelId = `quick-${image.os_name}`;
-const downloadable = image.latest.artifacts.filter((a) => a.fileUrl);
+// One group per release offered: latest only, or every maintained OpenStack series.
+const groups = image.quick.map((rel) => ({
+  ...rel,
+  artifacts: rel.artifacts.filter((a) => a.fileUrl),
+}));
+const otherSeries = image.quick.slice(1).map((r) => r.version);
 const searchText = [image.title, image.os_name, image.tagline, ...variants, ...image.tags]
   .join(" ")
   .toLowerCase();
@@ -53,6 +58,9 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
       {image.latest_version}
       {variants.length > 0 && (
         <span class="text-ink-faint block font-sans text-xs">{variants.join(" · ")}</span>
+      )}
+      {otherSeries.length > 0 && (
+        <span class="text-ink-faint block font-sans text-xs">also {otherSeries.join(" · ")}</span>
       )}
     </span>
     <span class="text-ink-muted col-start-2 hidden text-sm md:col-start-auto md:block">
@@ -104,8 +112,16 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
       <div class="border-line surface-sunken border-t px-4 py-5 sm:px-5">
         <div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] md:pl-[3.75rem]">
           <dl class="grid grid-cols-[auto_1fr] content-start gap-x-4 gap-y-1.5 text-sm">
-            <dt class="text-ink-faint">Version</dt>
+            <dt class="text-ink-faint">{otherSeries.length ? "Latest" : "Version"}</dt>
             <dd class="text-ink font-mono">{image.latest_version}</dd>
+            {otherSeries.length > 0 && (
+              <>
+                <dt class="text-ink-faint">Maintained</dt>
+                <dd class="text-ink-muted">
+                  every OpenStack series still maintained upstream is published
+                </dd>
+              </>
+            )}
             {image.login_user && (
               <>
                 <dt class="text-ink-faint">Default user</dt>
@@ -132,48 +148,59 @@ const searchText = [image.title, image.os_name, image.tagline, ...variants, ...i
             )}
           </dl>
           <div class="space-y-3">
-            {downloadable.map((a) => (
-              <div class="border-line surface flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3">
-                <div class="min-w-0 flex-1">
-                  <p class="text-ink text-sm font-medium">
-                    {a.label ?? "qcow2"}
-                    <span class="text-ink-faint font-normal">
-                      {" "}
-                      {a.label?.toLowerCase() !== a.firmware
-                        ? `· ${a.firmware.toUpperCase()} `
-                        : ""}
-                      · {formatBytes(a.sizeBytes)}
-                    </span>
-                  </p>
-                  {a.manifest?.sha256 && (
-                    <button
-                      type="button"
-                      data-copy={a.manifest.sha256}
-                      class="text-ink-faint hover:text-ink mt-0.5 block max-w-full truncate text-left font-mono text-xs"
-                      title="Copy the SHA-256"
-                    >
-                      sha256 {a.manifest.sha256.slice(0, 16)}… <span data-copy-label>Copy</span>
-                    </button>
-                  )}
+            {groups.flatMap((rel) =>
+              rel.artifacts.map((a) => (
+                <div class="border-line surface flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3">
+                  <div class="min-w-0 flex-1">
+                    <p class="text-ink text-sm font-medium">
+                      {rel.seriesName ? (
+                        <>
+                          <span class="font-mono">{rel.version}</span> {rel.seriesName}
+                          {rel.version === image.latest_version && (
+                            <span class="text-ink-faint font-normal"> (latest)</span>
+                          )}
+                        </>
+                      ) : (
+                        (a.label ?? "qcow2")
+                      )}
+                      <span class="text-ink-faint font-normal">
+                        {" "}
+                        {a.label?.toLowerCase() !== a.firmware
+                          ? `· ${a.firmware.toUpperCase()} `
+                          : ""}
+                        · {formatBytes(a.sizeBytes)}
+                      </span>
+                    </p>
+                    {a.manifest?.sha256 && (
+                      <button
+                        type="button"
+                        data-copy={a.manifest.sha256}
+                        class="text-ink-faint hover:text-ink mt-0.5 block max-w-full truncate text-left font-mono text-xs"
+                        title="Copy the SHA-256"
+                      >
+                        sha256 {a.manifest.sha256.slice(0, 16)}… <span data-copy-label>Copy</span>
+                      </button>
+                    )}
+                  </div>
+                  <a
+                    href={a.fileUrl}
+                    download
+                    class="inline-flex shrink-0 items-center gap-2 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+                  >
+                    <svg viewBox="0 0 16 16" class="h-4 w-4" fill="none" aria-hidden="true">
+                      <path
+                        d="M8 2.5v8m0 0L4.5 7M8 10.5 11.5 7M3 13.5h10"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      ></path>
+                    </svg>
+                    Download
+                  </a>
                 </div>
-                <a
-                  href={a.fileUrl}
-                  download
-                  class="inline-flex shrink-0 items-center gap-2 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
-                >
-                  <svg viewBox="0 0 16 16" class="h-4 w-4" fill="none" aria-hidden="true">
-                    <path
-                      d="M8 2.5v8m0 0L4.5 7M8 10.5 11.5 7M3 13.5h10"
-                      stroke="currentColor"
-                      stroke-width="1.6"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    ></path>
-                  </svg>
-                  Download
-                </a>
-              </div>
-            ))}
+              )),
+            )}
             <p class="text-sm">
               <a class="link" href={`/images/${image.os_name}/`}>
                 Glance and Proxmox commands, checksums, previous versions
