@@ -575,7 +575,10 @@ images:
       Cloud-init-ready, signed FreeBSD 15 qcow2 image built from the
       official release distribution sets, verified against the release
       MANIFEST, on a ZFS root that grows to the flavor disk. dhcpcd
-      configures IPv4 and the IPv6 address of the Neutron port.
+      configures IPv4 and the IPv6 address of the Neutron port. On
+      virtio-net, FreeBSD receives more slowly than Linux guests (sending is
+      on par): keep the offloads and multiqueue on, and measure receive-heavy
+      workloads with `iperf3 -R` (figures in the repository README).
     repo: open-img-cloud/freebsd-15
     upstream_homepage: https://www.freebsd.org/
     latest_version: "15.1-p7"
@@ -598,7 +601,10 @@ images:
       Cloud-init-ready, signed FreeBSD 14 qcow2 image built from the
       official release distribution sets, verified against the release
       MANIFEST, on a ZFS root that grows to the flavor disk. dhcpcd
-      configures IPv4 and the IPv6 address of the Neutron port.
+      configures IPv4 and the IPv6 address of the Neutron port. On
+      virtio-net, FreeBSD receives more slowly than Linux guests (sending is
+      on par): keep the offloads and multiqueue on, and measure receive-heavy
+      workloads with `iperf3 -R` (figures in the repository README).
     repo: open-img-cloud/freebsd-14
     upstream_homepage: https://www.freebsd.org/
     latest_version: "14.5-p4"
@@ -626,8 +632,11 @@ images:
       on OPNsense: a small first-boot layer matches WAN and LAN to the NICs,
       installs the SSH keys of root, sets the hostname and the web interface
       password (user data, else generated: console and nova get-password).
-      The web interface is open on the WAN after boot. Community image, not
-      an official OPNsense or Deciso product.
+      The web interface is open on the WAN after boot. On virtio-net, plan
+      about 1 Gbit/s routed on 2 vCPU and keep the NIC offloads off (the
+      default): they halve routing between VMs on the same hypervisor host
+      (figures in the repository README). Community image, not an official
+      OPNsense or Deciso product.
     repo: open-img-cloud/opnsense
     upstream_homepage: https://opnsense.org/
     latest_version: "26.7.9_3"
