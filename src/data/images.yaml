@@ -613,6 +613,33 @@ images:
       os_require_quiesce: "no"
     status_note: 14.5 is the last FreeBSD 14 release. Prefer FreeBSD 15 for new deployments.
 
+  - os_name: opnsense
+    title: OPNsense
+    featured: 6
+    os_distro: freebsd
+    # The version is the OPNsense release, not the FreeBSD one underneath.
+    os_version: null
+    tagline: Open source firewall and router, ready to boot unattended on OpenStack and Proxmox.
+    description: |
+      Signed OPNsense qcow2 built from the official, signed nano image and
+      updated to the current release with its hotfix level. No cloud-init
+      on OPNsense: a small first-boot layer matches WAN and LAN to the NICs,
+      installs the SSH keys of root, sets the hostname and the web interface
+      password (user data, else generated: console and nova get-password).
+      The web interface is open on the WAN after boot. Community image, not
+      an official OPNsense or Deciso product.
+    repo: open-img-cloud/opnsense
+    upstream_homepage: https://opnsense.org/
+    latest_version: "26.7.9_3"
+    login_user: root
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, firewall, appliance, signed]
+    logo: opnsense.svg
+    seo_title: OPNsense qcow2 firewall image for OpenStack & Proxmox
+    seo_description: "Signed OPNsense 26.7 qcow2 for OpenStack and Proxmox: unattended first boot (SSH keys, hostname, web GUI password from metadata), boot-tested, cosign-verifiable."
+    status_note: "Community image, not an official OPNsense or Deciso product. The web interface (443) and SSH are open on the WAN: restrict them to your addresses."
+
   - os_name: cirros
     title: CirrOS
     os_distro: cirros
