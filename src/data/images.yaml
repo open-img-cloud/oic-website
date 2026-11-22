@@ -615,6 +615,7 @@ images:
 
   - os_name: opnsense
     title: OPNsense
+    featured: 6
     os_distro: freebsd
     # The version is the OPNsense release, not the FreeBSD one underneath.
     os_version: null
