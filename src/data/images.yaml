@@ -649,6 +649,53 @@ images:
     seo_description: "Signed OPNsense 26.7 qcow2 for OpenStack and Proxmox: unattended first boot (SSH keys, hostname, web GUI password from metadata), boot-tested, cosign-verifiable."
     status_note: "Community image, not an official OPNsense or Deciso product. The web interface (443) and SSH are open on the WAN: restrict them to your addresses."
 
+  - os_name: flatcar
+    title: Flatcar Container Linux
+    os_distro: flatcar
+    os_version: null
+    tagline: Minimal, immutable OS for containers, configured with Ignition, self-updating.
+    description: |
+      The official Flatcar Stable OpenStack image, republished unchanged after
+      checking its OpenPGP-signed digests against the Flatcar image signing
+      key, then cosign-signed and boot-tested. Configured with Ignition or
+      Butane in the user data; without it, the SSH keys of `core` and the
+      hostname come from the metadata. Instances update and reboot by
+      themselves by default (see the repository README to control it). The
+      same file serves Proxmox VE with a configdrive2 cloud-init drive.
+    repo: open-img-cloud/flatcar
+    upstream_homepage: https://www.flatcar.org/
+    latest_version: "4757.2.3"
+    login_user: core
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, containers, ignition, signed]
+    logo: flatcar.svg
+    seo_title: Flatcar Container Linux qcow2 for OpenStack & Proxmox
+    seo_description: "Flatcar Container Linux Stable qcow2 for OpenStack and Proxmox, republished unchanged after OpenPGP verification, cosign-signed and boot-tested. Ignition, user core."
+
+  - os_name: talos-linux
+    title: Talos Linux
+    os_distro: talos
+    os_version: null
+    tagline: Immutable, API-managed OS for Kubernetes. No SSH, no shell.
+    description: |
+      Talos Linux for the OpenStack platform, built with Sidero Labs' own
+      cosign-verified imager and the official qemu-guest-agent extension (the
+      image Image Factory serves for that schematic). No SSH and no
+      cloud-init: pass a machine config (`talosctl gen config`) as user data,
+      open TCP 50000 and 6443, and manage it with `talosctl`. Boot-tested as a
+      single-node Kubernetes control plane. Community image, not an official
+      Sidero Labs product.
+    repo: open-img-cloud/talos-linux
+    upstream_homepage: https://www.talos.dev/
+    latest_version: "1.14.6"
+    format: qcow2
+    arch: x86_64
+    tags: [openstack, proxmox, kubernetes, immutable, signed]
+    seo_title: Talos Linux qcow2 image for OpenStack & Proxmox
+    seo_description: "Signed Talos Linux 1.14 qcow2 for OpenStack and Proxmox, built with Sidero's verified imager and the qemu-guest-agent extension, boot-tested as a Kubernetes control plane."
+    status_note: "Community image, not an official Sidero Labs product. No SSH: manage the node with talosctl (TCP 50000)."
+
   - os_name: cirros
     title: CirrOS
     os_distro: cirros
