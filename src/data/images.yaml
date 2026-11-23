@@ -28,6 +28,8 @@
 #                     else amzn / alpaquita
 #   os_version        OpenStack os_version; derived from latest_version when absent
 #                     ("9.8-20260525.0" gives "9.8"), null to leave it out
+#   os_purpose        SCS-0102 os_purpose (default generic; custom for openstack_series images)
+#   replace_frequency SCS-0102 commitment: critical_bug (default) or never (frozen test images)
 #   glance_properties extra Glance properties, merged over the defaults
 #                     (hw_qemu_guest_agent=yes, hw_disk_bus=scsi, hw_scsi_model=virtio-scsi)
 #
@@ -621,6 +623,7 @@ images:
 
   - os_name: opnsense
     title: OPNsense
+    os_purpose: network
     featured: 6
     os_distro: freebsd
     # The version is the OPNsense release, not the FreeBSD one underneath.
@@ -675,6 +678,7 @@ images:
 
   - os_name: talos-linux
     title: Talos Linux
+    os_purpose: k8snode
     os_distro: talos
     os_version: null
     tagline: Immutable, API-managed OS for Kubernetes. No SSH, no shell.
@@ -698,6 +702,8 @@ images:
 
   - os_name: cirros
     title: CirrOS
+    os_purpose: minimal
+    replace_frequency: never
     os_distro: cirros
     os_version: null
     test_image: true
@@ -788,6 +794,7 @@ images:
 
   - os_name: cloud-rescue
     title: Cloud Rescue
+    os_purpose: custom
     os_distro: rocky
     os_version: "9"
     seo_title: "Cloud Rescue: rescue image for OpenStack & Proxmox VMs"

@@ -57,6 +57,16 @@ export interface ImageEntry {
   eol?: { product: string; release?: string };
   /** Built per OpenStack series: the quick panel offers every maintained series published. */
   openstack_series?: boolean;
+  /**
+   * SCS-0102 os_purpose: generic (default), minimal, k8snode, gpu, network or custom. Images
+   * built per OpenStack series default to custom.
+   */
+  os_purpose?: "generic" | "minimal" | "k8snode" | "gpu" | "network" | "custom";
+  /**
+   * SCS-0102 replace_frequency we commit to: critical_bug (default: replaced when upstream
+   * ships its fixes) or never (frozen test images).
+   */
+  replace_frequency?: "critical_bug" | "never";
   /** Search title and description, for images the generic wording does not fit (rescue). */
   seo_title?: string;
   seo_description?: string;

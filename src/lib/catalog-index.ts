@@ -77,6 +77,10 @@ interface GlanceImageInput {
   os_version?: string | null;
   login_user?: string | null;
   glance_properties?: Record<string, string>;
+  os_purpose?: string;
+  replace_frequency?: string;
+  openstack_series?: boolean;
+  support?: { securityUntil: string | null } | null;
 }
 
 interface GlanceArtifactInput {
@@ -84,6 +88,44 @@ interface GlanceArtifactInput {
   firmware: Firmware;
   version: string;
   sha256?: string | null;
+  /** Versioned download URL (SCS-0102 image_source). */
+  url?: string | null;
+  /** Build time from the manifest (SCS-0102 image_build_date). */
+  built_at?: string | null;
+  /**
+   * The image's primary artifact. Other variants of the same OS, version and architecture
+   * (Alpine UEFI, Alpaquita musl) are os_purpose=custom: SCS-0102 allows one generic image per
+   * (os_distro, os_version, architecture).
+   */
+  primary?: boolean;
+}
+
+/** How long an image stays referable by UUID after a newer one replaces it (oic-sync keeps 3). */
+export const UUID_VALIDITY = "last-3";
+
+/**
+ * SCS-0102 v2 metadata (https://docs.scs.community/standards/scs-0102-v2-image-metadata):
+ * login user, source URL, build date, description, purpose, replacement commitment, support
+ * end and UUID validity.
+ */
+export function scsProperties(
+  img: GlanceImageInput,
+  a: GlanceArtifactInput,
+): Record<string, string> {
+  const purpose =
+    a.primary === false
+      ? "custom"
+      : (img.os_purpose ?? (img.openstack_series ? "custom" : "generic"));
+  return {
+    image_original_user: img.login_user || "none",
+    ...(a.url && { image_source: a.url }),
+    ...(a.built_at && { image_build_date: a.built_at }),
+    image_description: `https://openimages.cloud/images/${img.os_name}/`,
+    os_purpose: purpose,
+    replace_frequency: img.replace_frequency ?? "critical_bug",
+    provided_until: img.support?.securityUntil ?? "none",
+    uuid_validity: UUID_VALIDITY,
+  };
 }
 
 /**
@@ -103,6 +145,7 @@ export function glanceProperties(
     architecture: a.arch,
     ...DEFAULT_GLANCE_PROPERTIES,
     ...firmwareProperties(a.firmware),
+    ...scsProperties(img, a),
     ...img.glance_properties,
     oic_id: img.os_name,
     oic_version: a.version,
@@ -189,6 +232,7 @@ function indexImage(image: EnrichedImage): IndexImage | null {
   const artifacts: IndexArtifact[] = [];
   for (const a of image.latest.artifacts) {
     const m = a.manifest;
+    const primary = artifacts.length === 0;
     // Only artifacts whose manifest was fetched: they carry the digest and the versioned URL.
     if (!m || !a.fileUrl) continue;
     artifacts.push({
@@ -213,6 +257,9 @@ function indexImage(image: EnrichedImage): IndexImage | null {
         firmware: a.firmware,
         version: m.version,
         sha256: m.sha256,
+        url: a.fileUrl,
+        built_at: m.built_at ?? null,
+        primary,
       }),
     });
   }
