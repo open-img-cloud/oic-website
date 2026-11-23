@@ -10,6 +10,7 @@ export const TARGETS = [
   { id: "proxmox", label: "Proxmox VE (qm)" },
   { id: "oic-sync-proxmox", label: "oic-sync for Proxmox VE" },
   { id: "terraform", label: "Terraform / OpenTofu" },
+  { id: "ansible", label: "Ansible" },
   { id: "cloud-init", label: "cloud-init user-data" },
 ] as const;
 
@@ -272,6 +273,93 @@ data "openstack_images_image_v2" "${id}" {
 }`;
 }
 
+/** Terraform with the open-img-cloud/openimages provider: the catalog read at plan time. */
+export function terraformProvider(image: CmdImage, a: CmdArtifact, opts: CmdOptions): string {
+  const id = tfName(image, a);
+  const multi = image.artifacts.length > 1 && a.variant;
+  const name = opts.name.trim()
+    ? hcl(opts.name.trim())
+    : `"\${data.openimages_image.${id}.name} (\${data.openimages_image.${id}.version})"`;
+  const ref = (attr: string) => `data.openimages_image.${id}.${attr}`;
+  const rows: [string, string][] = [
+    ["name", name],
+    ["image_source_url", ref("url")],
+    ["web_download", "true"],
+    ["container_format", hcl("bare")],
+    ["disk_format", ref("disk_format")],
+    ["min_disk_gb", ref("min_disk_gb")],
+    ["min_ram_mb", ref("min_ram_mb")],
+    ...(opts.visibility ? [["visibility", hcl(opts.visibility)] as [string, string]] : []),
+    ["properties", ref("glance_properties")],
+  ];
+  const w = Math.max(...rows.map(([k]) => k.length));
+  return `# OpenTofu: until the provider is listed on its registry, use
+# source = "registry.terraform.io/open-img-cloud/openimages".
+terraform {
+  required_providers {
+    openimages = { source = "open-img-cloud/openimages", version = "~> 0.2" }
+    openstack  = { source = "terraform-provider-openstack/openstack", version = "~> 3.0" }
+  }
+}
+
+# Latest version at plan time; set version = "${a.url.split("/").at(-2)}" to pin it.
+data "openimages_image" "${id}" {
+  id${multi ? "     " : ""} = ${hcl(image.id)}${
+    multi
+      ? `
+  variant = ${hcl(String(a.variant))}`
+      : ""
+  }
+}
+
+# Glance fetches the versioned URL itself (web-download; without it, drop web_download and
+# Terraform uploads the file). The postcondition checks the SHA-512 Glance computed.
+resource "openstack_images_image_v2" "${id}" {
+${rows.map(([k, v]) => `  ${k.padEnd(w)} = ${v}`).join("\n")}
+
+  lifecycle {
+    postcondition {
+      condition     = lookup(self.properties, "os_hash_value", "") == ${ref("sha512")}
+      error_message = "The image Glance downloaded does not match the catalog SHA-512."
+    }
+  }
+}`;
+}
+
+export function ansibleInstall(): string {
+  return `# Collection openimages.cloud (until its Ansible Galaxy release, from git)
+ansible-galaxy collection install \\
+  git+https://github.com/open-img-cloud/ansible-collection-openimages.git
+pip install openstacksdk`;
+}
+
+export function ansiblePlaybook(image: CmdImage, a: CmdArtifact, opts: CmdOptions): string {
+  const multi = image.artifacts.length > 1 && a.variant;
+  const key = multi ? `${image.id}/${a.variant}` : image.id;
+  const yq = (v: string) => JSON.stringify(v);
+  const vars = [
+    `glance_image_cloud: ${yq(opts.cloud.trim())}${opts.cloud.trim() ? "" : "  # empty: OS_* variables"}`,
+    `glance_image_images: [${image.id}]`,
+    ...(multi ? [`glance_image_variants:`, `  ${image.id}: [${a.variant}]`] : []),
+    ...(opts.visibility ? [`glance_image_visibility: ${opts.visibility}`] : []),
+    ...(opts.name.trim() ? [`glance_image_names:`, `  ${yq(key)}: ${yq(opts.name.trim())}`] : []),
+  ];
+  return `# playbook.yml: imports the latest version if the project does not have it, with the
+# catalog properties, after checking the sha256 and the cosign signature (when cosign is found).
+- name: Import ${image.title}
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: openimages.cloud.glance_image
+      vars:
+${vars.map((v) => `        ${v}`).join("\n")}
+  post_tasks:
+    - name: Image id
+      ansible.builtin.debug:
+        msg: "{{ glance_image_ids[${yq(key).replace(/"/g, "'")}] }}"`;
+}
+
 export function cloudInitUserData(image: CmdImage, opts: CmdOptions): string {
   const user = opts.user.trim() || "ops";
   const key = opts.sshKey.trim() || DEFAULT_OPTIONS.sshKey;
@@ -349,7 +437,21 @@ export function generate(
         ],
       };
     case "terraform":
-      return { unavailable: null, blocks: [{ label: "hcl", code: terraform(image, a, opts) }] };
+      return {
+        unavailable: null,
+        blocks: [
+          { label: "hcl, openimages provider", code: terraformProvider(image, a, opts) },
+          { label: "hcl, without the provider", code: terraform(image, a, opts) },
+        ],
+      };
+    case "ansible":
+      return {
+        unavailable: null,
+        blocks: [
+          { label: "bash", code: ansibleInstall() },
+          { label: "playbook.yml", code: ansiblePlaybook(image, a, opts) },
+        ],
+      };
     case "cloud-init":
       if (image.testImage)
         return none(`${image.title} has no cloud-init: it reads only its own metadata.`);
