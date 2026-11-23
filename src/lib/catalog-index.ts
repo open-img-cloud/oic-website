@@ -418,9 +418,12 @@ export function buildOsismImages(index: CatalogIndex): string {
             ...osismMeta(a.glance_properties),
             os_distro: img.os_distro,
             ...(img.os_version && { os_version: img.os_version }),
-            os_purpose: "generic",
-            provided_until: "none",
-            replace_frequency: "quarterly",
+            // SCS-0102: the same values as index.json (os_purpose custom for the non-default
+            // variants, real end of support, critical_bug), except uuid_validity: how long a UUID
+            // stays valid depends on how the operator runs openstack-image-manager, not on us.
+            os_purpose: a.glance_properties.os_purpose ?? "generic",
+            provided_until: osismDay(a.glance_properties.provided_until ?? null) ?? "none",
+            replace_frequency: a.glance_properties.replace_frequency ?? "critical_bug",
             uuid_validity: "none",
             image_description: `${img.title}, signed cloud image from ${index.base_url}`,
           },
