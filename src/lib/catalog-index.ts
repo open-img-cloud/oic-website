@@ -158,6 +158,14 @@ export function firmwareProperties(firmware: Firmware): Record<string, string> {
   return firmware === "uefi" ? { hw_firmware_type: "uefi", hw_machine_type: "q35" } : {};
 }
 
+/** Glance min_ram (MiB) when images.yaml sets none (SCS-0102 makes min_ram mandatory). */
+export const DEFAULT_MIN_RAM_MIB = 1024;
+
+/** Glance min_ram of an image, in MiB. */
+export function minRamMiB(img: { min_ram?: number }): number {
+  return img.min_ram ?? DEFAULT_MIN_RAM_MIB;
+}
+
 /** Smallest root disk (GiB, rounded up) that fits the image, null when the size is unknown. */
 export function minDiskGiB(virtualSize: number | null | undefined): number | null {
   return virtualSize ? Math.ceil(virtualSize / 2 ** 30) : null;
@@ -210,6 +218,8 @@ export interface IndexImage {
   /** Installed packages of the latest version (oic-packages/v1), null when not published yet. */
   packages_url: string | null;
   tags: string[];
+  /** Glance min_ram in MiB (an image attribute, not a property): set it at registration. */
+  min_ram: number;
   glance_properties: Record<string, string>;
   optional_glance_properties: Record<string, string>;
   artifacts: IndexArtifact[];
@@ -288,6 +298,7 @@ function indexImage(image: EnrichedImage): IndexImage | null {
     versions_url: image.versionsUrl,
     packages_url: image.packages?.url ?? null,
     tags: image.tags,
+    min_ram: minRamMiB(image),
     glance_properties: {
       ...glanceOsType(image.os_distro),
       ...(image.login_user && { os_admin_user: image.login_user }),
@@ -397,7 +408,7 @@ export function buildOsismImages(index: CatalogIndex): string {
           format: a.format,
           login: img.login_user ?? "root",
           ...(minDisk != null && { min_disk: minDisk }),
-          min_ram: 512,
+          min_ram: img.min_ram,
           status: "active",
           visibility: "public",
           multi: true,

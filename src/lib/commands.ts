@@ -35,6 +35,8 @@ export interface CmdArtifact {
   url: string;
   sha256: string | null;
   minDisk: number | null;
+  /** Glance min_ram in MiB. */
+  minRam: number;
   firmware: "uefi" | "bios";
   /** Glance properties of this artifact, exactly those of index.json. */
   glance: Record<string, string>;
@@ -114,7 +116,7 @@ export function openstackCli(
 
 openstack image create \\
   --disk-format qcow2 --container-format bare \\
-  --file ${a.file} \\${a.minDisk ? `\n  --min-disk ${a.minDisk} \\` : ""}${opts.visibility ? `\n  --${opts.visibility} \\` : ""}
+  --file ${a.file} \\${a.minDisk ? `\n  --min-disk ${a.minDisk} \\` : ""}\n  --min-ram ${a.minRam} \\${opts.visibility ? `\n  --${opts.visibility} \\` : ""}
 ${Object.entries(a.glance)
   .map(([k, v]) => `  --property ${k}=${v} \\`)
   .join("\n")}
@@ -247,6 +249,7 @@ export function terraform(image: CmdImage, a: CmdArtifact, opts: CmdOptions): st
     ["container_format", hcl("bare")],
     ["disk_format", hcl("qcow2")],
     ...(a.minDisk ? [["min_disk_gb", String(a.minDisk)] as [string, string]] : []),
+    ["min_ram_mb", String(a.minRam)],
     ...(opts.visibility ? [["visibility", hcl(opts.visibility)] as [string, string]] : []),
   ];
   const rowWidth = Math.max(...rows.map(([k]) => k.length));
