@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-21",
+  "fetched_at": "2026-11-23",
   "eol": {
     "almalinux": {
       "8": {
@@ -61,12 +61,6 @@
       "3.18": {
         "eoasFrom": null,
         "eolFrom": "2025-05-09",
-        "eoesFrom": null,
-        "isEol": true
-      },
-      "3.17": {
-        "eoasFrom": null,
-        "eolFrom": "2024-11-22",
         "eoesFrom": null,
         "isEol": true
       }
