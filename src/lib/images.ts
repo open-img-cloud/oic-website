@@ -67,6 +67,8 @@ export interface ImageEntry {
    * ships its fixes) or never (frozen test images).
    */
   replace_frequency?: "critical_bug" | "never";
+  /** Smallest RAM (MiB) the image boots with (Glance min_ram, SCS-0102); default 1024. */
+  min_ram?: number;
   /** Search title and description, for images the generic wording does not fit (rescue). */
   seo_title?: string;
   seo_description?: string;

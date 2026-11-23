@@ -2,7 +2,7 @@
  * Build-time inputs of the command builders (src/lib/commands.ts): the same artifact, URL and
  * Glance properties as index.json, so every command matches the catalog.
  */
-import { glanceProperties, minDiskGiB } from "~/lib/catalog-index";
+import { glanceProperties, minDiskGiB, minRamMiB } from "~/lib/catalog-index";
 import type { CmdArtifact, CmdImage } from "~/lib/commands";
 import type { Artifact, EnrichedImage } from "~/lib/images";
 
@@ -31,6 +31,7 @@ export function cmdArtifact(image: EnrichedImage, a: Artifact | undefined): CmdA
     url: a?.fileUrl ?? `https://images.openimages.cloud/${image.os_name}/${image.latest_version}/`,
     sha256,
     minDisk: minDiskGiB(a?.virtualSize),
+    minRam: minRamMiB(image),
     firmware: a?.firmware ?? "bios",
     glance: glanceProperties(image, {
       arch: a?.arch ?? "x86_64",
