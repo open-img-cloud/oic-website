@@ -15,7 +15,7 @@ import { loadEnrichedImages } from "~/lib/images";
 
 const title = "Image commands for OpenStack and Proxmox";
 const description =
-  "Pick an image and a target: ready-to-copy commands for the OpenStack CLI, Proxmox VE, oic-sync, Terraform or OpenTofu, and a cloud-init user-data starter.";
+  "Pick an image and a target: ready-to-copy commands for the OpenStack CLI, Proxmox VE, oic-sync, Terraform or OpenTofu, Ansible, and a cloud-init user-data starter.";
 
 const enriched = await loadEnrichedImages();
 const images: CmdImage[] = enriched.map(cmdImage);
@@ -47,8 +47,12 @@ const intro: Record<TargetId, { text: string; link?: { href: string; label: stri
     link: { href: "/oic-sync/proxmox/", label: "oic-sync for Proxmox VE guide" },
   },
   terraform: {
-    text: "An openstack_images_image_v2 resource with the catalog properties, and a data source that finds the image by property for other configurations.",
-    link: { href: "/oic-sync/openstack/#terraform", label: "Images kept by oic-sync" },
+    text: "With the openimages provider, the URL, checksums and properties come from the catalog at plan time and Glance's SHA-512 is checked. Without it, the same resource with today's values, and a data source that finds the image by property.",
+    link: { href: "/integrations/#terraform", label: "Terraform and OpenTofu" },
+  },
+  ansible: {
+    text: "The glance_image role of the openimages.cloud collection imports the image if the project does not have it, checks the sha256, the signature and Glance's digest, and gives it the stable name.",
+    link: { href: "/integrations/#ansible", label: "Ansible collection" },
   },
   "cloud-init": {
     text: "A starter user-data that adds a user with your SSH key, and how to pass it on OpenStack and on Proxmox VE.",
@@ -60,7 +64,7 @@ const panels = TARGETS.map((t) => ({
   ...intro[t.id],
   result: generate(t.id, image, artifact, DEFAULT_OPTIONS, oicSyncVersion),
   // Most blocks a target can show: cloud-init has the user-data and its usage.
-  slots: t.id === "cloud-init" ? 2 : 1,
+  slots: ["cloud-init", "terraform", "ansible"].includes(t.id) ? 2 : 1,
 }));
 
 const data = JSON.stringify({ images, oicSyncVersion, defaultImage: image.id }).replace(
@@ -159,7 +163,7 @@ const field =
 
         <fieldset class="space-y-4">
           <legend class="text-ink text-sm font-medium">Options</legend>
-          <div data-for="openstack proxmox terraform cloud-init">
+          <div data-for="openstack proxmox terraform ansible cloud-init">
             <label for="get-name" class="text-ink-muted block text-xs">
               Image name (VM name for qm)
             </label>
@@ -173,7 +177,7 @@ const field =
               class:list={[field, "mt-1 font-mono"]}
             />
           </div>
-          <div data-for="openstack oic-sync-openstack">
+          <div data-for="openstack oic-sync-openstack ansible">
             <label for="get-cloud" class="text-ink-muted block text-xs">
               Cloud name in clouds.yaml
             </label>
@@ -187,7 +191,7 @@ const field =
               class:list={[field, "mt-1 font-mono"]}
             />
           </div>
-          <div data-for="openstack oic-sync-openstack terraform">
+          <div data-for="openstack oic-sync-openstack terraform ansible">
             <label for="get-visibility" class="text-ink-muted block text-xs">
               Visibility
             </label>
