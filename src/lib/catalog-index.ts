@@ -140,7 +140,11 @@ export function glanceProperties(
   return {
     ...glanceOsType(img.os_distro),
     ...(img.os_distro && { os_distro: img.os_distro }),
-    ...(img.os_version && { os_version: img.os_version }),
+    // OpenStack series images: os_version is the series of this artifact (2025.2, 2026.1...),
+    // not the image-level latest one.
+    ...(img.openstack_series
+      ? { os_version: a.version }
+      : img.os_version && { os_version: img.os_version }),
     ...(img.login_user && { os_admin_user: img.login_user }),
     architecture: a.arch,
     ...DEFAULT_GLANCE_PROPERTIES,

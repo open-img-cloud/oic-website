@@ -310,10 +310,13 @@ async function exists(target: string): Promise<boolean> {
   return !!(await timedFetch(target, { method: "HEAD" }))?.ok;
 }
 
-/** "9.8-20260525.0" → "9.8", "13-20261103-2651" → "13", "24.04-20261017" → "24.04". */
+/**
+ * "9.8-20260525.0" → "9.8", "13-20261103-2651" → "13", "24.04-20261017" → "24.04",
+ * "26.7.9_3" (OPNsense hotfix) → "26.7.9".
+ */
 export function deriveOsVersion(image: ImageEntry): string | null {
   if (image.os_version !== undefined) return image.os_version;
-  const head = image.latest_version.split("-")[0];
+  const head = image.latest_version.split("-")[0].split("_")[0];
   return /^\d+(\.\d+)*$/.test(head) ? head : null;
 }
 

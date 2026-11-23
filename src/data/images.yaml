@@ -628,8 +628,7 @@ images:
     os_purpose: network
     featured: 6
     os_distro: freebsd
-    # The version is the OPNsense release, not the FreeBSD one underneath.
-    os_version: null
+    # os_version: the OPNsense release (26.7.9 from 26.7.9_3), not the FreeBSD one underneath.
     tagline: Open source firewall and router, ready to boot unattended on OpenStack and Proxmox.
     description: |
       Signed OPNsense qcow2 built from the official, signed nano image and
@@ -657,7 +656,6 @@ images:
   - os_name: flatcar
     title: Flatcar Container Linux
     os_distro: flatcar
-    os_version: null
     tagline: Minimal, immutable OS for containers, configured with Ignition, self-updating.
     description: |
       The official Flatcar Stable OpenStack image, republished unchanged after
@@ -683,7 +681,6 @@ images:
     min_ram: 2048
     os_purpose: k8snode
     os_distro: talos
-    os_version: null
     tagline: Immutable, API-managed OS for Kubernetes. No SSH, no shell.
     description: |
       Talos Linux for the OpenStack platform, built with Sidero Labs' own
@@ -709,7 +706,6 @@ images:
     os_purpose: minimal
     replace_frequency: never
     os_distro: cirros
-    os_version: null
     test_image: true
     tagline: Tiny test image for OpenStack (Tempest, smoke checks), republished unchanged. Not for production.
     description: |
@@ -733,7 +729,7 @@ images:
   - os_name: octavia-amphora
     title: Octavia Amphora
     os_distro: ubuntu
-    os_version: null
+    # os_version: the OpenStack series of each artifact (2026.2), not the Ubuntu release.
     tagline: OpenStack load balancer amphora image, built via diskimage-builder.
     description: |
       Cloud-init-ready, signed Octavia Amphora qcow2 with HAProxy
@@ -756,7 +752,7 @@ images:
   - os_name: manila-service-image
     title: Manila Service Image
     os_distro: ubuntu
-    os_version: null
+    # os_version: the OpenStack series of each artifact (2026.2), not the Ubuntu release.
     tagline: Share server image for the OpenStack Manila generic driver (NFS and CIFS).
     description: |
       Signed service image for the Manila generic driver, built from
@@ -777,7 +773,7 @@ images:
   - os_name: trove-guest-image
     title: Trove Guest Image
     os_distro: ubuntu
-    os_version: null
+    # os_version: the OpenStack series of each artifact (2026.2), not the Ubuntu release.
     tagline: Guest image for OpenStack Trove (Database as a Service).
     description: |
       Signed guest image for Trove, built from `openstack/trove` (pinned
