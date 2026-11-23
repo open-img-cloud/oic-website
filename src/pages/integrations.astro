@@ -1,0 +1,213 @@
+---
+import Base from "~/layouts/Base.astro";
+import CodeBlock from "~/components/CodeBlock.astro";
+import { IMAGES_BASE_URL } from "~/lib/images";
+
+const title = "Integrations: oic-sync, Terraform, OpenTofu, Ansible";
+const description =
+  "Use the signed openimages.cloud images from your tools: oic-sync, the Terraform and OpenTofu provider, the Ansible collection, the osism image manager and the catalog index.";
+const headline = "Integrations";
+
+const PROVIDER_REPO = "https://github.com/open-img-cloud/terraform-provider-openimages";
+const PROVIDER_REGISTRY =
+  "https://registry.terraform.io/providers/open-img-cloud/openimages/latest";
+const ANSIBLE_REPO = "https://github.com/open-img-cloud/ansible-collection-openimages";
+const OIC_SYNC_REPO = "https://github.com/open-img-cloud/oic-sync";
+
+const tools = [
+  {
+    href: "#oic-sync",
+    title: "oic-sync",
+    text: "Keeps the images current in OpenStack Glance or as Proxmox VE templates, signatures verified.",
+  },
+  {
+    href: "#terraform",
+    title: "Terraform and OpenTofu",
+    text: "A provider with data sources: URL, checksums and Glance properties to chain into your resources.",
+  },
+  {
+    href: "#ansible",
+    title: "Ansible",
+    text: "A collection: import into Glance, install oic-sync, run an internal mirror.",
+  },
+  {
+    href: "#osism",
+    title: "osism image manager",
+    text: "Ready-made definitions for openstack-image-manager.",
+  },
+  {
+    href: "#index",
+    title: "Catalog index",
+    text: "One signed JSON document for your own tooling.",
+  },
+  {
+    href: "/get/",
+    title: "Command generator",
+    text: "Copy-paste commands for the OpenStack CLI, Proxmox VE, oic-sync and Terraform.",
+  },
+];
+
+const oicSync = `pipx install 'oic-sync[openstack]'
+oic-sync openstack sync --cloud mycloud --image debian-13 --image ubuntu-24.04`;
+
+const terraform = `terraform {
+  required_providers {
+    openimages = { source = "open-img-cloud/openimages", version = "~> 0.2" }
+    openstack  = { source = "terraform-provider-openstack/openstack", version = "~> 3.0" }
+  }
+}
+
+data "openimages_image" "debian" {
+  id = "debian-13"
+}
+
+resource "openstack_images_image_v2" "debian" {
+  name             = data.openimages_image.debian.name
+  image_source_url = data.openimages_image.debian.url
+  web_download     = true
+  container_format = "bare"
+  disk_format      = data.openimages_image.debian.disk_format
+  min_disk_gb      = data.openimages_image.debian.min_disk_gb
+  min_ram_mb       = data.openimages_image.debian.min_ram_mb
+  properties       = data.openimages_image.debian.glance_properties
+}`;
+
+const ansibleInstall = `ansible-galaxy collection install \\
+  git+https://github.com/open-img-cloud/ansible-collection-openimages.git`;
+
+const ansible = `- name: Import openimages.cloud images
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: openimages.cloud.glance_image
+      vars:
+        glance_image_cloud: mycloud
+        glance_image_images: [debian-13, ubuntu-24.04, alpine-linux]`;
+
+const osism = `curl -fsSo oic-images.yml ${IMAGES_BASE_URL}/osism/images.yml
+openstack-image-manager --cloud admin --images oic-images.yml --latest`;
+
+const index = `curl -fsS ${IMAGES_BASE_URL}/index.json \\
+  | jq '.images[] | select(.id == "debian-13") | .artifacts[0] | {url, sha512}'`;
+---
+
+<Base title={title} description={description}>
+  <article class="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
+    <p class="eyebrow">Ecosystem</p>
+    <h1 class="text-ink mt-3 text-4xl font-semibold tracking-tight">{headline}</h1>
+    <p class="text-ink-muted mt-4 text-lg leading-relaxed">
+      Every tool below reads the same{" "}
+      <a class="link" href={`${IMAGES_BASE_URL}/index.json`}>
+        catalog index
+      </a>
+      : versioned URLs, SHA-256 and SHA-512 digests, cosign signatures and the Glance properties of
+      each image (guest agent, disk bus, SCS-0102 metadata, minimum disk and RAM). Pick the one that
+      fits how you already run your cloud.
+    </p>
+
+    <section class="mt-12 grid gap-6 sm:grid-cols-2" aria-label="Tools">
+      {tools.map((t) => (
+        <a href={t.href} class="border-line hover:border-line-strong group rounded-xl border p-5">
+          <p class="text-ink font-medium">
+            {t.title}{" "}
+            <span aria-hidden="true" class="text-ink-faint group-hover:text-ink">
+              →
+            </span>
+          </p>
+          <p class="text-ink-muted mt-2 text-sm leading-relaxed">{t.text}</p>
+        </a>
+      ))}
+    </section>
+
+    <section id="oic-sync" class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">oic-sync</h2>
+      <p class="mt-3">
+        A command line tool that imports the images into OpenStack Glance or as Proxmox VE
+        templates, verifies their signatures, gives the newest version a stable name and retires the
+        old ones. Run it daily from a timer. Packages: PyPI,{" "}
+        <code class="font-mono text-sm">.deb</code>, <code class="font-mono text-sm">.rpm</code> and
+        a signed container image.
+      </p>
+      <CodeBlock code={oicSync} label="pipx" />
+      <p>
+        <a class="link" href="/oic-sync/">
+          Guides for OpenStack, Proxmox VE and mirrors
+        </a>{" "}
+        ·{" "}
+        <a class="link" href={OIC_SYNC_REPO}>
+          Source
+        </a>
+      </p>
+    </section>
+
+    <section id="terraform" class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Terraform and OpenTofu</h2>
+      <p class="mt-3">
+        The <code class="font-mono text-sm">open-img-cloud/openimages</code> provider only reads the
+        catalog: its data sources give the URL, checksums, sizes and Glance properties of an image,
+        at the latest version or a pinned one, to chain into{" "}
+        <code class="font-mono text-sm">openstack_images_image_v2</code>, a Proxmox VE download or
+        any resource that takes a URL. No credentials, nothing created.
+      </p>
+      <CodeBlock code={terraform} label="hcl" />
+      <p>
+        <a class="link" href={PROVIDER_REGISTRY}>
+          Terraform Registry
+        </a>{" "}
+        ·{" "}
+        <a class="link" href={PROVIDER_REPO}>
+          Source and examples
+        </a>
+        . The OpenTofu Registry listing is under review.
+      </p>
+    </section>
+
+    <section id="ansible" class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Ansible</h2>
+      <p class="mt-3">
+        The <code class="font-mono text-sm">openimages.cloud</code> collection imports images into
+        Glance (checksums, signature and Glance digest checked), installs oic-sync with its timers
+        on Proxmox VE or OpenStack, and runs an internal mirror of the catalog. Until it is
+        published on Ansible Galaxy, install it from GitHub:
+      </p>
+      <CodeBlock code={ansibleInstall} label="ansible-galaxy" />
+      <CodeBlock code={ansible} label="playbook" />
+      <p>
+        <a class="link" href={ANSIBLE_REPO}>
+          Source, roles and modules
+        </a>
+      </p>
+    </section>
+
+    <section id="osism" class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">osism image manager</h2>
+      <p class="mt-3">
+        The catalog is also exported in the format of{" "}
+        <a class="link" href="https://github.com/osism/openstack-image-manager">
+          openstack-image-manager
+        </a>
+        , rebuilt with the site every day.
+      </p>
+      <CodeBlock code={osism} />
+    </section>
+
+    <section id="index" class="text-ink-muted mt-14 leading-relaxed">
+      <h2 class="text-ink text-xl font-semibold tracking-tight">Catalog index</h2>
+      <p class="mt-3">
+        For your own tooling:{" "}
+        <a class="link" href={`${IMAGES_BASE_URL}/index.json`}>
+          index.json
+        </a>{" "}
+        (schema <code class="font-mono text-sm">oic-index/v1</code>, fields only added over time)
+        lists the latest version of every image, and each image has a{" "}
+        <code class="font-mono text-sm">versions.json</code> with its history. The{" "}
+        <a class="link" href="/docs/">
+          documentation
+        </a>{" "}
+        describes every field.
+      </p>
+      <CodeBlock code={index} />
+    </section>
+  </article>
+</Base>
