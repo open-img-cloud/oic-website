@@ -37,6 +37,9 @@ export function cmdArtifact(image: EnrichedImage, a: Artifact | undefined): CmdA
       firmware: a?.firmware ?? "bios",
       version: a?.manifest?.version ?? image.latest_version,
       sha256,
+      url: a?.fileUrl ?? null,
+      built_at: a?.manifest?.built_at ?? null,
+      primary: !a || a === primaryArtifact(image),
     }),
   };
 }
