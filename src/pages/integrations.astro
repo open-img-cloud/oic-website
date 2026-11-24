@@ -72,8 +72,7 @@ resource "openstack_images_image_v2" "debian" {
   properties       = data.openimages_image.debian.glance_properties
 }`;
 
-const ansibleInstall = `ansible-galaxy collection install \\
-  git+https://github.com/open-img-cloud/ansible-collection-openimages.git`;
+const ansibleInstall = `ansible-galaxy collection install openimages.cloud`;
 
 const ansible = `- name: Import openimages.cloud images
   hosts: localhost
@@ -156,10 +155,16 @@ const index = `curl -fsS ${IMAGES_BASE_URL}/index.json \\
           Terraform Registry
         </a>{" "}
         ·{" "}
+        <a
+          class="link"
+          href="https://search.opentofu.org/provider/open-img-cloud/openimages/latest"
+        >
+          OpenTofu Registry
+        </a>{" "}
+        ·{" "}
         <a class="link" href={PROVIDER_REPO}>
           Source and examples
         </a>
-        . The OpenTofu Registry listing is under review.
       </p>
     </section>
 
@@ -168,14 +173,18 @@ const index = `curl -fsS ${IMAGES_BASE_URL}/index.json \\
       <p class="mt-3">
         The <code class="font-mono text-sm">openimages.cloud</code> collection imports images into
         Glance (checksums, signature and Glance digest checked), installs oic-sync with its timers
-        on Proxmox VE or OpenStack, and runs an internal mirror of the catalog. Until it is
-        published on Ansible Galaxy, install it from GitHub:
+        on Proxmox VE or OpenStack, and runs an internal mirror of the catalog. Install it from
+        Ansible Galaxy:
       </p>
       <CodeBlock code={ansibleInstall} label="ansible-galaxy" />
       <CodeBlock code={ansible} label="playbook" />
       <p>
         <a class="link" href={ANSIBLE_REPO}>
           Source, roles and modules
+        </a>{" "}
+        ·{" "}
+        <a class="link" href="https://galaxy.ansible.com/ui/repo/published/openimages/cloud/">
+          Ansible Galaxy
         </a>
       </p>
     </section>

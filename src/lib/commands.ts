@@ -293,9 +293,7 @@ export function terraformProvider(image: CmdImage, a: CmdArtifact, opts: CmdOpti
     ["properties", ref("glance_properties")],
   ];
   const w = Math.max(...rows.map(([k]) => k.length));
-  return `# OpenTofu: until the provider is listed on its registry, use
-# source = "registry.terraform.io/open-img-cloud/openimages".
-terraform {
+  return `terraform {
   required_providers {
     openimages = { source = "open-img-cloud/openimages", version = "~> 0.2" }
     openstack  = { source = "terraform-provider-openstack/openstack", version = "~> 3.0" }
@@ -327,9 +325,8 @@ ${rows.map(([k, v]) => `  ${k.padEnd(w)} = ${v}`).join("\n")}
 }
 
 export function ansibleInstall(): string {
-  return `# Collection openimages.cloud (until its Ansible Galaxy release, from git)
-ansible-galaxy collection install \\
-  git+https://github.com/open-img-cloud/ansible-collection-openimages.git
+  return `# Collection openimages.cloud from Ansible Galaxy (pulls openstack.cloud)
+ansible-galaxy collection install openimages.cloud
 pip install openstacksdk`;
 }
 
