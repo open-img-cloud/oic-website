@@ -21,6 +21,8 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      OIC_BOT: ${{ secrets.OIC_BOT_PRIVATE_KEY != '' && vars.OIC_BOT_APP_ID != '' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -37,9 +39,24 @@ jobs:
       - name: Refresh the snapshot
         run: node scripts/refresh-upstream-snapshot.mjs
 
+      # Opened by the oic-bot GitHub App, so the PR starts its CI like any other (a PR opened
+      # with GITHUB_TOKEN waits for an approval). Falls back to GITHUB_TOKEN without the key.
+      - name: Token of the oic-bot app
+        id: bot
+        if: env.OIC_BOT == 'true'
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          app-id: ${{ vars.OIC_BOT_APP_ID }}
+          private-key: ${{ secrets.OIC_BOT_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+
       - name: Open or update the PR
         uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3 (Node 24)
         with:
+          token: ${{ steps.bot.outputs.token || github.token }}
           branch: chore/upstream-snapshot
           delete-branch: true
           add-paths: src/data/upstream-snapshot.json
