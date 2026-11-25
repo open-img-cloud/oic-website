@@ -692,6 +692,7 @@ images:
       Sidero Labs product.
     repo: open-img-cloud/talos-linux
     upstream_homepage: https://www.talos.dev/
+    logo: talos.svg
     latest_version: "1.14.6"
     format: qcow2
     arch: x86_64
